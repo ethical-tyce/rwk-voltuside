@@ -92,6 +92,13 @@ function createWindow() {
     const ANIM_DURATION_MS = 800; // ← make this bigger for slower
     const ANIM_INTERVAL_MS = 10;
 
+    // use a single path for the window icon so the taskbar icon
+    // can match whatever we show in the title bar (index.html uses
+    // the same `icon.png`).  on Windows an .ico file is preferred
+    // when you package the app, but a PNG works in development.
+    const iconPath = path.join(__dirname,
+        process.platform === 'win32' ? 'icon.ico' : 'icon.png');
+
     win = new BrowserWindow({
         width: START_WIDTH,
         height: START_HEIGHT,
@@ -111,7 +118,7 @@ function createWindow() {
             // Allow the CDN scripts (Monaco) to load
             webSecurity: false 
         },
-        icon: path.join(__dirname, 'icon.png')
+        icon: iconPath
     });
 
     // Load your HTML file
@@ -150,7 +157,7 @@ function createWindow() {
 
             if (step >= steps) {
                 clearInterval(grow);
-                win.setMinimumSize(600, 460);
+                win.setMinimumSize(600, 510);
                 win.webContents.send('startup:window-expanded');
             }
         }, ANIM_INTERVAL_MS);

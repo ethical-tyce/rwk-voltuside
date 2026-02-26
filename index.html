@@ -715,32 +715,28 @@
             background: transparent;
         }
 
-        /* left‑side drawer style for the tab browser */
+        /* center the tab browser like the settings overlay */
         #tabBrowserModal.modal-backdrop {
-            justify-content: flex-start;   /* push panel to left edge */
-            align-items: stretch;          /* span full height */
-            z-index: 20001;                /* sit above windowChrome so clicks are caught */
-            padding-top: 40px;             /* avoid dragging area overlap */
+            justify-content: center;      /* centre the panel */
+            align-items: center;          /* vertically centre too */
+            z-index: 20001;               /* sit above windowChrome */
         }
 
+        /* reuse the same modal appearance/animation as #settingsMenu */
         #tabBrowserModal .modal-content {
-            /* place below the draggable chrome so buttons remain clickable */
-            margin-top: 40px;
-            height: calc(100% - 40px);
-
-            max-height: none;
-            border-radius: 0; /* flush with window edges */
-
-            /* ensure panel sits on top of the titlebar */
-            z-index: 20001;
-
-            /* override default modal animation with horizontal drawer slide */
-            animation: tabDrawerIn 0.2s ease-out;
+            margin-top: 0;
+            max-height: 90vh;
+            border-radius: 6px;
+            padding: 0;
+            width: 90%;
+            max-width: 500px;
+            display: flex;
+            flex-direction: column;
+            animation: settingsSlideIn 0.2s ease-out;
         }
 
-        /* When the backdrop is hidden we still need a slide-out animation */
         #tabBrowserModal.hide .modal-content {
-            animation: tabDrawerOut 0.2s ease-out;
+            animation: settingsSlideOut 0.2s ease-out;
         }
 
         .modal-content {
@@ -1601,6 +1597,9 @@
             </svg>
         </button>
         <div id="windowTitleGroup">
+            <!-- this image is the same asset that we pass to BrowserWindow
+                 as the `icon` option; Windows will also use it for the taskbar
+                 button and the Alt‑Tab thumbnail (use icon.ico when packaging) -->
             <img id="windowTitleIcon" src="icon.png" alt="">
             <span id="versionLabel" style="font-size:11px;color:#909090;margin-left:-5px;user-select:none;">v?</span>
         </div>
@@ -2879,7 +2878,7 @@ console.log('Dark mode applied!');`
 
             overlay.innerHTML = `
                 <div class="modal-content">
-                    <div class="tab-browser-header">
+                    <div class="settings-header">
                         <h3>Tab Browser</h3>
                         <div style="display: flex; gap: 8px;">
                             <button id="refreshTabBrowserBtn" class="settings-close" title="Refresh">
