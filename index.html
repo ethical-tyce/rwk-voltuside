@@ -1,0 +1,3052 @@
+<!DOCTYPE html>
+<html lang="en" style="background:#000;">
+<head>
+    <meta charset="UTF-8">
+    <title>Voltus IDE</title>
+
+    <style>
+        html {
+            background: #000;
+        }
+
+        :root {
+            /* CHANGE THIS NUMBER TO ADJUST SPEED GLOBALLY */
+            --hover-speed: 0.2s; 
+            --menu-glass-bg: rgba(0, 0, 0, 0.1);
+            --menu-glass-blur: 5px;
+            --menu-glass-saturate: 210%;
+            --menu-glass-border: rgba(255, 255, 255, 0.05);
+            --menu-glass-divider: rgba(255, 255, 255, 0.08);
+            --menu-glass-shadow:
+                0 20px 40px rgba(0, 0, 0, 0.4),
+                inset 0 0 0 1px rgba(255, 255, 255, 0.12),
+                inset 0 2px 10px rgba(255, 255, 255, 0.05);
+        }
+
+        .window-btn, 
+        .icon-btn, 
+        .run-btn, 
+        .tab, 
+        .sidebar-tab, 
+        .modal-btn, 
+        .mode-btn, 
+        .settings-close, 
+        .settings-toggle,
+        .settings-select {
+            transition: all var(--hover-speed) ease !important;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            height: 100vh;
+            background: #0a0a0a;
+            color: #a0a0a0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        #windowChrome {
+            height: 40px;
+            min-height: 35px;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            display: flex;
+            align-items: center;
+            /* With the title group positioned absolutely, the button row becomes the
+               only flex item.  Use flex-end to keep it on the right edge. */
+            justify-content: flex-end;
+            padding: 1px 12px;
+            background: transparent;
+            border-bottom: none;
+            -webkit-app-region: drag;
+            user-select: none;
+            z-index: 20000;
+            pointer-events: auto;
+            transition: opacity 0.2s ease;
+        }
+
+        body.startup-active #windowChrome {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        #windowTitlebarBg {
+            height: 40px;
+            min-height: 35px;
+            flex-shrink: 0;
+            background: #000;
+            border-bottom: none;
+        }
+
+        #windowTitleGroup {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        #windowTitleIcon {
+            width: 30px;
+            height: 30px;
+            object-fit: contain;
+            flex-shrink: 0;
+            /* remove left margin since we will center via parent */
+            margin-left: 0;
+            margin-top: 2px;
+            opacity: 0;
+            transition: opacity 0.12s ease;
+            display: block;
+            background: transparent;
+        }
+
+        body.title-icon-ready #windowTitleIcon {
+            opacity: 1;
+        }
+
+        /* ---------- CONSISTENT WINDOW BUTTONS ---------- */
+        #windowButtons {
+            display: flex;
+            align-items: center;
+            gap: 15px; /* Adjust spacing between buttons */
+            -webkit-app-region: no-drag;
+        }
+
+        /* center the title icon horizontally by absolutely positioning its group */
+        #windowTitleGroup {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            top: 0;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            pointer-events: none; /* allow drag through when not over the icon */
+        }
+
+        /* bug button sits at the extreme left inside the chrome */
+        .bug-btn {
+            position: absolute;
+            left: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            -webkit-app-region: no-drag;
+            width: 32px;
+            height: 32px;
+            padding: 0 !important;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #9b9b9b;
+            background: none !important;
+            box-shadow: none !important;
+            border: none !important;
+            outline: none;
+            backdrop-filter: none !important;
+            -webkit-backdrop-filter: none !important;
+            text-shadow: none !important;
+            cursor: pointer;
+        }
+        .bug-btn:hover {
+            background: none !important;
+            box-shadow: none !important;
+            border: none !important;
+            transform: translateY(-50%);
+            color: #ffffff;
+        }
+        .bug-btn:active {
+            transform: translateY(-50%);
+            background: none !important;
+        }
+        .bug-btn svg {
+            width: 18px;
+            height: 18px;
+        }
+        .bug-btn:hover {
+            color: #ffffff;
+        }
+
+        /* ensure icon itself still receives clicks if needed */
+        #windowTitleGroup > img {
+            pointer-events: auto;
+        }
+
+        .window-btn {
+            width: 24px;         /* Uniform hitbox width */
+            height: 24px;        /* Uniform hitbox height */
+            flex: 0 0 24px;
+            position: relative;
+            border: none;
+            background: transparent;
+            color: #9b9b9b;
+            cursor: pointer;
+            display: flex;       /* Centers the icon span */
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            outline: none;
+        }
+
+        .window-btn:hover {
+            color: #ffffff;
+        }
+
+        /* Identical 12px x 12px bounding box for all icons */
+        .window-icon {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            width: 12px;
+            height: 12px;
+            display: block;
+            pointer-events: none;
+        }
+
+        /* Minimize: 1.6px thick line, centered vertically */
+        .window-icon-min::before {
+            content: "";
+            position: absolute;
+            left: 1px;
+            right: 1px;
+            top: 50%;
+            transform: translateY(-50%);
+            height: 1.6px;
+            background: currentColor;
+            border-radius: 2px;
+        }
+
+        /* Maximize: Box filling the 12px container */
+        .window-icon-max::before {
+            content: "";
+            position: absolute;
+            inset: 1px; /* 1px margin inside the 12px box */
+            border: 1.4px solid currentColor;
+            border-radius: 1.5px;
+        }
+
+        /* Close: Upscaled X using the full 12px height */
+        .window-icon-close::before,
+        .window-icon-close::after {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 50%;
+            width: 12px;
+            height: 1.4px;
+            background: currentColor;
+            border-radius: 1px;
+            transform-origin: center;
+            backface-visibility: hidden;
+        }
+
+        .window-icon-close::before {
+            transform: translateY(-50%) rotate(45deg);
+        }
+
+        .window-icon-close::after {
+            transform: translateY(-50%) rotate(-45deg);
+        }
+
+        #app {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+        }
+
+        #app {
+            transition: filter 0.3s ease, transform 0.3s ease;
+        }
+
+        /* The new Deep Blur effect */
+        .ui-blur {
+            filter: blur(12px) brightness(0.7) saturate(150%) !important;
+            pointer-events: none; /* Prevents clicking through to the editor */
+            transform: scale(0.98); /* Subtle "push back" effect */
+        }
+
+        /* Keep foreground title controls sharp above blur and modals */
+        #windowChrome {
+            z-index: 20000;
+        }
+
+        /* Standardized Glass for ALL Modals (Settings, Hub, Browser, Clear) */
+        .modal-content, #modal, #settingsMenu {
+            background: var(--menu-glass-bg) !important;
+            backdrop-filter: blur(var(--menu-glass-blur)) saturate(var(--menu-glass-saturate)) !important;
+            -webkit-backdrop-filter: blur(var(--menu-glass-blur)) saturate(var(--menu-glass-saturate)) !important;
+            border: 1px solid var(--menu-glass-border) !important;
+            box-shadow: var(--menu-glass-shadow) !important;
+        }
+
+        /* ---------- TOP BAR ---------- */
+        #topbar {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 0px 12px 10px 12px;
+            border-bottom: none;
+            background: #000;
+            position: relative;
+        }
+
+            #topbar::after {
+                content: '';
+                position: absolute;
+                right: 380px;
+                top: 0;
+                bottom: 0;
+                width: 60px;
+                background: linear-gradient(to right, transparent, #000);
+                pointer-events: none;
+                z-index: 10;
+            }
+
+        /* ---------- TABS ---------- */
+        #tabs {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            overflow-x: auto;
+            scroll-behavior: auto;
+            position: relative;
+        }
+
+            #tabs::-webkit-scrollbar {
+                display: none;
+            }
+
+        #tabs {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        .tab {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            min-width: 70px;
+            max-width: 180px;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            background: #1a1a1a;
+            border: none;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+            .tab:hover {
+                background: #282828;
+            }
+
+            .tab.active {
+                background: #3e3e3e;
+            }
+
+            .tab span {
+                flex: 1;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                font-size: 13px;
+                color: #909090;
+            }
+
+            .tab.active span {
+                color: #e0e0e0;
+            }
+
+            .tab button {
+                background: none;
+                border: none;
+                color: #b9b9b9;
+                cursor: pointer;
+                padding: 0;
+                font-size: 12px;
+                width: 14px;
+                height: 14px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+                .tab button:hover {
+                    color: #ffffff;
+                }
+
+        #addTab {
+            padding: 6px 12px;
+            border: none;
+            cursor: pointer;
+            background: transparent;
+            color: #c0c0c0;
+            font-size: 16px;
+            position: relative;
+            z-index: 2;
+        }
+
+            #addTab:hover {
+                color: #ffffff;
+            }
+
+        /* ---------- BUTTONS ---------- */
+        .icon-btn, .run-btn {
+            /* 1. Ultra-transparent background */
+            background: rgba(255, 255, 255, 0.03) !important;
+            
+            /* 2. Glass blur & saturation */
+            backdrop-filter: blur(15px) saturate(200%);
+            -webkit-backdrop-filter: blur(15px) saturate(200%);
+            
+            /* 3. The "Glass Edge" shadows */
+            box-shadow: 
+                0 4px 15px rgba(0, 0, 0, 0.3),                /* Drop shadow */
+                inset 0 0 0 1px rgba(255, 255, 255, 0.15),     /* Sharp outer edge */
+                inset 0 2px 10px rgba(255, 255, 255, 0.1) !important;    /* Internal refraction */
+
+            /* 4. Border and Text */
+            border: 1px solid rgba(255, 255, 255, 0.05) !important;
+            color: #ffffff !important;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+            
+            padding: 8px;
+            border-radius: 8px; /* Slightly rounder looks better for glass */
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Hover effect to make the glass "light up" */
+        .icon-btn:hover, .run-btn:hover {
+            background: rgba(255, 255, 255, 0.08) !important;
+            box-shadow: 
+                0 6px 20px rgba(0, 0, 0, 0.4),
+                inset 0 0 0 1px rgba(255, 255, 255, 0.25),
+                inset 0 2px 12px rgba(255, 255, 255, 0.15) !important;
+            transform: translateY(-1px);
+        }
+
+        /* Active/Click effect */
+        .icon-btn:active, .run-btn:active {
+            transform: translateY(0px);
+            background: rgba(255, 255, 255, 0.05) !important;
+        }
+
+        /* Specific sizing for the Run Button to keep it wide */
+        .run-btn {
+            padding: 9px 16px;
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        /* Ensure SVG icons inside glassy buttons are bright */
+        .icon-btn svg {
+            width: 18px;
+            height: 18px;
+            stroke-width: 2;
+            filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.2));
+        }
+
+        /* ---------- EDITOR ---------- */
+        #editorWrap {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+            min-width: 0;
+        }
+
+        #editorContainer {
+            flex: 1;
+            display: flex;
+            min-height: 0;
+            min-width: 0;
+        }
+
+        /* ---------- LEFT SIDEBAR ---------- */
+        #leftSidebar {
+            width: 48px;
+            background: #000;
+            border-right: none;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            padding: 0px 6px;
+        }
+
+        /* ---------- GLASSY SIDEBAR TABS ---------- */
+        .sidebar-tab {
+            /* 1. Ultra-transparent glass base */
+            background: rgba(255, 255, 255, 0.03) !important;
+            
+            /* 2. Glass blur & saturation */
+            backdrop-filter: blur(15px) saturate(200%);
+            -webkit-backdrop-filter: blur(15px) saturate(200%);
+
+            /* 3. The Triple Glass Shadow */
+            box-shadow: 
+                0 4px 10px rgba(0, 0, 0, 0.3),                /* Drop shadow */
+                inset 0 0 0 1px rgba(255, 255, 255, 0.1),     /* Sharp outer edge highlight */
+                inset 0 2px 8px rgba(255, 255, 255, 0.05) !important; /* Internal refraction */
+
+            /* 4. Border and Icon color */
+            border: 1px solid rgba(255, 255, 255, 0.05) !important;
+            color: rgba(255, 255, 255, 0.4) !important; /* Dim icon by default */
+            
+            /* Layout */
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px; /* Slightly rounder look */
+            cursor: pointer;
+            transition: all 0.2s ease !important;
+        }
+
+        /* Hover: Glass lights up and icon brightens */
+        .sidebar-tab:hover {
+            background: rgba(255, 255, 255, 0.08) !important;
+            color: rgba(255, 255, 255, 0.8) !important;
+            box-shadow: 
+                0 4px 12px rgba(0, 0, 0, 0.4),
+                inset 0 0 0 1px rgba(255, 255, 255, 0.2),
+                inset 0 2px 10px rgba(255, 255, 255, 0.1) !important;
+            transform: scale(1.05); /* Subtle pop effect */
+        }
+
+        /* Active: The "Pressed Glass" look */
+        .sidebar-tab.active {
+            background: rgba(255, 255, 255, 0.15) !important;
+            color: #ffffff !important;
+            border: 1px solid rgba(255, 255, 255, 0.2) !important;
+            box-shadow: 
+                0 0 15px rgba(255, 255, 255, 0.05),           /* Outer glow */
+                inset 0 0 0 1px rgba(255, 255, 255, 0.4),     /* Much brighter edge */
+                inset 0 2px 10px rgba(255, 255, 255, 0.1) !important;
+        }
+
+        /* Ensure the SVGs inside catch the glow */
+        .sidebar-tab svg {
+            width: 18px;
+            height: 18px;
+            stroke-width: 2.5px; /* Slightly thicker for glass visibility */
+            filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.5));
+        }
+
+        /* ---------- MAIN CONTENT AREA ---------- */
+        #mainContent {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+            min-width: 0;
+            position: relative;
+        }
+
+        #editor {
+            flex: 1;
+            min-height: 0;
+            min-width: 0;
+            position: relative;
+            display: block;
+        }
+
+        #htmlOutput {
+            flex: 1;
+            min-height: 0;
+            display: none;
+            background: #000;
+            border: none;
+        }
+
+        #htmlOutputLabel {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: #0a0a0a;
+            color: #a0a0a0;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 11px;
+            border: none;
+            z-index: 100;
+            pointer-events: none;
+            display: none;
+        }
+
+            #htmlOutputLabel.active {
+                display: block;
+            }
+
+        #htmlOutput.active {
+            display: block;
+        }
+
+        #editor.active {
+            display: block;
+        }
+
+        #editor:not(.active) {
+            display: none;
+        }
+
+        /* ---------- CONSOLE ---------- */
+        #consoleWrap {
+            height: 240px;
+            overflow: auto;
+            flex: none;
+            border-top: none;
+            display: none;
+            flex-direction: column;
+            background: #000;
+        }
+
+            #consoleWrap.active {
+                display: flex;
+            }
+
+        #consoleTop {
+            padding: 8px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: #808080;
+            font-size: 12px;
+            text-transform: uppercase;
+            border-bottom: none;
+        }
+
+        #console {
+            flex: 1;
+            padding: 10px 16px;
+            overflow-y: auto;
+            font-family: 'Consolas', monospace;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        .log {
+            color: #909090;
+        }
+
+        .warn {
+            color: #b0b0b0;
+        }
+
+        .error {
+            color: #c0c0c0;
+        }
+
+        .entry {
+            margin-bottom: 6px;
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #000;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #2a2a2a;
+            border-radius: 3px;
+        }
+
+            ::-webkit-scrollbar-thumb:hover {
+                background: #3a3a3a;
+            }
+
+        @keyframes settingsSlideIn {
+            from {
+                opacity: 0;
+                transform: translate(-50%, -50%) scale(0.95) translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(1) translateY(0);
+            }
+        }
+
+        @keyframes settingsSlideOut {
+            from {
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(1) translateY(0);
+            }
+
+            to {
+                opacity: 0;
+                transform: translate(-50%, -50%) scale(0.95) translateY(-10px);
+            }
+        }
+
+        /* ---------- MODAL BACKDROP ---------- */
+        .modal-backdrop {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            animation: modalFadeIn 0.2s ease-out;
+        }
+
+            .modal-backdrop.hide {
+                animation: modalFadeOut 0.2s ease-out;
+            }
+
+        /* Match Settings menu feel: no dark veil behind these menus */
+        #tabBrowserModal.modal-backdrop,
+        #scriptHubModal.modal-backdrop {
+            background: transparent;
+        }
+
+        /* left‑side drawer style for the tab browser */
+        #tabBrowserModal.modal-backdrop {
+            justify-content: flex-start;   /* push panel to left edge */
+            align-items: stretch;          /* span full height */
+            z-index: 20001;                /* sit above windowChrome so clicks are caught */
+            padding-top: 40px;             /* avoid dragging area overlap */
+        }
+
+        #tabBrowserModal .modal-content {
+            /* place below the draggable chrome so buttons remain clickable */
+            margin-top: 40px;
+            height: calc(100% - 40px);
+
+            max-height: none;
+            border-radius: 0; /* flush with window edges */
+
+            /* ensure panel sits on top of the titlebar */
+            z-index: 20001;
+
+            /* override default modal animation with horizontal drawer slide */
+            animation: tabDrawerIn 0.2s ease-out;
+        }
+
+        /* When the backdrop is hidden we still need a slide-out animation */
+        #tabBrowserModal.hide .modal-content {
+            animation: tabDrawerOut 0.2s ease-out;
+        }
+
+        .modal-content {
+            background: #0a0a0a;
+            border: 1px solid #2a2a2a;
+            border-radius: 6px;
+            animation: modalSlideIn 0.2s ease-out;
+        }
+
+        .modal-backdrop.hide .modal-content {
+            animation: modalSlideOut 0.2s ease-out;
+        }
+
+        /* ---------- MODAL ---------- */
+        @keyframes modalFadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: scale(0.95) translateY(-10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        @keyframes modalFadeOut {
+            from {
+                opacity: 1;
+            }
+
+            to {
+                opacity: 0;
+            }
+        }
+
+        @keyframes modalSlideOut {
+            from {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+
+            to {
+                opacity: 0;
+                transform: scale(0.95) translateY(-10px);
+            }
+        }
+
+        /* drawer animations for tab browser */
+        @keyframes tabDrawerIn {
+            from {
+                transform: translateX(-100%);
+            }
+            to {
+                transform: translateX(0);
+            }
+        }
+        @keyframes tabDrawerOut {
+            from {
+                transform: translateX(0);
+            }
+            to {
+                transform: translateX(-100%);
+            }
+        }
+
+        #modalOverlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            z-index: 1000;
+        }
+
+            #modalOverlay.show {
+                opacity: 1;
+                pointer-events: auto;
+                animation: modalFadeIn 0.2s ease-out;
+            }
+
+            #modalOverlay.hide {
+                animation: modalFadeOut 0.2s ease-out;
+            }
+
+        #modal {
+            background: #0a0a0a;
+            border: 1px solid #2a2a2a;
+            border-radius: 6px;
+            padding: 24px;
+            width: 400px;
+        }
+
+        #modalOverlay.show #modal {
+            animation: modalSlideIn 0.2s ease-out;
+        }
+
+        #modalOverlay.hide #modal {
+            animation: modalSlideOut 0.2s ease-out;
+        }
+
+        #modal h3 {
+            margin: 0 0 12px;
+            color: #c0c0c0;
+            font-size: 17px;
+        }
+
+        #modal p {
+            margin: 0 0 24px;
+            font-size: 14px;
+            color: #808080;
+            line-height: 1.6;
+        }
+
+        #modalActions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+        }
+
+        .modal-btn {
+            padding: 8px 16px;
+            border-radius: 4px;
+            border: none;
+            cursor: pointer;
+            font-size: 13px;
+        }
+
+            .modal-btn.cancel {
+                background: #1a1a1a;
+                color: #909090;
+            }
+
+                .modal-btn.cancel:hover {
+                    background: #2a2a2a;
+                }
+
+            .modal-btn.confirm {
+                background: #2a2a2a;
+                color: #e0e0e0;
+            }
+
+                .modal-btn.confirm:hover {
+                    background: #3a3a3a;
+                }
+
+        #consoleHandle {
+            height: 4px;
+            cursor: ns-resize;
+            background: #1a1a1a;
+            display: none;
+        }
+
+            #consoleHandle.active {
+                display: block;
+            }
+
+            #consoleHandle:hover {
+                background: #2a2a2a;
+            }
+
+        body.dragging {
+            user-select: none;
+            cursor: ns-resize;
+        }
+
+        /* ---------- TOAST ---------- */
+        #toastContainer {
+            position: fixed;
+            bottom: 25px;
+            right: 25px;
+            z-index: 2000;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            pointer-events: none;
+        }
+
+        .toast {
+            /* 1. Ultra-transparent background - purely to catch the light */
+            background: rgba(255, 255, 255, 0.03); 
+            
+            /* 2. The Glass Secret - High blur + High saturation */
+            /* This makes the code behind it look frosted but makes the colors pop */
+            backdrop-filter: blur(15px) saturate(200%);
+            -webkit-backdrop-filter: blur(15px) saturate(200%);
+            
+            /* 3. The "Warped" Edge highlights */
+            /* This creates a 'double rim' effect that looks like thick glass edges */
+            box-shadow: 
+                0 10px 30px rgba(0, 0, 0, 0.3),              /* Subtle drop shadow */
+                inset 0 0 0 1px rgba(255, 255, 255, 0.15),   /* The sharp outer 'glass' edge */
+                inset 0 2px 10px rgba(255, 255, 255, 0.1);   /* Internal refraction glow */
+
+            /* 4. Thin, almost invisible border */
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            
+            color: #ffffff;
+            padding: 8px 16px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 13px;
+            font-weight: 500;
+            
+            /* Give text a tiny shadow so it doesn't get lost in the blurred background */
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+            
+            animation: slideIn 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+            opacity: 1;
+            transition: opacity 0.2s ease-out;
+            pointer-events: auto;
+        }
+
+        .toast-icon {
+            font-size: 16px;
+            /* Faint glow for the icon */
+            filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.3));
+        }
+
+            .toast.fade-out {
+                opacity: 0;
+            }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .toast-icon {
+            font-size: 16px;
+        }
+
+        /* ---------- GLASSY SETTINGS MENU (Layout Preserved) ---------- */
+        #settingsMenu {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            width: 90%;
+            max-width: 500px;
+            /* The Glass Secret */
+            background: var(--menu-glass-bg) !important;
+            backdrop-filter: blur(var(--menu-glass-blur)) saturate(var(--menu-glass-saturate));
+            -webkit-backdrop-filter: blur(var(--menu-glass-blur)) saturate(var(--menu-glass-saturate));
+            box-shadow: var(--menu-glass-shadow);
+            border: 1px solid var(--menu-glass-border);
+            border-radius: 6px; 
+            padding: 0;
+            z-index: 1500;
+            opacity: 0;
+            pointer-events: none;
+            transform: translate(-50%, -50%);
+        }
+
+        #settingsMenu.show {
+            opacity: 1;
+            pointer-events: auto;
+            animation: settingsSlideIn 0.2s ease-out;
+        }
+
+        #settingsMenu.hide {
+            animation: settingsSlideOut 0.2s ease-out;
+        }
+
+        .settings-header {
+            padding: 18px 24px;
+            border-bottom: 1px solid var(--menu-glass-divider);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .settings-header h3 {
+            margin: 0;
+            color: #ffffff;
+            font-size: 17px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        /* --- GLASSY CLOSE BUTTON --- */
+        .settings-close {
+            background: rgba(255, 255, 255, 0.05) !important;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+            /* Inner "rim" light */
+            box-shadow: inset 0 1px 4px rgba(255, 255, 255, 0.1);
+            
+            color: #909090;
+            cursor: pointer;
+            padding: 6px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all var(--hover-speed) ease !important;
+        }
+
+        .settings-close:hover {
+            background: rgba(255, 255, 255, 0.12) !important;
+            border-color: rgba(255, 255, 255, 0.2) !important;
+            color: #ffffff;
+            transform: scale(1.1); /* Subtle "pop" on hover */
+        }
+
+        .settings-body {
+            padding: 18px 24px;
+            max-height: 450px;
+            overflow-y: auto;
+        }
+
+        .settings-section-title {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.3);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 12px;
+        }
+
+        .settings-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+        }
+
+        .settings-label {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        /* --- SOLID BLACK DROPDOWN --- */
+        .settings-select {
+            background: #000 !important;
+            color: #ffffff !important;
+            border: 1px solid #333 !important;
+            border-radius: 8px;
+            padding: 7px 12px;
+            font-size: 13px;
+            cursor: pointer;
+            outline: none;
+        }
+
+        /* --- SICK GLASSY TOGGLES --- */
+        .settings-toggle {
+            width: 44px;
+            height: 22px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 11px;
+            position: relative;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(5px);
+        }
+
+        .settings-toggle.active {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 255, 255, 0.3);
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.05);
+        }
+
+        .settings-toggle::after {
+            content: '';
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.4);
+            top: 2.3334px;
+            left: 2.9px;
+            /* Bouncy movement transition */
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), background 0.3s ease;
+        }
+
+        .settings-toggle.active::after {
+            transform: translateX(22px);
+            background: #ffffff;
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.6);
+        }
+
+        /* ---------- TAB BROWSER ---------- */
+        .tab-browser-content {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .mode-selector {
+            display: flex;
+            gap: 6px;
+            padding-bottom: 8px;
+            border-bottom: none;
+        }
+
+        .mode-btn {
+            flex: 1;
+            padding: 6px;
+            border-radius: 4px;
+            background: #1a1a1a;
+            border: none;
+            color: #707070;
+            cursor: pointer;
+            font-size: 11px;
+        }
+
+            .mode-btn.active {
+                background: #2a2a2a;
+                color: #c0c0c0;
+            }
+
+        #tabListContainer {
+            max-height: 250px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 2px; /* tighter stacking */
+        }
+
+        .tab-item {
+            display: flex;
+            align-items: center;
+            padding: 4px 6px; /* smaller padding for compact look */
+            background: #1a1a1a;
+            border: none;
+            border-radius: 4px;
+            gap: 6px;
+        }
+
+            .tab-item:hover {
+                background: #2a2a2a;
+            }
+
+        .tab-item-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .tab-item-name {
+            font-size: 12px;
+            color: #b0b0b0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .tab-item-url {
+            font-size: 10px;
+            color: #707070;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .tab-checkbox {
+            width: 14px;
+            height: 14px;
+            cursor: pointer;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 0 15px;
+            font-size: 11px;
+            font-weight: bold;
+            letter-spacing: 0.5px;
+        }
+
+        /* --- Floating Status Capsule --- */
+        #statusCapsule {
+            position: fixed;
+            bottom: 25px;
+            right: 25px;
+            background: #0a0a0a;
+            border: 1px solid #1a1a1a;
+            padding: 6px 14px;
+            border-radius: 30px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            z-index: 1999;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.6);
+            transition: all 0.3s ease;
+        }
+
+        #statusDot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #444; /* Grey when offline */
+            transition: all 0.3s ease;
+        }
+
+        #statusDot.online {
+            background: #00ff88; /* Green when online */
+            box-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
+        }
+
+        #statusText {
+            font-size: 10px;
+            font-weight: normal;
+            letter-spacing: 1px;
+            color: #666; /* Grey when offline */
+            text-transform: uppercase;
+            transition: all 0.3s ease;
+        }
+
+        #statusText.online {
+            color: #00ff88;
+        }
+
+        #statusCapsule.online {
+            border-color: rgba(0, 255, 136, 0.3);
+        }
+        
+        /* --- TAB BROWSER MATERIAL OVERRIDES (EXACT SETTINGS MATCH) --- */
+        /* Tab browser is now a compact vertical panel instead of a wide centered modal */
+        #tabBrowserModal .modal-content {
+            background: var(--menu-glass-bg) !important;
+            backdrop-filter: blur(var(--menu-glass-blur)) saturate(var(--menu-glass-saturate));
+            -webkit-backdrop-filter: blur(var(--menu-glass-blur)) saturate(var(--menu-glass-saturate));
+            box-shadow: var(--menu-glass-shadow);
+            border: 1px solid var(--menu-glass-border);
+            border-radius: 6px;
+            padding: 0; /* Let internal structure handle padding like settings */
+
+            /* make the panel narrow and tall */
+            width: 250px;
+            max-height: 90vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .tab-browser-header {
+            padding: 12px 16px; /* reduced padding */
+            border-bottom: 1px solid var(--menu-glass-divider);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .tab-browser-header h3 {
+            margin: 0;
+            color: #ffffff;
+            font-size: 17px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .tab-browser-body {
+            padding: 12px 16px;
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        #scriptHubModal .modal-content {
+            background: var(--menu-glass-bg) !important;
+            backdrop-filter: blur(var(--menu-glass-blur)) saturate(var(--menu-glass-saturate));
+            -webkit-backdrop-filter: blur(var(--menu-glass-blur)) saturate(var(--menu-glass-saturate));
+            box-shadow: var(--menu-glass-shadow);
+            border: 1px solid var(--menu-glass-border);
+            border-radius: 6px;
+            padding: 0;
+        }
+
+        .script-hub-header {
+            padding: 18px 24px;
+            border-bottom: 1px solid var(--menu-glass-divider);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .script-hub-header h2 {
+            margin: 0;
+            color: #ffffff;
+            font-size: 17px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .script-hub-grid {
+            padding: 18px 24px;
+            overflow-y: auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 12px;
+        }
+
+        .script-hub-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 8px;
+            padding: 12px;
+            cursor: pointer;
+            transition: all var(--hover-speed) ease;
+        }
+
+        .script-hub-card:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.16);
+            transform: translateY(-1px);
+        }
+
+        .script-hub-card-icon {
+            font-size: 24px;
+            margin-bottom: 6px;
+        }
+
+        .script-hub-card-name {
+            color: rgba(255, 255, 255, 0.85);
+            font-size: 13px;
+            margin-bottom: 3px;
+        }
+
+        .script-hub-card-category {
+            color: rgba(255, 255, 255, 0.45);
+            font-size: 10px;
+            text-transform: uppercase;
+            margin-bottom: 6px;
+            letter-spacing: 0.08em;
+        }
+
+        .script-hub-card-description {
+            color: rgba(255, 255, 255, 0.62);
+            font-size: 12px;
+            line-height: 1.3;
+        }
+
+        /* Material for the Tab Items in the list */
+        .tab-item {
+            background: rgba(255, 255, 255, 0.03) !important;
+            border: 1px solid rgba(255, 255, 255, 0.05) !important;
+            border-radius: 8px;
+            padding: 12px !important;
+            margin-bottom: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .tab-item:hover {
+            background: rgba(255, 255, 255, 0.08) !important;
+            border-color: rgba(255, 255, 255, 0.15) !important;
+        }
+
+        .tab-item-name {
+            color: rgba(255, 255, 255, 0.8) !important;
+            font-size: 13px !important;
+        }
+
+        .tab-item-url {
+            color: rgba(255, 255, 255, 0.3) !important;
+            font-size: 10px !important;
+        }
+
+        /* Mode buttons - using the 'Settings Toggle' style background */
+        .mode-btn {
+            background: rgba(255, 255, 255, 0.05) !important;
+            border: 1px solid rgba(255, 255, 255, 0.1) !important;
+            color: rgba(255, 255, 255, 0.4) !important;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            font-size: 10px !important;
+            font-weight: bold;
+            border-radius: 4px;
+            transition: all 0.2s ease !important;
+        }
+
+        .mode-btn.active {
+            background: rgba(255, 255, 255, 0.15) !important;
+            border-color: rgba(255, 255, 255, 0.3) !important;
+            color: #ffffff !important;
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.05);
+        }
+
+        /* --- SICK STARTUP ANIMATIONS --- */
+        #startup-splash {
+            position: fixed;
+            inset: 0;
+            background: #000;
+            z-index: 99999;
+            overflow: hidden;
+            display: grid;
+            place-items: center;
+            transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .splash-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .splash-logo {
+            width: 120px;
+            height: 120px;
+            filter: drop-shadow(0 0 30px rgba(255, 255, 255, 0.1));
+            opacity: 0;
+            transform: scale(0.5) translateY(20px);
+        }
+
+        .splash-loader {
+            margin-top: 5px;
+            height: 2px;
+            width: 100px; /* Set the final width here */
+            background: linear-gradient(90deg, transparent, #fff, transparent);
+            
+            /* Change 1: Start scaled to 0 */
+            transform: scaleX(0); 
+            
+            /* Change 2: Hardware acceleration */
+            will-change: transform; 
+            
+            opacity: 0;
+        }
+
+        body.startup-intro-running .splash-logo {
+            animation: logoEntrance 1.2s cubic-bezier(0.16, 1, 0.3, 1) 0s both;
+        }
+
+        body.startup-intro-running .splash-loader {
+            animation: loadBar 1.5s ease-in-out 0s forwards;
+        }
+
+        /* The "Window Expansion" effect applied to the main app */
+        #app {
+            /* animation: appExpand 3s cubic-bezier(0.16, 1, 0.3, 1) 1.2s forwards; */
+            transform-origin: center;
+            opacity: 0;
+        }
+
+        #app.expanded {
+            animation: appExpand 1.0s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+
+        @keyframes logoEntrance {
+            0% {
+                opacity: 0;
+                transform: scale(0.5) translateY(20px);
+                filter: brightness(0) blur(10px);
+            }
+            50% {
+                opacity: 1;
+                filter: brightness(1.5) blur(0px);
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        @keyframes loadBar {
+            0% { 
+                transform: scaleX(0); 
+                opacity: 0; 
+            }
+            20% { 
+                opacity: 1; 
+            }
+            100% { 
+                transform: scaleX(1); 
+                opacity: 0; 
+            }
+        }
+
+        @keyframes appExpand {
+            0% {
+                transform: scale(0.9);
+                opacity: 0;
+                filter: blur(20px);
+                border-radius: 20px;
+            }
+            25% {
+                opacity: 1;
+                transform: scale(0.95);
+                filter:blur(10px)
+            }
+            100% {
+                transform: scale(1);
+                opacity: 1;
+                filter: blur(0px);
+                border-radius: 0px;
+            }
+        }
+
+        /* Class to fade out splash */
+        .splash-fade-out {
+            opacity: 0;
+            pointer-events: none;
+        }
+    </style>
+</head>
+
+<body class="startup-active" style="margin:0;background:#000;overflow:hidden;">
+    <!-- STARTUP SPLASH OVERLAY -->
+    <div id="startup-splash">
+        <div class="splash-content">
+            <img src="icon.png" class="splash-logo" alt="Voltus Logo">
+            <div class="splash-loader"></div>
+        </div>
+    </div>
+
+    <div id="windowChrome" hidden>
+        <!-- bug icon placed top-left -->
+        <button id="bugButton" class="bug-btn" title="Report bug">
+            <!-- replaced with user-supplied SVG, colours driven by currentColor -->
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="12" height="12"
+                 fill="currentColor" stroke="none" style="pointer-events:none;">
+                <g transform="translate(0,512) scale(0.1,-0.1)">
+                    <path d="M1113 5104 c-89 -44 -98 -182 -17 -238 10 -7 94 -36 185 -64 287 -89
+434 -159 521 -249 61 -64 111 -152 206 -365 l90 -204 -67 -72 c-164 -173 -290
+-411 -371 -703 l-19 -69 925 0 924 0 -6 28 c-3 15 -26 86 -49 159 -76 231
+-191 434 -329 580 l-73 77 72 160 c96 215 129 280 180 352 93 131 233 203 622
+324 119 36 135 44 160 76 53 70 26 177 -53 210 -48 20 -61 19 -227 -32 -408
+-124 -588 -216 -701 -361 -53 -68 -129 -212 -222 -423 -37 -85 -69 -157 -71
+-159 -1 -2 -28 3 -60 12 -97 26 -179 30 -273 12 -47 -9 -93 -17 -104 -18 -15
+-2 -36 37 -110 203 -107 239 -156 327 -227 404 -119 130 -271 206 -658 325
+-180 56 -200 58 -248 35z m1199 -1375 c68 -35 108 -126 87 -201 -47 -178 -274
+-199 -350 -33 -36 77 -13 168 55 220 64 48 132 53 208 14z m651 20 c47 -13
+106 -63 123 -106 34 -80 2 -184 -69 -231 -33 -22 -52 -27 -101 -27 -75 0 -125
+28 -161 89 -59 102 -11 231 101 271 48 17 59 18 107 4z"/>
+                    <path d="M505 3901 c-72 -33 -125 -111 -125 -183 0 -47 243 -844 267 -876 36
+-49 78 -67 394 -176 173 -59 317 -111 321 -114 4 -4 8 -190 10 -414 l3 -408
+-300 -136 c-165 -75 -314 -147 -331 -160 -17 -12 -39 -39 -49 -60 -22 -47
+-225 -1102 -225 -1172 0 -93 54 -165 147 -192 89 -27 194 19 233 103 12 25 58
+240 113 532 l94 489 201 92 201 92 33 -97 c18 -53 65 -161 105 -241 180 -361
+445 -603 758 -692 115 -33 335 -33 449 0 259 75 478 246 661 517 62 93 163
+299 200 408 16 48 34 87 39 87 5 0 88 -41 185 -91 l177 -90 112 -497 c125
+-553 124 -552 213 -596 88 -43 169 -30 235 39 45 47 69 116 59 169 -59 284
+-251 1098 -265 1126 -11 21 -32 47 -47 58 -16 10 -154 83 -308 161 l-280 143
+3 412 c2 226 7 414 10 417 4 4 122 46 262 94 140 48 278 96 306 106 50 19 101
+63 124 108 20 39 250 812 250 841 0 38 -19 90 -47 128 -71 96 -236 97 -316 2
+-27 -32 -32 -46 -161 -474 -41 -136 -76 -249 -78 -251 -2 -1 -103 -37 -226
+-79 l-223 -76 -1108 0 -1109 0 -242 83 c-133 46 -246 90 -250 98 -5 8 -52 158
+-105 334 -53 176 -107 339 -120 362 -18 29 -40 49 -77 67 -62 31 -117 33 -173
+7z"/>
+                </g>
+            </svg>
+        </button>
+        <div id="windowTitleGroup">
+            <img id="windowTitleIcon" src="icon.png" alt="">
+            <span id="versionLabel" style="font-size:11px;color:#909090;margin-left:-5px;user-select:none;">v?</span>
+        </div>
+        <div id="windowButtons">
+            <button id="windowMinimize" class="window-btn window-btn-min" aria-label="Minimize">
+                <span class="window-icon window-icon-min"></span>
+            </button>
+            <button id="windowMaximize" class="window-btn window-btn-max" aria-label="Maximize">
+                <span class="window-icon window-icon-max"></span>
+            </button>
+            <button id="windowClose" class="window-btn window-btn-close" aria-label="Close">
+                <span class="window-icon window-icon-close"></span>
+            </button>
+        </div>
+    </div>
+
+    <div id="app">
+        <div id="windowTitlebarBg"></div>
+        <div id="topbar">
+            <div id="statusCapsule">
+                <div id="statusDot"></div>
+                <span id="statusText">Offline</span>
+            </div>
+            <div id="tabs">
+                <button id="addTab">+</button>
+            </div>
+
+            <button class="icon-btn" id="client" title="Settings">
+                <svg viewBox="0 0 512 512" fill="none" stroke="currentColor" style="stroke-width: 43 !important">
+                    <path d="M262.29,192.31a64,64,0,1,0,57.4,57.4A64.13,64.13,0,0,0,262.29,192.31ZM416.39,256a154.34,154.34,0,0,1-1.53,20.79l45.21,35.46A10.81,10.81,0,0,1,462.52,326l-42.77,74a10.81,10.81,0,0,1-13.14,4.59l-44.9-18.08a16.11,16.11,0,0,0-15.17,1.75A164.48,164.48,0,0,1,325,400.8a15.94,15.94,0,0,0-8.82,12.14l-6.73,47.89A11.08,11.08,0,0,1,298.77,470H213.23a11.11,11.11,0,0,1-10.69-8.87l-6.72-47.82a16.07,16.07,0,0,0-9-12.22,155.3,155.3,0,0,1-21.46-12.57,16,16,0,0,0-15.11-1.71l-44.89,18.07a10.81,10.81,0,0,1-13.14-4.58l-42.77-74a10.8,10.8,0,0,1,2.45-13.75l38.21-30a16.05,16.05,0,0,0,6-14.08c-.36-4.17-.58-8.33-.58-12.5s.21-8.27.58-12.35a16,16,0,0,0-6.07-13.94l-38.19-30A10.81,10.81,0,0,1,49.48,186l42.77-74a10.81,10.81,0,0,1,13.14-4.59l44.9,18.08a16.11,16.11,0,0,0,15.17-1.75A164.48,164.48,0,0,1,187,111.2a15.94,15.94,0,0,0,8.82-12.14l6.73-47.89A11.08,11.08,0,0,1,213.23,42h85.54a11.11,11.11,0,0,1,10.69,8.87l6.72,47.82a16.07,16.07,0,0,0,9,12.22,155.3,155.3,0,0,1,21.46,12.57,16,16,0,0,0,15.11,1.71l44.89-18.07a10.81,10.81,0,0,1,13.14,4.58l42.77,74a10.8,10.8,0,0,1-2.45,13.75l-38.21,30a16.05,16.05,0,0,0-6.05,14.08C416.17,247.67,416.39,251.83,416.39,256Z" />
+                </svg>
+            </button>
+
+            <button class="icon-btn" id="scriptHub" title="Script Hub">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path d="M4 22h14a2 2 0 0 0 2-2V7l-5-5H6a2 2 0 0 0-2 2v4"></path>
+                    <path d="M14 2v4a2 2 0 0 0 2 2h4"></path>
+                    <path d="m5 12-3 3 3 3"></path>
+                    <path d="m9 18 3-3-3-3"></path>
+                </svg>
+            </button>
+
+            <button class="icon-btn" id="tabBrowser" title="Tab Browser">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path d="M20 7h-9"></path>
+                    <path d="M14 17H5"></path>
+                    <circle cx="17" cy="17" r="3"></circle>
+                    <circle cx="7" cy="7" r="3"></circle>
+                </svg>
+            </button>
+
+            <button class="icon-btn" id="open" title="Open">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path d="m6 14 1.5-2.9A2 2 0 0 1 9.24 10H20a2 2 0 0 1 1.94 2.5l-1.54 6a2 2 0 0 1-1.95 1.5H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3.9a2 2 0 0 1 1.69.9l.81 1.2a2 2 0 0 0 1.67.9H18a2 2 0 0 1 2 2v2"></path>
+                </svg>
+            </button>
+
+            <button class="icon-btn" id="save" title="Save">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
+                    <polyline points="17 21 17 13 7 13 7 21" />
+                    <polyline points="7 3 7 8 15 8" />
+                </svg>
+            </button>
+
+            <button class="icon-btn" id="clear" title="Clear Script">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <polyline points="3 6 5 6 21 6" />
+                    <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6" />
+                    <path d="M10 11v6M14 11v6" />
+                    <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
+                </svg>
+            </button>
+
+            <button id="execute" class="run-btn">▶ Execute</button>
+        </div>
+
+        <div id="editorWrap">
+            <div id="editorContainer">
+                <div id="leftSidebar">
+                    <div class="sidebar-tab active" id="editorTab" title="Editor">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <polyline points="16 18 22 12 16 6"></polyline>
+                            <polyline points="8 6 2 12 8 18"></polyline>
+                        </svg>
+                    </div>
+                    <div class="sidebar-tab" id="htmlOutputTab" title="HTML Output">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                            <line x1="8" y1="21" x2="16" y2="21"></line>
+                            <line x1="12" y1="17" x2="12" y2="21"></line>
+                        </svg>
+                    </div>
+                </div>
+
+                <div id="mainContent">
+                    <div id="editor" class="active"></div>
+                    <iframe id="htmlOutput"></iframe>
+                    <div id="htmlOutputLabel"></div>
+                </div>
+            </div>
+
+            <div id="consoleHandle"></div>
+
+            <div id="consoleWrap">
+                <div id="consoleTop">
+                    <span>Console</span>
+                    <button id="clearConsole" class="icon-btn">Clear</button>
+                </div>
+                <div id="console"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="settingsMenu">
+        <div class="settings-header">
+            <h3>Settings</h3>
+            <button class="settings-close" id="closeSettings">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
+        </div>
+        <div class="settings-body">
+            <div class="settings-section">
+                <div class="settings-section-title">Editor</div>
+                <div class="settings-item">
+                    <span class="settings-label">Font Size</span>
+                    <select class="settings-select" id="fontSize">
+                        <option value="12" selected>12px</option>
+                        <option value="14">14px</option>
+                        <option value="16">16px</option>
+                        <option value="18">18px</option>
+                    </select>
+                </div>
+                <div class="settings-item">
+                    <span class="settings-label">Show Minimap</span>
+                    <div class="settings-toggle active" id="toggleMinimap"></div>
+                </div>
+                <div class="settings-item">
+                    <span class="settings-label">Word Wrap</span>
+                    <div class="settings-toggle" id="toggleWordWrap"></div>
+                </div>
+            </div>
+
+            <div class="settings-section">
+                <div class="settings-section-title">Execution</div>
+                <div class="settings-item">
+                    <span class="settings-label">Execution Mode</span>
+                    <select class="settings-select" id="executionMode">
+                        <option value="browser" selected>Browser Execution</option>
+                        <option value="local">Local Execution</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="settings-section">
+                <div class="settings-section-title">Window</div>
+                <div class="settings-item">
+                    <span class="settings-label">Always On Top</span>
+                    <div class="settings-toggle active" id="toggleAlwaysOnTop"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="toastContainer"></div>
+
+    <div id="modalOverlay">
+        <div id="modal">
+            <h3 id="modalTitle"></h3>
+            <p id="modalText"></p>
+            <div id="modalActions">
+                <button class="modal-btn cancel" id="modalCancel">Cancel</button>
+                <button class="modal-btn confirm" id="modalConfirm">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="node_modules/monaco-editor/min/vs/loader.js"></script>
+    <script>
+        window.addEventListener('DOMContentLoaded', () => {
+            const splash = document.getElementById('startup-splash');
+            const appContainer = document.getElementById('app');
+            const body = document.body;
+            const windowChrome = document.getElementById('windowChrome');
+            const titleIcon = document.getElementById('windowTitleIcon');
+            const bugButton = document.getElementById('bugButton');
+            if (bugButton) {
+                bugButton.onclick = () => {
+                    showModal('Report Bugs', 'Report bugs to Discord server?', () => {
+                        if (window.shell && typeof window.shell.openExternal === 'function') {
+                            window.shell.openExternal('https://discord.gg/YOUR_INVITE_HERE');
+                        } else {
+                            window.open('https://discord.gg/YOUR_INVITE_HERE', '_blank');
+                        }
+                    }, null);
+                };
+            }
+            const versionLabel = document.getElementById('versionLabel');
+            if (versionLabel) {
+                if (window.appInfo && typeof window.appInfo.getVersion === 'function') {
+                    window.appInfo.getVersion().then(v => {
+                        versionLabel.textContent = 'v' + v;
+                    }).catch(() => {
+                        versionLabel.textContent = 'v0.2.3';
+                    });
+                } else {
+                    versionLabel.textContent = 'v0.2.3';
+                }
+            }
+            let startupRevealStarted = false;
+
+            const markTitleIconReady = () => {
+                body.classList.add('title-icon-ready');
+            };
+
+            const startStartupReveal = () => {
+                if (startupRevealStarted) return;
+                startupRevealStarted = true;
+                body.classList.add('startup-intro-running');
+
+                setTimeout(() => {
+                    splash.classList.add('splash-fade-out');
+                    appContainer.classList.add('expanded');
+                    if (windowChrome) {
+                        windowChrome.hidden = false;
+                    }
+                    body.classList.remove('startup-active');
+                    setTimeout(() => {
+                        splash.remove();
+                    }, 800);
+                }, 2400);
+            };
+
+            if (titleIcon) {
+                if (titleIcon.complete && titleIcon.naturalWidth > 0) {
+                    markTitleIconReady();
+                } else {
+                    titleIcon.addEventListener('load', markTitleIconReady, { once: true });
+                }
+            }
+
+            if (typeof window.startupEvents?.onWindowExpanded === 'function') {
+                const unsubscribeExpanded = window.startupEvents.onWindowExpanded(() => {
+                    if (typeof unsubscribeExpanded === 'function') {
+                        unsubscribeExpanded();
+                    }
+                    startStartupReveal();
+                });
+            } else {
+                // Fallback for non-Electron contexts.
+                setTimeout(() => {
+                    startStartupReveal();
+                }, 1800);
+            }
+        });
+
+        const consoleEl = document.getElementById("console");
+        const windowMinimizeBtn = document.getElementById("windowMinimize");
+        const windowMaximizeBtn = document.getElementById("windowMaximize");
+        const windowCloseBtn = document.getElementById("windowClose");
+
+        if (window.windowControls) {
+            windowMinimizeBtn.addEventListener("click", () => {
+                window.windowControls.minimize();
+            });
+            windowMaximizeBtn.addEventListener("click", () => {
+                window.windowControls.maximizeToggle();
+            });
+            windowCloseBtn.addEventListener("click", () => {
+                window.windowControls.close();
+            });
+        }
+
+        const SCRIPT_LIBRARY = [
+            {
+                id: 'scrape-table',
+                name: 'Scrape Table to Console',
+                category: 'Web Scraping',
+                description: 'Extract all tables from the current page',
+                icon: '📊',
+                code: `const tables = document.querySelectorAll('table');
+console.log(\`Found \${tables.length} tables\`);
+tables.forEach((table, index) => {
+            console.log(\`\\n=== Table \${index + 1} ===\`);
+            const rows = table.querySelectorAll('tr');
+            rows.forEach(row => {
+                const cells = Array.from(row.cells).map(cell => cell.textContent.trim());
+                console.log(cells.join(' | '));
+            });
+});`
+            },
+            {
+                id: 'remove-ads',
+                name: 'Remove Common Ads',
+                category: 'Page Modification',
+                description: 'Hide common ad elements from the page',
+                icon: '🚫',
+                code: `const adSelectors = ['[id*="ad"]', '[class*="ad"]', '[id*="banner"]', '[class*="banner"]'];
+let removedCount = 0;
+adSelectors.forEach(selector => {
+            document.querySelectorAll(selector).forEach(el => {
+                el.remove();
+                removedCount++;
+            });
+});
+console.log(\`Removed \${removedCount} ad elements\`);`
+            },
+            {
+                id: 'extract-links',
+                name: 'Extract All Links',
+                category: 'Web Scraping',
+                description: 'Get all links from the current page',
+                icon: '🔗',
+                code: `const links = Array.from(document.querySelectorAll('a[href]'))
+            .map(a => ({
+                text: a.textContent.trim(),
+                url: a.href
+            }))
+            .filter(link => link.text && link.url);
+console.log(\`Found \${links.length} links:\`);
+console.table(links);`
+            },
+            {
+                id: 'dark-mode',
+                name: 'Force Dark Mode',
+                category: 'Page Modification',
+                description: 'Apply dark mode to any website',
+                icon: '🌙',
+                code: `const style = document.createElement('style');
+style.innerHTML = \`
+            * {
+                background-color: #1a1a1a !important;
+                color: #a0a0a0 !important;
+                border-color: #333 !important;
+            }
+            img, video { filter: brightness(0.8) !important; }
+\`;
+document.head.appendChild(style);
+console.log('Dark mode applied!');`
+            }
+        ];
+
+        function showScriptHub() {
+            const existing = document.getElementById('scriptHubModal');
+            if (existing) existing.remove();
+
+            const overlay = document.createElement('div');
+            overlay.id = 'scriptHubModal';
+            overlay.className = 'modal-backdrop';
+
+            const modal = document.createElement('div');
+            modal.className = 'modal-content';
+            modal.style.cssText = `width:90%;max-width:800px;max-height:80vh;display:flex;flex-direction:column;`;
+
+            const header = document.createElement('div');
+            header.className = 'script-hub-header';
+            header.innerHTML = `<h2>Script Hub</h2>
+                        <button id="closeScriptHub" class="settings-close">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="18" y1="6" x2="6" y2="18"></line>
+                                <line x1="6" y1="6" x2="18" y2="18"></line>
+                            </svg>
+                        </button>`;
+
+            const scriptGrid = document.createElement('div');
+            scriptGrid.className = 'script-hub-grid';
+
+            SCRIPT_LIBRARY.forEach(script => {
+                const card = document.createElement('div');
+                card.className = 'script-hub-card';
+                card.innerHTML = `<div class="script-hub-card-icon">${script.icon}</div>
+                            <div class="script-hub-card-name">${script.name}</div>
+                            <div class="script-hub-card-category">${script.category}</div>
+                            <div class="script-hub-card-description">${script.description}</div>`;
+
+                card.addEventListener('click', () => {
+                    loadScriptToEditor(script);
+                    closeScriptHub();
+                });
+
+                scriptGrid.appendChild(card);
+            });
+
+            modal.appendChild(header);
+            modal.appendChild(scriptGrid);
+            overlay.appendChild(modal);
+            document.body.appendChild(overlay);
+
+            const app = document.getElementById('app');
+            app.classList.add('ui-blur');
+
+            const closeScriptHub = () => {
+                overlay.classList.add('hide');
+                setTimeout(() => {
+                    overlay.remove();
+                    app.classList.remove('ui-blur');
+                }, 200);
+            };
+
+            document.getElementById('closeScriptHub').onclick = closeScriptHub;
+            overlay.addEventListener('click', (e) => {
+                if (e.target === overlay) closeScriptHub();
+            });
+        }
+
+        function loadScriptToEditor(script) {
+            showModal(
+                "Load Script",
+                `Load "${script.name}" into a new tab or replace current tab?`,
+                () => {
+                    createTab(script.name);
+                    if (editor) {
+                        editor.setValue(script.code);
+                    }
+                    showToast(`Loaded: ${script.name}`);
+                    pushConsole('log', `Loaded script: ${script.name}`);
+                },
+                () => {
+                    if (editor) {
+                        editor.setValue(script.code);
+                    }
+                    if (activeTabId && tabs[activeTabId]) {
+                        tabs[activeTabId].name = script.name;
+                        const activeTab = document.querySelector('.tab.active span');
+                        if (activeTab) {
+                            activeTab.textContent = script.name;
+                        }
+                    }
+                    showToast(`Loaded: ${script.name}`);
+                    pushConsole('log', `Loaded script: ${script.name}`);
+                }
+            );
+        }
+
+        function pushConsole(type, ...args) {
+            const line = document.createElement("div");
+            line.className = `entry ${type}`;
+            line.textContent = `[${new Date().toLocaleTimeString()}] ` + args.join(" ");
+            consoleEl.appendChild(line);
+            consoleEl.scrollTop = consoleEl.scrollHeight;
+        }
+
+        function showToast(message) {
+            const toastContainer = document.getElementById('toastContainer');
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+
+            // Limit to 5 notifications
+            while (toastContainer.children.length >= 5) {
+                toastContainer.removeChild(toastContainer.firstChild);
+            }
+
+            // Determine icon based on message content
+            let icon = '✅';
+            if (message.toLowerCase().includes('save')) icon = '💾';
+            else if (message.toLowerCase().includes('load')) icon = '📂';
+            else if (message.toLowerCase().includes('open')) icon = '📁';
+            else if (message.toLowerCase().includes('clear')) icon = '🗑️';
+            else if (message.toLowerCase().includes('switched') || message.toLowerCase().includes('mode')) icon = '🔄';
+            else if (message.toLowerCase().includes('sent')) icon = '📤';
+            else if (message.toLowerCase().includes('no code')) icon = '⚠️';
+            else if (message.toLowerCase().includes('no browser')) icon = '❌';
+
+            toast.innerHTML = `<span class="toast-icon">${icon}</span><span>${message}</span>`;
+            toastContainer.appendChild(toast);
+
+            setTimeout(() => {
+                toast.classList.add('fade-out');
+                setTimeout(() => toast.remove(), 200);
+            }, 1800);
+        }
+
+        ["log", "warn", "error"].forEach(type => {
+            const orig = console[type];
+            console[type] = (...args) => {
+                orig(...args);
+                pushConsole(type, ...args);
+            };
+        });
+
+        document.getElementById("clearConsole").onclick = () => {
+            consoleEl.innerHTML = "";
+        };
+
+        let editor;
+
+        // 1. Tell the loader where the core files are
+        require.config({ paths: { vs: 'node_modules/monaco-editor/min/vs' } });
+
+        // 2. Tell the environment where the background workers are
+        window.MonacoEnvironment = {
+            getWorkerUrl: function (moduleId, label) {
+                if (label === 'json') {
+                    return './node_modules/monaco-editor/min/vs/language/json/json.worker.js';
+                }
+                if (label === 'css' || label === 'scss' || label === 'less') {
+                    return './node_modules/monaco-editor/min/vs/language/css/css.worker.js';
+                }
+                if (label === 'html' || label === 'handlebars' || label === 'razor') {
+                    return './node_modules/monaco-editor/min/vs/language/html/html.worker.js';
+                }
+                if (label === 'typescript' || label === 'javascript') {
+                    return './node_modules/monaco-editor/min/vs/language/typescript/ts.worker.js';
+                }
+                return './node_modules/monaco-editor/min/vs/base/worker/workerMain.js';
+            }
+        };
+
+        setTimeout(() => {
+            require(['vs/editor/editor.main'], function () {
+                // Define custom VS Code-inspired color theme
+                monaco.editor.defineTheme('voltus-color', {
+                    base: 'vs-dark',
+                    inherit: true,
+                    rules: [
+                        { token: 'comment', foreground: '6A9955' },
+                        { token: 'keyword', foreground: 'C586C0', fontStyle: 'bold' },
+                        { token: 'string', foreground: 'CE9178' },
+                        { token: 'number', foreground: 'B5CEA8' },
+                        { token: 'regexp', foreground: 'D16969' },
+                        { token: 'operator', foreground: 'D4D4D4' },
+                        { token: 'namespace', foreground: '4EC9B0' },
+                        { token: 'type', foreground: '4EC9B0' },
+                        { token: 'struct', foreground: '4EC9B0' },
+                        { token: 'class', foreground: '4EC9B0' },
+                        { token: 'interface', foreground: '4EC9B0' },
+                        { token: 'enum', foreground: '4EC9B0' },
+                        { token: 'typeParameter', foreground: '4EC9B0' },
+                        { token: 'function', foreground: 'DCDCAA' },
+                        { token: 'member', foreground: 'DCDCAA' },
+                        { token: 'macro', foreground: 'DCDCAA' },
+                        { token: 'variable', foreground: '9CDCFE' },
+                        { token: 'parameter', foreground: '9CDCFE' },
+                        { token: 'property', foreground: '9CDCFE' },
+                        { token: 'label', foreground: 'C8C8C8' },
+                        { token: 'constant', foreground: '4FC1FF' },
+                        { token: 'identifier', foreground: '9CDCFE' },
+                        { token: 'delimiter', foreground: 'D4D4D4' }
+                    ],
+                    colors: {
+                        'editor.background': '#000000',
+                        'editor.foreground': '#D4D4D4',
+                        'editor.lineHighlightBackground': '#0f0f0f', <!--#0a0a0a-->
+                        'editorLineNumber.foreground': '#404040',
+                        'editorLineNumber.activeForeground': '#C6C6C6',
+                        'editor.selectionBackground': '#264F78',
+                        'editorCursor.foreground': '#AEAFAD',
+                        'editorWhitespace.foreground': '#1a1a1a',
+                        'editor.findMatchBackground': '#515C6A',
+                        'editor.findMatchHighlightBackground': '#314365'
+                    },
+                    semanticTokenColors: {
+                        'function': '#DCDCAA',
+                        'method': '#DCDCAA',
+                        'variable': '#9CDCFE',
+                        'parameter': '#9CDCFE',
+                        'property': '#9CDCFE',
+                        'class': '#4EC9B0',
+                        'interface': '#4EC9B0',
+                        'namespace': '#4EC9B0',
+                        'type': '#4EC9B0'
+                    }
+                });
+
+                editor = monaco.editor.create(document.getElementById('editor'), {
+                    value: '\n',
+                    language: 'javascript',
+                    theme: 'voltus-color',
+                    fontSize: 12,
+                    minimap: { enabled: true },
+                    scrollBeyondLastLine: false,
+                    automaticLayout: true,
+                    lineNumbers: 'on',
+                    renderLineHighlight: 'all',
+                    wordWrap: 'off',
+                    glyphMargin: false,
+                    folding: true,
+                    lineDecorationsWidth: 0,
+                    lineNumbersMinChars: 3,
+                    padding: { top: 10, bottom: 10 },
+                    cursorSmoothCaretAnimation: 'on',
+                    cursorBlinking: 'smooth',
+                    smoothScrolling: true,
+                    semanticHighlighting: { enabled: true }
+                });
+
+                // Auto-save content on change
+                editor.onDidChangeModelContent(() => {
+                    if (activeTabId && tabs[activeTabId]) {
+                        tabs[activeTabId].content = editor.getValue();
+                    }
+                });
+
+                // Keep Monaco sized correctly across window and panel resizes.
+                const editorElement = document.getElementById('editor');
+                const editorContainer = document.getElementById('editorContainer');
+                const editorWrap = document.getElementById('editorWrap');
+                const consoleWrap = document.getElementById('consoleWrap');
+                let editorLayoutRaf = null;
+
+                const scheduleEditorLayout = () => {
+                    if (!editor) return;
+                    if (editorLayoutRaf !== null) {
+                        cancelAnimationFrame(editorLayoutRaf);
+                    }
+                    editorLayoutRaf = requestAnimationFrame(() => {
+                        editorLayoutRaf = null;
+                        const width = editorElement.clientWidth;
+                        const height = editorElement.clientHeight;
+                        if (width > 0 && height > 0) {
+                            editor.layout({ width, height });
+                        }
+                    });
+                };
+
+                scheduleEditorLayout();
+                window.addEventListener('resize', scheduleEditorLayout);
+
+                if (typeof ResizeObserver === 'function') {
+                    const layoutObserver = new ResizeObserver(scheduleEditorLayout);
+                    layoutObserver.observe(editorElement);
+                    layoutObserver.observe(editorContainer);
+                    layoutObserver.observe(editorWrap);
+                    layoutObserver.observe(consoleWrap);
+                }
+
+                // Console resize handlers
+                const consoleHandle = document.getElementById("consoleHandle");
+
+                let isDragging = false;
+                let startY = 0;
+                let startHeight = 0;
+
+                consoleHandle.addEventListener("mousedown", (e) => {
+                    isDragging = true;
+                    startY = e.clientY;
+                    startHeight = consoleWrap.offsetHeight;
+                    document.getElementById('htmlOutput').style.pointerEvents = 'none';
+                    e.preventDefault();
+                });
+
+                document.addEventListener("mousemove", (e) => {
+                    if (!isDragging) return;
+                    const deltaY = startY - e.clientY;
+                    const newHeight = startHeight + deltaY;
+                    const minHeight = 100;
+                    const maxHeight = window.innerHeight * 0.6;
+                    const clampedHeight = Math.max(minHeight, Math.min(maxHeight, newHeight));
+                    consoleWrap.style.height = clampedHeight + "px";
+                    scheduleEditorLayout();
+                });
+
+                document.addEventListener("mouseup", () => {
+                    if (isDragging) {
+                        isDragging = false;
+                        document.getElementById('htmlOutput').style.pointerEvents = 'auto';
+                        scheduleEditorLayout();
+                    }
+                });
+
+                // Create first tab after editor is ready
+                createTab();
+            });
+        }, 500);
+
+        const overlay = document.getElementById("modalOverlay");
+        const app = document.getElementById("app");
+        const titleEl = document.getElementById("modalTitle");
+        const textEl = document.getElementById("modalText");
+        const confirmBtn = document.getElementById("modalConfirm");
+        const cancelBtn = document.getElementById("modalCancel");
+
+        function showModal(title, text, onConfirm, onCancel = null) {
+            titleEl.textContent = title;
+            textEl.textContent = text;
+
+            if (title === "Load Script") {
+                confirmBtn.textContent = "New Tab";
+                cancelBtn.textContent = "Replace";
+            } else {
+                confirmBtn.textContent = "Confirm";
+                cancelBtn.textContent = "Cancel";
+            }
+
+            overlay.classList.remove('hide');
+            overlay.classList.add("show");
+            
+            // CHANGE THIS:
+            document.getElementById('app').classList.add("ui-blur");
+
+            const close = () => {
+                overlay.classList.remove('show');
+                overlay.classList.add('hide');
+                setTimeout(() => {
+                    overlay.classList.remove('hide');
+                    // CHANGE THIS:
+                    document.getElementById('app').classList.remove("ui-blur");
+                }, 200);
+            };
+
+            cancelBtn.onclick = () => {
+                if (onCancel) {
+                    close();
+                    setTimeout(() => onCancel(), 200);
+                } else {
+                    close();
+                }
+            };
+
+            confirmBtn.onclick = () => {
+                close();
+                setTimeout(() => onConfirm?.(), 200);
+            };
+        }
+
+        const tabsEl = document.getElementById("tabs");
+        const addTabBtn = document.getElementById("addTab");
+
+        // Enable horizontal scrolling with mouse wheel
+        tabsEl.addEventListener('wheel', (e) => {
+            if (e.deltaY !== 0) {
+                e.preventDefault();
+                tabsEl.scrollLeft += e.deltaY;
+            }
+        });
+
+        let tabCounter = 0;
+        const tabs = {};
+        let activeTabId = null;
+        let selectedExecutionTarget = 'active';
+        let extensionBridgeSubscribed = false;
+        let extensionBridgeStatus = null;
+        let browserTabCache = [];
+        let selectedBrowserTabIds = [];
+        let activeBrowserTabId = null;
+
+        function updateTabButtons() {
+            const all = [...document.querySelectorAll(".tab")];
+            const onlyOne = all.length === 1;
+            all.forEach(tab => {
+                const btn = tab.querySelector("button");
+                btn.textContent = onlyOne ? "✎" : "✕";
+            });
+        }
+
+        function startRename(titleEl, id) {
+            const input = document.createElement("input");
+            input.value = titleEl.textContent;
+            input.style.cssText = `width:100%;background:#000;color:#a0a0a0;border:1px solid#2a2a2a;border-radius:4px;padding:2px 6px;font-size:12px;outline:none;`;
+
+            const parent = titleEl.parentNode;
+            parent.insertBefore(input, titleEl);
+            titleEl.style.display = 'none';
+            input.focus();
+            input.select();
+
+            const finish = save => {
+                if (save && input.value.trim()) {
+                    titleEl.textContent = input.value.trim();
+                    tabs[id].name = input.value.trim();
+                    renderTabBrowserList();
+                }
+                titleEl.style.display = '';
+                input.remove();
+            };
+
+            input.onblur = () => finish(true);
+            input.onkeydown = e => {
+                if (e.key === "Enter") finish(true);
+                if (e.key === "Escape") finish(false);
+            };
+        }
+
+        function createTab(name = null) {
+            tabCounter++;
+            const id = "tab" + tabCounter;
+
+            if (!name) {
+                name = "Script " + tabCounter;
+            }
+
+            const tab = document.createElement("div");
+            tab.className = "tab";
+
+            const title = document.createElement("span");
+            title.textContent = name;
+            title.ondblclick = e => {
+                e.stopPropagation();
+                startRename(title, id);
+            };
+
+            const btn = document.createElement("button");
+
+            btn.onclick = e => {
+                e.stopPropagation();
+                const count = document.querySelectorAll(".tab").length;
+
+                if (count === 1) {
+                    startRename(title, id);
+                    return;
+                }
+
+                const wasActive = tab.classList.contains("active");
+                tab.remove();
+                delete tabs[id];
+
+                if (wasActive) {
+                    const firstTab = document.querySelector(".tab");
+                    if (firstTab) firstTab.click();
+                }
+                updateTabButtons();
+                renderTabBrowserList();
+            };
+
+            tab.append(title, btn);
+
+            tab.onclick = () => {
+                if (activeTabId && tabs[activeTabId]) {
+                    if (document.getElementById('editor').classList.contains('active')) {
+                        tabs[activeTabId].content = editor.getValue();
+                    }
+                }
+
+                document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+                tab.classList.add("active");
+                activeTabId = id;
+
+                if (editor) {
+                    editor.setValue(tabs[id].content);
+                }
+
+                if (document.getElementById('htmlOutput').classList.contains('active')) {
+                    document.getElementById('editorTab').click();
+                }
+            };
+
+            tabs[id] = { name, content: `` };
+
+            tabsEl.insertBefore(tab, addTabBtn);
+            tab.click();
+            updateTabButtons();
+            renderTabBrowserList();
+        }
+
+        addTabBtn.onclick = () => createTab();
+
+        document.getElementById("clear").onclick = () => {
+            showModal("Clear Script", "This will erase everything in this tab.", () => {
+                if (editor) {
+                    editor.setValue("");
+                    showToast('Script cleared')
+                }
+                pushConsole("warn", "Script cleared");
+            });
+        };
+
+        document.getElementById("save").onclick = () => {
+            const code = editor.getValue();
+            if (!code.trim()) {
+                pushConsole("warn", "No code to save");
+                showToast('No code to save');
+                return;
+            }
+
+            const currentTabName = tabs[activeTabId].name;
+            const blob = new Blob([code], { type: 'text/javascript' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${currentTabName}.js`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            pushConsole("log", `Script saved as ${currentTabName}.js`);
+            showToast('Script saved');
+        };
+
+        document.getElementById("open").onclick = () => {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.js,.txt';
+            input.multiple = true;
+
+            input.onchange = (e) => {
+                const files = Array.from(e.target.files);
+                if (files.length === 0) return;
+
+                let filesLoaded = 0;
+
+                files.forEach((file) => {
+                    const reader = new FileReader();
+
+                    reader.onload = (event) => {
+                        const content = event.target.result;
+                        const fileName = file.name.replace(/\.[^/.]+$/, "");
+
+                        createTab(fileName);
+                        tabs[activeTabId].content = content;
+                        if (editor) {
+                            editor.setValue(content);
+                        }
+
+                        filesLoaded++;
+
+                        if (filesLoaded === files.length) {
+                            showToast(`Opened ${files.length} file(s)`);
+                            pushConsole("log", `Opened ${files.length} file(s)`);
+                        }
+                    };
+
+                    reader.readAsText(file);
+                });
+            };
+
+            input.click();
+        };
+
+        let executionMode = 'browser';
+
+        document.getElementById('editorTab').onclick = function () {
+            document.querySelectorAll('.sidebar-tab').forEach(t => t.classList.remove('active'));
+            this.classList.add('active');
+            document.getElementById('editor').classList.add('active');
+            document.getElementById('htmlOutput').classList.remove('active');
+            document.getElementById('htmlOutputLabel').classList.remove('active');
+            document.getElementById('consoleWrap').classList.remove('active');
+            document.getElementById('consoleHandle').classList.remove('active');
+            if (editor) {
+                requestAnimationFrame(() => editor.layout());
+            }
+        };
+
+        document.getElementById('htmlOutputTab').onclick = function () {
+            document.querySelectorAll('.sidebar-tab').forEach(t => t.classList.remove('active'));
+            this.classList.add('active');
+            document.getElementById('htmlOutput').classList.add('active');
+            document.getElementById('editor').classList.remove('active');
+            document.getElementById('consoleWrap').classList.add('active');
+            document.getElementById('consoleHandle').classList.add('active');
+
+            const label = document.getElementById('htmlOutputLabel');
+            if (label.textContent) {
+                label.classList.add('active');
+            }
+        };
+
+        document.getElementById("scriptHub").onclick = () => {
+            showScriptHub();
+        };
+
+        const settingsMenu = document.getElementById('settingsMenu');
+        const settingsBtn = document.getElementById('client');
+        const closeSettingsBtn = document.getElementById('closeSettings');
+
+        settingsBtn.onclick = () => {
+            if (settingsMenu.classList.contains('show')) {
+                settingsMenu.classList.remove('show');
+                settingsMenu.classList.add('hide');
+                setTimeout(() => {
+                    settingsMenu.classList.remove('hide');
+                    app.classList.remove('ui-blur');
+                }, 200);
+            } else {
+                settingsMenu.classList.remove('hide');
+                settingsMenu.classList.add('show');
+                app.classList.add('ui-blur');
+            }
+        };
+
+        closeSettingsBtn.onclick = () => {
+            settingsMenu.classList.remove('show');
+            settingsMenu.classList.add('hide');
+            setTimeout(() => {
+                settingsMenu.classList.remove('hide');
+                app.classList.remove('ui-blur');
+            }, 200);
+        };
+
+        document.addEventListener('click', (e) => {
+            if (settingsMenu.classList.contains('show') &&
+                !settingsMenu.contains(e.target) &&
+                !settingsBtn.contains(e.target)) {
+                settingsMenu.classList.remove('show');
+                settingsMenu.classList.add('hide');
+                setTimeout(() => {
+                    settingsMenu.classList.remove('hide');
+                    app.classList.remove('ui-blur');
+                }, 200);
+            }
+        });
+
+        document.getElementById('fontSize').onchange = (e) => {
+            if (editor) {
+                editor.updateOptions({ fontSize: parseInt(e.target.value) });
+            }
+        };
+
+        document.getElementById('toggleMinimap').onclick = function () {
+            this.classList.toggle('active');
+            if (editor) {
+                editor.updateOptions({ minimap: { enabled: this.classList.contains('active') } });
+            }
+        };
+
+        document.getElementById('toggleWordWrap').onclick = function () {
+            this.classList.toggle('active');
+            if (editor) {
+                editor.updateOptions({ wordWrap: this.classList.contains('active') ? 'on' : 'off' });
+            }
+        };
+
+        const alwaysOnTopToggle = document.getElementById('toggleAlwaysOnTop');
+        const setAlwaysOnTopToggleUI = (enabled) => {
+            alwaysOnTopToggle.classList.toggle('active', Boolean(enabled));
+        };
+
+        alwaysOnTopToggle.onclick = async function () {
+            const targetEnabled = !this.classList.contains('active');
+            if (!window.windowControls?.setAlwaysOnTop) {
+                setAlwaysOnTopToggleUI(targetEnabled);
+                return;
+            }
+            try {
+                const applied = await window.windowControls.setAlwaysOnTop(targetEnabled);
+                setAlwaysOnTopToggleUI(applied);
+            } catch {
+                setAlwaysOnTopToggleUI(targetEnabled);
+            }
+        };
+
+        if (window.windowControls?.getAlwaysOnTop) {
+            window.windowControls.getAlwaysOnTop().then(setAlwaysOnTopToggleUI).catch(() => { });
+        }
+
+        document.getElementById('executionMode').onchange = (e) => {
+            executionMode = e.target.value;
+            showToast(`Switched to ${e.target.value === 'local' ? 'Local' : 'Browser'} mode`);
+        };
+
+        function normalizeBrowserTabList(rawData) {
+            const list = Array.isArray(rawData) ? rawData : [];
+            return list
+                .filter(tab => tab && tab.id !== undefined && tab.id !== null)
+                .map(tab => ({
+                    id: tab.id,
+                    title: tab.title || 'Untitled Tab',
+                    url: tab.url || ''
+                }));
+        }
+
+        function applyBrowserTabList(rawData) {
+            browserTabCache = normalizeBrowserTabList(rawData);
+            const availableIds = new Set(browserTabCache.map(tab => tab.id));
+            selectedBrowserTabIds = selectedBrowserTabIds.filter(id => availableIds.has(id));
+
+            if (!activeBrowserTabId || !availableIds.has(activeBrowserTabId)) {
+                activeBrowserTabId = browserTabCache.length > 0 ? browserTabCache[0].id : null;
+            }
+        }
+
+        function handleExtensionMessage(rawMessage) {
+            let message;
+            try {
+                message = typeof rawMessage === 'string' ? JSON.parse(rawMessage) : rawMessage;
+            } catch {
+                return;
+            }
+
+            if (!message || typeof message !== 'object') {
+                return;
+            }
+
+            if (message.type === 'TAB_LIST') {
+                applyBrowserTabList(message.data);
+                renderTabBrowserList();
+            }
+        }
+
+        function ensureExtensionBridgeSubscription() {
+            if (extensionBridgeSubscribed) return;
+
+            if (!window.extensionBridge) {
+                return;
+            }
+
+            if (typeof window.extensionBridge.onMessage === 'function') {
+                window.extensionBridge.onMessage((message) => {
+                    handleExtensionMessage(message);
+                });
+            }
+
+            if (typeof window.extensionBridge.onStatus === 'function') {
+                window.extensionBridge.onStatus((status) => {
+                    extensionBridgeStatus = status;
+                });
+            }
+
+            extensionBridgeSubscribed = true;
+        }
+
+        // This updates our floating capsule whenever the extension connects/disconnects
+        window.extensionBridge.onStatus((status) => {
+            const capsule = document.getElementById('statusCapsule');
+            const dot = document.getElementById('statusDot');
+            const text = document.getElementById('statusText');
+
+            if (status.connectedClients > 0) {
+                // TURN GREEN
+                capsule.classList.add('online');
+                dot.classList.add('online');
+                text.classList.add('online');
+                text.textContent = 'Online';
+            } else {
+                // TURN GREY
+                capsule.classList.remove('online');
+                dot.classList.remove('online');
+                text.classList.remove('online');
+                text.textContent = 'Offline';
+            }
+        });
+
+        async function ensureExtensionSocket() {
+            if (!window.extensionBridge || typeof window.extensionBridge.getStatus !== 'function') {
+                throw new Error('Electron extension bridge is unavailable');
+            }
+
+            ensureExtensionBridgeSubscription();
+
+            const status = await window.extensionBridge.getStatus();
+            extensionBridgeStatus = status;
+
+            if (!status || !status.serverRunning) {
+                throw new Error((status && status.error) || 'Bridge server is not running');
+            }
+
+            return status;
+        }
+
+        function sendExtensionMessage(payload) {
+            if (!window.extensionBridge || typeof window.extensionBridge.send !== 'function') {
+                throw new Error('Electron extension bridge is unavailable');
+            }
+
+            ensureExtensionBridgeSubscription();
+            window.extensionBridge.send(payload);
+        }
+
+        function getTargetBrowserTabIds() {
+            if (selectedExecutionTarget === 'all') {
+                return browserTabCache.map(tab => tab.id);
+            }
+
+            if (selectedExecutionTarget === 'selected') {
+                return selectedBrowserTabIds.slice();
+            }
+
+            if (activeBrowserTabId) {
+                return [activeBrowserTabId];
+            }
+
+            if (browserTabCache.length > 0) {
+                return [browserTabCache[0].id];
+            }
+
+            return [];
+        }
+
+        function renderTabBrowserList(statusMessage = '') {
+            const container = document.getElementById('tabListContainer');
+            if (!container) return;
+
+            container.innerHTML = '';
+
+            if (statusMessage) {
+                const status = document.createElement('div');
+                status.className = 'tab-item';
+                status.textContent = statusMessage;
+                container.appendChild(status);
+            }
+
+            if (browserTabCache.length === 0) {
+                const empty = document.createElement('div');
+                empty.className = 'tab-item';
+                empty.textContent = 'No browser tabs received from extension';
+                container.appendChild(empty);
+                return;
+            }
+
+            browserTabCache.forEach(tab => {
+                const item = document.createElement('div');
+                item.className = 'tab-item';
+                item.style.border = tab.id === activeBrowserTabId ? '1px solid #3a3a3a' : '1px solid transparent';
+
+                const info = document.createElement('div');
+                info.className = 'tab-item-info';
+
+                const title = document.createElement('div');
+                title.className = 'tab-item-name';
+                title.textContent = tab.title;
+
+                const meta = document.createElement('div');
+                meta.className = 'tab-item-url';
+                meta.textContent = tab.url;
+
+                info.appendChild(title);
+                info.appendChild(meta);
+
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.className = 'tab-checkbox';
+                checkbox.checked = selectedBrowserTabIds.includes(tab.id);
+                checkbox.disabled = selectedExecutionTarget !== 'selected';
+                checkbox.addEventListener('click', (event) => {
+                    event.stopPropagation();
+                });
+                checkbox.addEventListener('change', () => {
+                    window.toggleTabSelection(tab.id);
+                });
+
+                item.appendChild(info);
+                item.appendChild(checkbox);
+                item.addEventListener('click', () => {
+                    if (selectedExecutionTarget === 'selected') {
+                        window.toggleTabSelection(tab.id);
+                        return;
+                    }
+
+                    activeBrowserTabId = tab.id;
+                    renderTabBrowserList();
+                });
+                container.appendChild(item);
+            });
+        }
+
+        window.setExecMode = (mode) => {
+            selectedExecutionTarget = mode;
+            document.querySelectorAll('.mode-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.getAttribute('data-mode') === mode);
+            });
+            renderTabBrowserList();
+        };
+
+        window.toggleTabSelection = (id) => {
+            const idx = selectedBrowserTabIds.indexOf(id);
+            if (idx > -1) selectedBrowserTabIds.splice(idx, 1);
+            else selectedBrowserTabIds.push(id);
+            renderTabBrowserList();
+        };
+
+        async function refreshBrowserTabsInModal() {
+            renderTabBrowserList('Loading browser tabs...');
+            try {
+                await ensureExtensionSocket();
+                sendExtensionMessage({ type: 'GET_TABS' });
+            } catch (error) {
+                browserTabCache = [];
+                renderTabBrowserList('Could not connect to extension on ws://127.0.0.1:8181');
+                pushConsole("error", error.message);
+            }
+        }
+
+        function showTabBrowser() {
+            const existing = document.getElementById('tabBrowserModal');
+            if (existing) {
+                existing.remove();
+            }
+
+            const overlay = document.createElement('div');
+            overlay.id = 'tabBrowserModal';
+            overlay.className = 'modal-backdrop';
+
+            overlay.innerHTML = `
+                <div class="modal-content">
+                    <div class="tab-browser-header">
+                        <h3>Tab Browser</h3>
+                        <div style="display: flex; gap: 8px;">
+                            <button id="refreshTabBrowserBtn" class="settings-close" title="Refresh">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+                                </svg>
+                            </button>
+                            <button id="closeTabBrowserBtn" class="settings-close">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="tab-browser-body">
+                        <div class="settings-section">
+                            <div class="settings-section-title">Execution Target</div>
+                            <div class="mode-selector" style="margin-bottom: 20px;">
+                                <button class="mode-btn ${selectedExecutionTarget === 'active' ? 'active' : ''}" data-mode="active" onclick="setExecMode('active')">Active</button>
+                                <button class="mode-btn ${selectedExecutionTarget === 'all' ? 'active' : ''}" data-mode="all" onclick="setExecMode('all')">All</button>
+                                <button class="mode-btn ${selectedExecutionTarget === 'selected' ? 'active' : ''}" data-mode="selected" onclick="setExecMode('selected')">Select</button>
+                            </div>
+                        </div>
+
+                        <div class="settings-section">
+                            <div class="settings-section-title">Connected Tabs</div>
+                            <div id="tabListContainer" style="max-height: 280px; overflow-y: auto;"></div>
+                        </div>
+
+                        <div style="margin-top: 15px; font-size: 10px; color: rgba(255,255,255,0.2); font-family: monospace; text-align: center;">
+                            BRIDGE: WS://127.0.0.1:8181
+                        </div>
+                    </div>
+                </div>`;
+
+            document.body.appendChild(overlay);
+            document.getElementById('app').classList.add('ui-blur');
+            renderTabBrowserList('Loading browser tabs...');
+
+            document.getElementById('closeTabBrowserBtn').onclick = closeTabBrowser;
+            document.getElementById('refreshTabBrowserBtn').onclick = () => {
+                refreshBrowserTabsInModal();
+            };
+            
+            overlay.addEventListener('click', (e) => {
+                if (e.target === overlay) closeTabBrowser();
+            });
+
+            refreshBrowserTabsInModal();
+        }
+
+        function closeTabBrowser() {
+            const overlay = document.getElementById('tabBrowserModal');
+            if (overlay) {
+                overlay.classList.add('hide');
+                setTimeout(() => {
+                    overlay.remove();
+                    document.getElementById('app').classList.remove('ui-blur');
+                }, 200);
+            }
+        }
+
+        document.getElementById("tabBrowser").onclick = showTabBrowser;
+
+        window.addEventListener('message', (event) => {
+            if (event.data && event.data.isLocalLog) {
+                pushConsole(event.data.type, ...event.data.args);
+            }
+        });
+
+        function getCurrentEditorCode() {
+            if (activeTabId && tabs[activeTabId] && editor) {
+                tabs[activeTabId].content = editor.getValue();
+            }
+            return editor ? editor.getValue() : '';
+        }
+
+        function runCodeLocally(code) {
+            const htmlOutput = document.getElementById('htmlOutput');
+            const htmlDoc = htmlOutput.contentDocument || htmlOutput.contentWindow.document;
+            const serializedCode = JSON.stringify(code).replace(/<\//g, '<\\/');
+
+            htmlDoc.open();
+            htmlDoc.write(`
+                            <!DOCTYPE html>
+                            <html>
+                            <body style="background:#000;color:#909090;font-family:monospace;padding:20px;">
+                                <script>
+                                    (function() {
+                                        const userCode = ${serializedCode};
+                                        const relay = (type, args) => {
+                                            window.parent.postMessage({
+                                                isLocalLog: true,
+                                                type: type,
+                                                args: Array.from(args).map(arg => {
+                                                    try { return typeof arg === 'object' ? JSON.stringify(arg) : String(arg); }
+                                                    catch(e) { return String(arg); }
+                                                })
+                                            }, '*');
+                                        };
+
+                                        console.log = (...args) => relay('log', args);
+                                        console.warn = (...args) => relay('warn', args);
+                                        console.error = (...args) => relay('error', args);
+
+                                        try {
+                                            (0, eval)(userCode);
+                                        } catch (e) {
+                                            const detail = e && e.stack ? e.stack : String(e);
+                                            relay('error', [detail]);
+                                        }
+                                    })();
+                                <\/script>
+                            </body>
+                            </html>
+                        `);
+            htmlDoc.close();
+            document.getElementById('htmlOutputTab').click();
+        }
+
+        document.getElementById("execute").onclick = async () => {
+            const code = getCurrentEditorCode();
+
+            if (!code.trim()) {
+                showToast('No code to execute');
+                return;
+            }
+
+            if (executionMode === 'local') {
+                runCodeLocally(code);
+                return;
+            }
+
+            try {
+                await ensureExtensionSocket();
+            } catch (error) {
+                showToast('Extension not connected');
+                pushConsole("error", error.message);
+                return;
+            }
+
+            const targetTabIds = getTargetBrowserTabIds();
+            if (targetTabIds.length === 0) {
+                showToast('No browser tabs selected');
+                pushConsole("warn", "No browser tab targets available");
+                try {
+                    sendExtensionMessage({ type: 'GET_TABS' });
+                } catch { }
+                return;
+            }
+
+            try {
+                sendExtensionMessage({
+                    type: 'EXECUTE',
+                    code: code,
+                    target: selectedExecutionTarget,
+                    tabIds: targetTabIds
+                });
+                showToast(`Sent to ${targetTabIds.length} browser tab(s)`);
+                pushConsole("log", `Sent code to ${targetTabIds.length} browser tab(s)`);
+            } catch (error) {
+                showToast('Failed to send to extension');
+                pushConsole("error", error.message);
+            }
+        };
+    </script>
+</body>
+</html>
