@@ -341,6 +341,18 @@
                 background: #282828;
             }
 
+            .tab.dragging {
+                opacity: 0.55;
+            }
+
+            .tab.drag-over-left {
+                box-shadow: inset 2px 0 0 #6a6a6a;
+            }
+
+            .tab.drag-over-right {
+                box-shadow: inset -2px 0 0 #6a6a6a;
+            }
+
             .tab.active {
                 background: #3e3e3e;
             }
@@ -2327,12 +2339,31 @@ console.log('Dark mode applied!');`
         let tabCounter = 0;
         const tabs = {};
         let activeTabId = null;
+        let draggingTab = null;
+        let dragOverTab = null;
+        let dragOverSide = null;
         let selectedExecutionTarget = 'active';
         let extensionBridgeSubscribed = false;
         let extensionBridgeStatus = null;
         let browserTabCache = [];
         let selectedBrowserTabIds = [];
         let activeBrowserTabId = null;
+
+        function clearDragOverState() {
+            document.querySelectorAll(".tab.drag-over-left, .tab.drag-over-right").forEach(tab => {
+                tab.classList.remove("drag-over-left", "drag-over-right");
+            });
+            dragOverTab = null;
+            dragOverSide = null;
+        }
+
+        function finishTabDrag() {
+            if (draggingTab) {
+                draggingTab.classList.remove("dragging");
+            }
+            clearDragOverState();
+            draggingTab = null;
+        }
 
         function updateTabButtons() {
             const all = [...document.querySelectorAll(".tab")];
@@ -2381,6 +2412,8 @@ console.log('Dark mode applied!');`
 
             const tab = document.createElement("div");
             tab.className = "tab";
+            tab.draggable = true;
+            tab.dataset.tabId = id;
 
             const title = document.createElement("span");
             title.textContent = name;
@@ -2434,6 +2467,43 @@ console.log('Dark mode applied!');`
                 }
             };
 
+            tab.addEventListener("dragstart", (e) => {
+                draggingTab = tab;
+                tab.classList.add("dragging");
+                if (e.dataTransfer) {
+                    e.dataTransfer.effectAllowed = "move";
+                    e.dataTransfer.setData("application/x-voltus-tab-id", id);
+                }
+            });
+
+            tab.addEventListener("dragover", (e) => {
+                if (!draggingTab || draggingTab === tab) return;
+                e.preventDefault();
+                const rect = tab.getBoundingClientRect();
+                const isLeftSide = (e.clientX - rect.left) < rect.width / 2;
+                clearDragOverState();
+                dragOverTab = tab;
+                dragOverSide = isLeftSide ? "left" : "right";
+                tab.classList.add(isLeftSide ? "drag-over-left" : "drag-over-right");
+            });
+
+            tab.addEventListener("drop", (e) => {
+                if (!draggingTab || draggingTab === tab || !dragOverTab || !dragOverSide) return;
+                e.preventDefault();
+
+                if (dragOverSide === "left") {
+                    tabsEl.insertBefore(draggingTab, dragOverTab);
+                } else {
+                    tabsEl.insertBefore(draggingTab, dragOverTab.nextSibling || addTabBtn);
+                }
+
+                clearDragOverState();
+            });
+
+            tab.addEventListener("dragend", () => {
+                finishTabDrag();
+            });
+
             tabs[id] = { name, content: `` };
 
             tabsEl.insertBefore(tab, addTabBtn);
@@ -2443,6 +2513,53 @@ console.log('Dark mode applied!');`
         }
 
         addTabBtn.onclick = () => createTab();
+
+        tabsEl.addEventListener("dragover", (e) => {
+            if (!draggingTab) return;
+            const tabElements = [...tabsEl.querySelectorAll(".tab")].filter(t => t !== draggingTab);
+            if (tabElements.length === 0) return;
+
+            const lastTab = tabElements[tabElements.length - 1];
+            const rect = lastTab.getBoundingClientRect();
+            if (e.clientX > rect.right) {
+                e.preventDefault();
+                clearDragOverState();
+                dragOverTab = lastTab;
+                dragOverSide = "right";
+                lastTab.classList.add("drag-over-right");
+            }
+        });
+
+        tabsEl.addEventListener("drop", (e) => {
+            if (!draggingTab || !dragOverTab || !dragOverSide) return;
+            e.preventDefault();
+
+            if (dragOverSide === "left") {
+                tabsEl.insertBefore(draggingTab, dragOverTab);
+            } else {
+                tabsEl.insertBefore(draggingTab, dragOverTab.nextSibling || addTabBtn);
+            }
+
+            clearDragOverState();
+        });
+
+        document.addEventListener("dragover", (e) => {
+            if (!draggingTab) return;
+            const insideTabs = tabsEl.contains(e.target);
+            if (!insideTabs) {
+                e.preventDefault();
+                clearDragOverState();
+            }
+        });
+
+        document.addEventListener("drop", (e) => {
+            if (!draggingTab) return;
+            const insideTabs = tabsEl.contains(e.target);
+            if (!insideTabs) {
+                e.preventDefault();
+                finishTabDrag();
+            }
+        });
 
         document.getElementById("clear").onclick = () => {
             showModal("Clear Script", "This will erase everything in this tab.", () => {
