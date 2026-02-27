@@ -722,9 +722,12 @@
             z-index: 20001;               /* sit above windowChrome */
         }
 
-        /* reuse the same modal appearance/animation as #settingsMenu */
+        /* Reuse modal layout but use modal animations to avoid transform jumps. */
         #tabBrowserModal .modal-content {
             margin-top: 0;
+            transform-origin: center center;
+            will-change: transform, opacity;
+            animation-fill-mode: both;
             max-height: 90vh;
             border-radius: 6px;
             padding: 0;
@@ -732,11 +735,11 @@
             max-width: 500px;
             display: flex;
             flex-direction: column;
-            animation: settingsSlideIn 0.2s ease-out;
+            animation: modalSlideIn 0.2s ease-out;
         }
 
         #tabBrowserModal.hide .modal-content {
-            animation: settingsSlideOut 0.2s ease-out;
+            animation: modalSlideOut 0.2s ease-out forwards;
         }
 
         .modal-content {
@@ -747,7 +750,7 @@
         }
 
         .modal-backdrop.hide .modal-content {
-            animation: modalSlideOut 0.2s ease-out;
+            animation: modalSlideOut 0.2s ease-out forwards;
         }
 
         /* ---------- MODAL ---------- */
@@ -1286,9 +1289,10 @@
             border-radius: 6px;
             padding: 0; /* Let internal structure handle padding like settings */
 
-            /* make the panel narrow and tall */
-            width: 250px;
-            max-height: 90vh;
+            /* match settings menu sizing */
+            width: 90%;
+            max-width: 400px;
+            max-height: 80vh;
             display: flex;
             flex-direction: column;
         }
@@ -2907,7 +2911,7 @@ console.log('Dark mode applied!');`
 
                         <div class="settings-section">
                             <div class="settings-section-title">Connected Tabs</div>
-                            <div id="tabListContainer" style="max-height: 280px; overflow-y: auto;"></div>
+                            <div id="tabListContainer" style="max-height: 42vh; overflow-y: auto;"></div>
                         </div>
 
                         <div style="margin-top: 15px; font-size: 10px; color: rgba(255,255,255,0.2); font-family: monospace; text-align: center;">
@@ -3049,3 +3053,4 @@ console.log('Dark mode applied!');`
     </script>
 </body>
 </html>
+
