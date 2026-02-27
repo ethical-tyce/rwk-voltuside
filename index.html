@@ -12,6 +12,9 @@
         :root {
             /* CHANGE THIS NUMBER TO ADJUST SPEED GLOBALLY */
             --hover-speed: 0.2s; 
+            --bug-btn-offset-x: 5px; /* increase to move bug button right */
+            --bug-btn-size: 32px; /* overall clickable bug button size */
+            --bug-icon-size: 13px; /* bug icon size inside button */
             --menu-glass-bg: rgba(0, 0, 0, 0.1);
             --menu-glass-blur: 5px;
             --menu-glass-saturate: 210%;
@@ -24,6 +27,7 @@
         }
 
         .window-btn, 
+        .bug-btn,
         .icon-btn, 
         .run-btn, 
         .tab, 
@@ -60,9 +64,7 @@
             right: 0;
             display: flex;
             align-items: center;
-            /* With the title group positioned absolutely, the button row becomes the
-               only flex item.  Use flex-end to keep it on the right edge. */
-            justify-content: flex-end;
+            justify-content: space-between;
             padding: 1px 12px;
             background: transparent;
             border-bottom: none;
@@ -93,8 +95,8 @@
         }
 
         #windowTitleIcon {
-            width: 30px;
-            height: 30px;
+            width: 33px;
+            height: 33px;
             object-fit: contain;
             flex-shrink: 0;
             /* remove left margin since we will center via parent */
@@ -118,27 +120,20 @@
             -webkit-app-region: no-drag;
         }
 
-        /* center the title icon horizontally by absolutely positioning its group */
         #windowTitleGroup {
-            position: absolute;
-            left: 50%;
-            transform: translateX(-50%);
-            top: 0;
-            height: 100%;
             display: flex;
             align-items: center;
+            gap: 8px;
             pointer-events: none; /* allow drag through when not over the icon */
         }
 
-        /* bug button sits at the extreme left inside the chrome */
+        /* bug button now sits in the window button row */
         .bug-btn {
-            position: absolute;
-            left: 8px;
-            top: 50%;
-            transform: translateY(-50%);
             -webkit-app-region: no-drag;
-            width: 32px;
-            height: 32px;
+            position: relative;
+            left: var(--bug-btn-offset-x);
+            width: var(--bug-btn-size);
+            height: var(--bug-btn-size);
             padding: 0 !important;
             display: flex;
             align-items: center;
@@ -157,16 +152,14 @@
             background: none !important;
             box-shadow: none !important;
             border: none !important;
-            transform: translateY(-50%);
             color: #ffffff;
         }
         .bug-btn:active {
-            transform: translateY(-50%);
             background: none !important;
         }
         .bug-btn svg {
-            width: 18px;
-            height: 18px;
+            width: var(--bug-icon-size);
+            height: var(--bug-icon-size);
         }
         .bug-btn:hover {
             color: #ffffff;
@@ -1564,13 +1557,20 @@
     </div>
 
     <div id="windowChrome" hidden>
-        <!-- bug icon placed top-left -->
-        <button id="bugButton" class="bug-btn" title="Report bug">
-            <!-- replaced with user-supplied SVG, colours driven by currentColor -->
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="12" height="12"
-                 fill="currentColor" stroke="none" style="pointer-events:none;">
-                <g transform="translate(0,512) scale(0.1,-0.1)">
-                    <path d="M1113 5104 c-89 -44 -98 -182 -17 -238 10 -7 94 -36 185 -64 287 -89
+        <div id="windowTitleGroup">
+            <!-- this image is the same asset that we pass to BrowserWindow
+                 as the icon option; Windows will also use it for the taskbar
+                 button and the Alt-Tab thumbnail (use icon.ico when packaging) -->
+            <img id="windowTitleIcon" src="icon.png" alt="">
+            <span id="versionLabel" style="font-size:11px;color:#909090;margin-left:-5px;user-select:none;">v?</span>
+        </div>
+        <div id="windowButtons">
+            <button id="bugButton" class="bug-btn" title="Report bug">
+                <!-- replaced with user-supplied SVG, colours driven by currentColor -->
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="12" height="12"
+                     fill="currentColor" stroke="none" style="pointer-events:none;">
+                    <g transform="translate(0,512) scale(0.1,-0.1)">
+                        <path d="M1113 5104 c-89 -44 -98 -182 -17 -238 10 -7 94 -36 185 -64 287 -89
 434 -159 521 -249 61 -64 111 -152 206 -365 l90 -204 -67 -72 c-164 -173 -290
 -411 -371 -703 l-19 -69 925 0 924 0 -6 28 c-3 15 -26 86 -49 159 -76 231
 -191 434 -329 580 l-73 77 72 160 c96 215 129 280 180 352 93 131 233 203 622
@@ -1582,7 +1582,7 @@
 -199 -350 -33 -36 77 -13 168 55 220 64 48 132 53 208 14z m651 20 c47 -13
 106 -63 123 -106 34 -80 2 -184 -69 -231 -33 -22 -52 -27 -101 -27 -75 0 -125
 28 -161 89 -59 102 -11 231 101 271 48 17 59 18 107 4z"/>
-                    <path d="M505 3901 c-72 -33 -125 -111 -125 -183 0 -47 243 -844 267 -876 36
+                        <path d="M505 3901 c-72 -33 -125 -111 -125 -183 0 -47 243 -844 267 -876 36
 -49 78 -67 394 -176 173 -59 317 -111 321 -114 4 -4 8 -190 10 -414 l3 -408
 -300 -136 c-165 -75 -314 -147 -331 -160 -17 -12 -39 -39 -49 -60 -22 -47
 -225 -1102 -225 -1172 0 -93 54 -165 147 -192 89 -27 194 19 233 103 12 25 58
@@ -1597,17 +1597,9 @@
 -79 l-223 -76 -1108 0 -1109 0 -242 83 c-133 46 -246 90 -250 98 -5 8 -52 158
 -105 334 -53 176 -107 339 -120 362 -18 29 -40 49 -77 67 -62 31 -117 33 -173
 7z"/>
-                </g>
-            </svg>
-        </button>
-        <div id="windowTitleGroup">
-            <!-- this image is the same asset that we pass to BrowserWindow
-                 as the `icon` option; Windows will also use it for the taskbar
-                 button and the Alt‑Tab thumbnail (use icon.ico when packaging) -->
-            <img id="windowTitleIcon" src="icon.png" alt="">
-            <span id="versionLabel" style="font-size:11px;color:#909090;margin-left:-5px;user-select:none;">v?</span>
-        </div>
-        <div id="windowButtons">
+                    </g>
+                </svg>
+            </button>
             <button id="windowMinimize" class="window-btn window-btn-min" aria-label="Minimize">
                 <span class="window-icon window-icon-min"></span>
             </button>
@@ -1619,7 +1611,6 @@
             </button>
         </div>
     </div>
-
     <div id="app">
         <div id="windowTitlebarBg"></div>
         <div id="topbar">
@@ -3053,4 +3044,5 @@ console.log('Dark mode applied!');`
     </script>
 </body>
 </html>
+
 
