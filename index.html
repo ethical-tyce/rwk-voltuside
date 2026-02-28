@@ -407,9 +407,9 @@
             /* 1. Ultra-transparent background */
             background: rgba(255, 255, 255, 0.03) !important;
             
-            /* 2. Glass blur & saturation */
-            backdrop-filter: blur(15px) saturate(200%);
-            -webkit-backdrop-filter: blur(15px) saturate(200%);
+            /* 2. Match Settings menu glass blur & saturation */
+            backdrop-filter: blur(var(--menu-glass-blur)) saturate(var(--menu-glass-saturate));
+            -webkit-backdrop-filter: blur(var(--menu-glass-blur)) saturate(var(--menu-glass-saturate));
             
             /* 3. The "Glass Edge" shadows */
             box-shadow: 
@@ -824,7 +824,7 @@
         #modalOverlay {
             position: fixed;
             inset: 0;
-            background: rgba(0, 0, 0, 0.5);
+            background: transparent;
             display: flex;
             align-items: center;
             justify-content: center;
