@@ -41,5 +41,6 @@ contextBridge.exposeInMainWorld('startupEvents', {
 
 // expose app version retrieval
 contextBridge.exposeInMainWorld('appInfo', {
-    getVersion: () => ipcRenderer.invoke('app:get-version')
+    getVersion: () => ipcRenderer.invoke('app:get-version'),
+    openExternal: (url) => ipcRenderer.invoke('app:open-external', url)
 });

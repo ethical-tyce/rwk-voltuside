@@ -1,4 +1,4 @@
-const { app, BrowserWindow, Menu, ipcMain } = require('electron');
+const { app, BrowserWindow, Menu, ipcMain, shell } = require('electron');
 const path = require('path');
 
 let win;
@@ -231,6 +231,16 @@ ipcMain.handle('extension:get-status', () => {
 ipcMain.handle('app:get-version', () => {
     // return the current application version from Electron
     return app.getVersion();
+});
+
+ipcMain.handle('app:open-external', async (_event, url) => {
+    if (typeof url !== 'string' || !url.trim()) return false;
+    try {
+        return await shell.openExternal(url);
+    } catch (error) {
+        console.error('[OpenExternal] Failed:', error && error.message ? error.message : String(error));
+        return false;
+    }
 });
 
 app.on('window-all-closed', () => {

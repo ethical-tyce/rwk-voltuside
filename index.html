@@ -118,7 +118,7 @@
             object-fit: contain;
             flex-shrink: 0;
             /* remove left margin since we will center via parent */
-            margin-left: 0;
+            margin-left: -3px;
             margin-top: 2px;
             opacity: 0;
             transition: opacity 0.12s ease;
@@ -331,6 +331,10 @@
                 pointer-events: none;
                 z-index: 10;
             }
+
+        body.dashboard-open #topbar {
+            display: none;
+        }
 
         /* ---------- TABS ---------- */
         #tabs {
@@ -646,22 +650,220 @@
             min-height: 0;
             min-width: 0;
             position: relative;
+            overflow: hidden;
+        }
+
+        .primary-view {
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            transform: translateY(10px) scale(0.995);
+            pointer-events: none;
+            visibility: hidden;
+            transition: opacity 220ms ease, transform 220ms ease, visibility 0s linear 220ms;
+            will-change: opacity, transform;
+        }
+
+        .primary-view.active {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+            pointer-events: auto;
+            visibility: visible;
+            transition: opacity 220ms ease, transform 220ms ease, visibility 0s;
+            z-index: 2;
+        }
+
+        .primary-view.is-leaving {
+            opacity: 0;
+            transform: translateY(-8px) scale(0.995);
+            pointer-events: none;
+            visibility: visible;
+            z-index: 3;
+            transition: opacity 220ms ease, transform 220ms ease;
+        }
+
+        #dashboard {
+            padding: 22px;
+            color: #d2d2d2;
+            overflow-y: auto;
+        }
+
+        #dashboard h2 {
+            margin: 0 0 10px 0;
+            font-size: 20px;
+            font-weight: 600;
+            color: #f0f0f0;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            gap: 8px;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        }
+
+        .dashboard-card {
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 8px;
+            background: linear-gradient(145deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.01));
+            padding: 10px 11px;
+        }
+
+        .dashboard-card-label {
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: #8f8f8f;
+            margin-bottom: 4px;
+        }
+
+        .dashboard-card-value {
+            font-size: 16px;
+            line-height: 1.2;
+            color: #f2f2f2;
+        }
+
+        .link-section.connected-section {
+            margin: 0 0 10px 0;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 8px;
+            background: linear-gradient(145deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.01));
+            padding: 10px 11px;
+        }
+
+        .connected-content {
+            display: grid;
+            gap: 8px;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+
+        .link-card {
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.02);
+            padding: 10px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            min-height: 112px;
+        }
+
+        .link-icon {
+            width: 28px;
+            height: 28px;
+            border-radius: 7px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #d8d8d8;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            flex-shrink: 0;
+        }
+
+        .link-icon svg {
+            width: 14px;
+            height: 14px;
+        }
+
+        .link-title {
+            margin: 0;
+            font-size: 13px;
+            color: #efefef;
+            font-weight: 500;
+        }
+
+        .toolbar-button.run {
+            margin-top: auto;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.05);
+            color: #e6e6e6;
+            border-radius: 7px;
+            height: 30px;
+            padding: 0 10px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            -webkit-app-region: no-drag;
+        }
+
+        .toolbar-button.run:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.18);
+        }
+
+        .toolbar-button.run svg {
+            width: 13px;
+            height: 13px;
+        }
+
+        @media (max-width: 980px) {
+            .connected-content {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .link-section.changelog-section {
+            margin-top: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 8px;
+            background: linear-gradient(145deg, rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.01));
+            padding: 10px 11px;
+        }
+
+        .changelog-header {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+        }
+
+        .changelog-icon {
+            width: 28px;
+            height: 28px;
+            border-radius: 7px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #d8d8d8;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            flex-shrink: 0;
+            margin-top: 1px;
+        }
+
+        .changelog-icon svg {
+            width: 14px;
+            height: 14px;
+        }
+
+        .link-subtitle {
+            margin: 2px 0 0 0;
+            font-size: 12px;
+            color: #9a9a9a;
+        }
+
+        .changelog-list {
+            margin-top: 8px;
+            max-height: 180px;
+            overflow-y: auto;
+            color: #a8a8a8;
+            font-size: 12px;
         }
 
         #editor {
-            flex: 1;
             min-height: 0;
             min-width: 0;
-            position: relative;
-            display: block;
+            background: #000;
         }
 
         #htmlOutput {
-            flex: 1;
             min-height: 0;
-            display: none;
             background: #000;
             border: none;
+            width: 100%;
+            height: 100%;
         }
 
         #htmlOutputLabel {
@@ -682,18 +884,6 @@
             #htmlOutputLabel.active {
                 display: block;
             }
-
-        #htmlOutput.active {
-            display: block;
-        }
-
-        #editor.active {
-            display: block;
-        }
-
-        #editor:not(.active) {
-            display: none;
-        }
 
         /* ---------- CONSOLE ---------- */
         #consoleWrap {
@@ -1649,7 +1839,7 @@
     </style>
 </head>
 
-<body class="startup-active" style="margin:0;background:#000;overflow:hidden;">
+<body class="startup-active dashboard-open" style="margin:0;background:#000;overflow:hidden;">
     <!-- STARTUP SPLASH OVERLAY -->
     <div id="startup-splash">
         <div class="splash-content">
@@ -1777,7 +1967,13 @@
         <div id="editorWrap">
             <div id="editorContainer">
                 <div id="leftSidebar">
-                    <div class="sidebar-tab active" id="editorTab" title="Editor">
+                    <div class="sidebar-tab active" id="homeTab" title="Home">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <path d="M3 10.5L12 3l9 7.5"></path>
+                            <path d="M5 10v10h14V10"></path>
+                        </svg>
+                    </div>
+                    <div class="sidebar-tab" id="editorTab" title="Editor">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
                             <polyline points="16 18 22 12 16 6"></polyline>
                             <polyline points="8 6 2 12 8 18"></polyline>
@@ -1793,8 +1989,103 @@
                 </div>
 
                 <div id="mainContent">
-                    <div id="editor" class="active"></div>
-                    <iframe id="htmlOutput"></iframe>
+                    <div id="dashboard" class="primary-view active">
+                        <h2>Dashboard</h2>
+                        <div class="link-section connected-section">
+                            <div class="connected-content">
+                                <div class="connected-left">
+                                    <div class="link-card website-card">
+                                        <div class="link-icon">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <rect width="20" height="14" x="2" y="3" rx="2"></rect>
+                                                <line x1="8" x2="16" y1="21" y2="21"></line>
+                                                <line x1="12" x2="12" y1="17" y2="21"></line>
+                                            </svg>
+                                        </div>
+                                        <h3 class="link-title">Visit Our Website</h3>
+                                        <button id="openWebsiteBtn" type="button" class="toolbar-button run" aria-label="Open Voltus website">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+                                                <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+                                            </svg>
+                                            Open Website
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="connected-center">
+                                    <div class="link-card version-card">
+                                        <div class="link-icon">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <path d="M16.5 9.4 7.55 4.24"></path>
+                                                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                                                <polyline points="3.29 7 12 12 20.71 7"></polyline>
+                                                <line x1="12" x2="12" y1="22" y2="12"></line>
+                                            </svg>
+                                        </div>
+                                        <h3 class="link-title" id="dashboardVersionTitle">Version: Unknown</h3>
+                                        <button id="downloadLatestBtn" type="button" class="toolbar-button run" aria-label="Download latest Voltus IDE">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+                                                <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+                                            </svg>
+                                            Download Latest
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="connected-right">
+                                    <div class="link-card discord-card">
+                                        <div class="link-icon">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+                                                <circle cx="9" cy="7" r="4"></circle>
+                                                <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
+                                                <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                                            </svg>
+                                        </div>
+                                        <h3 class="link-title">Join Our Community</h3>
+                                        <button id="joinDiscordBtn" type="button" class="toolbar-button run" aria-label="Join the Voltus Discord">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                                <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+                                                <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+                                            </svg>
+                                            Join Discord
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="dashboard-grid">
+                            <div class="dashboard-card">
+                                <div class="dashboard-card-label">Current Mode</div>
+                                <div class="dashboard-card-value" id="dashboardModeValue">Browser</div>
+                            </div>
+                            <div class="dashboard-card">
+                                <div class="dashboard-card-label">Open Tabs</div>
+                                <div class="dashboard-card-value" id="dashboardTabsValue">0</div>
+                            </div>
+                            <div class="dashboard-card">
+                                <div class="dashboard-card-label">Active Tab</div>
+                                <div class="dashboard-card-value" id="dashboardActiveTabValue">None</div>
+                            </div>
+                        </div>
+                        <div class="link-section changelog-section">
+                            <div class="changelog-header">
+                                <div class="changelog-icon">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <polyline points="22 7 13.5 15.5 8.5 10.5 2 17"></polyline>
+                                        <polyline points="16 7 22 7 22 13"></polyline>
+                                    </svg>
+                                </div>
+                                <div class="changelog-title-section">
+                                    <h3 class="link-title">Latest Updates</h3>
+                                    <p class="link-subtitle">Stay updated with the latest features and improvements</p>
+                                </div>
+                            </div>
+                            <div class="changelog-list" style="padding-right: 8px;"></div>
+                        </div>
+                    </div>
+                    <div id="editor" class="primary-view"></div>
+                    <iframe id="htmlOutput" class="primary-view"></iframe>
                     <div id="htmlOutputLabel"></div>
                 </div>
             </div>
@@ -1889,24 +2180,79 @@
             if (bugButton) {
                 bugButton.onclick = () => {
                     showModal('Report Bugs', 'Report bugs to Discord server?', () => {
-                        if (window.shell && typeof window.shell.openExternal === 'function') {
-                            window.shell.openExternal('https://discord.gg/YOUR_INVITE_HERE');
+                        if (window.appInfo && typeof window.appInfo.openExternal === 'function') {
+                            window.appInfo.openExternal('https://discord.gg/S37zYBH6Rr');
                         } else {
-                            window.open('https://discord.gg/YOUR_INVITE_HERE', '_blank');
+                            showToast('Could not open Discord link');
                         }
                     }, null);
                 };
             }
             const versionLabel = document.getElementById('versionLabel');
+            const dashboardVersionTitle = document.getElementById('dashboardVersionTitle');
+            const openWebsiteBtn = document.getElementById('openWebsiteBtn');
+            const downloadLatestBtn = document.getElementById('downloadLatestBtn');
+            const joinDiscordBtn = document.getElementById('joinDiscordBtn');
+
+            const openExternalLink = async (url) => {
+                if (!window.appInfo || typeof window.appInfo.openExternal !== 'function') {
+                    return false;
+                }
+
+                try {
+                    const result = await window.appInfo.openExternal(url);
+                    return Boolean(result);
+                } catch (error) {
+                    pushConsole('warn', 'openExternal failed:', error && error.message ? error.message : String(error));
+                    return false;
+                }
+            };
+
+            if (openWebsiteBtn) {
+                openWebsiteBtn.addEventListener('click', async (event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    const opened = await openExternalLink('https://voltus-ide.xyz');
+                    /*if (!opened) {
+                        showToast('Could not open in external browser');
+                    }*/
+                });
+            }
+
+            if (downloadLatestBtn) {
+                downloadLatestBtn.addEventListener('click', async (event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    await openExternalLink('https://voltus-ide.xyz/download');
+                });
+            }
+
+            if (joinDiscordBtn) {
+                joinDiscordBtn.addEventListener('click', async (event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    await openExternalLink('https://discord.gg/S37zYBH6Rr');
+                });
+            }
+
             if (versionLabel) {
                 if (window.appInfo && typeof window.appInfo.getVersion === 'function') {
                     window.appInfo.getVersion().then(v => {
                         versionLabel.textContent = 'v' + v;
+                        if (dashboardVersionTitle) {
+                            dashboardVersionTitle.textContent = 'Version: ' + v;
+                        }
                     }).catch(() => {
                         versionLabel.textContent = 'v0.2.3';
+                        if (dashboardVersionTitle) {
+                            dashboardVersionTitle.textContent = 'Version: 0.2.3';
+                        }
                     });
                 } else {
                     versionLabel.textContent = 'v0.2.3';
+                    if (dashboardVersionTitle) {
+                        dashboardVersionTitle.textContent = 'Version: 0.2.3';
+                    }
                 }
             }
             let startupRevealStarted = false;
@@ -2127,6 +2473,7 @@ console.log('Dark mode applied!');`
                         if (activeTab) {
                             activeTab.textContent = script.name;
                         }
+                        updateDashboardMetrics();
                     }
                     showToast(`Loaded: ${script.name}`);
                     pushConsole('log', `Loaded script: ${script.name}`);
@@ -2480,6 +2827,7 @@ console.log('Dark mode applied!');`
                     titleEl.textContent = input.value.trim();
                     tabs[id].name = input.value.trim();
                     renderTabBrowserList();
+                    updateDashboardMetrics();
                 }
                 titleEl.style.display = '';
                 input.remove();
@@ -2533,6 +2881,7 @@ console.log('Dark mode applied!');`
                 }
                 updateTabButtons();
                 renderTabBrowserList();
+                updateDashboardMetrics();
             };
 
             tab.append(title, btn);
@@ -2555,6 +2904,7 @@ console.log('Dark mode applied!');`
                 if (document.getElementById('htmlOutput').classList.contains('active')) {
                     document.getElementById('editorTab').click();
                 }
+                updateDashboardMetrics();
             };
 
             tab.addEventListener("dragstart", (e) => {
@@ -2605,6 +2955,7 @@ console.log('Dark mode applied!');`
             tab.click();
             updateTabButtons();
             renderTabBrowserList();
+            updateDashboardMetrics();
         }
 
         addTabBtn.onclick = () => createTab();
@@ -2730,33 +3081,115 @@ console.log('Dark mode applied!');`
         };
 
         let executionMode = 'browser';
+        let currentPrimaryView = 'home';
+        let primaryViewTransitionTimer = null;
+
+        function updateDashboardMetrics() {
+            const modeEl = document.getElementById('dashboardModeValue');
+            const tabsEl = document.getElementById('dashboardTabsValue');
+            const activeEl = document.getElementById('dashboardActiveTabValue');
+
+            if (modeEl) {
+                modeEl.textContent = executionMode === 'local' ? 'Local' : 'Browser';
+            }
+
+            if (tabsEl) {
+                tabsEl.textContent = String(Object.keys(tabs).length);
+            }
+
+            if (activeEl) {
+                const activeName = activeTabId && tabs[activeTabId] ? tabs[activeTabId].name : 'None';
+                activeEl.textContent = activeName;
+            }
+        }
+
+        function setPrimaryView(view) {
+            if (primaryViewTransitionTimer) {
+                clearTimeout(primaryViewTransitionTimer);
+                primaryViewTransitionTimer = null;
+            }
+
+            document.querySelectorAll('.sidebar-tab').forEach(t => t.classList.remove('active'));
+            document.body.classList.toggle('dashboard-open', view === 'home');
+
+            const dashboardEl = document.getElementById('dashboard');
+            const editorEl = document.getElementById('editor');
+            const htmlOutputEl = document.getElementById('htmlOutput');
+            const htmlOutputLabelEl = document.getElementById('htmlOutputLabel');
+            const consoleWrapEl = document.getElementById('consoleWrap');
+            const consoleHandleEl = document.getElementById('consoleHandle');
+
+            htmlOutputLabelEl.classList.remove('active');
+            consoleWrapEl.classList.remove('active');
+            consoleHandleEl.classList.remove('active');
+
+            const viewMap = {
+                home: dashboardEl,
+                editor: editorEl,
+                html: htmlOutputEl
+            };
+            const nextEl = viewMap[view] || editorEl;
+            const prevEl = viewMap[currentPrimaryView] || null;
+            const viewEls = [dashboardEl, editorEl, htmlOutputEl];
+
+            viewEls.forEach(el => {
+                if (el !== prevEl) {
+                    el.classList.remove('is-leaving');
+                }
+                if (el !== nextEl) {
+                    el.classList.remove('active');
+                }
+            });
+
+            if (prevEl && prevEl !== nextEl) {
+                prevEl.classList.remove('active');
+                prevEl.classList.add('is-leaving');
+                primaryViewTransitionTimer = setTimeout(() => {
+                    prevEl.classList.remove('is-leaving');
+                    primaryViewTransitionTimer = null;
+                }, 230);
+            }
+
+            nextEl.classList.remove('is-leaving');
+            nextEl.classList.add('active');
+
+            if (view === 'home') {
+                document.getElementById('homeTab').classList.add('active');
+                updateDashboardMetrics();
+            } else if (view === 'editor') {
+                document.getElementById('editorTab').classList.add('active');
+            } else if (view === 'html') {
+                document.getElementById('htmlOutputTab').classList.add('active');
+                consoleWrapEl.classList.add('active');
+                consoleHandleEl.classList.add('active');
+
+                if (htmlOutputLabelEl.textContent) {
+                    htmlOutputLabelEl.classList.add('active');
+                }
+            }
+
+            currentPrimaryView = view;
+
+            if (editor) {
+                requestAnimationFrame(() => {
+                    requestAnimationFrame(() => editor.layout());
+                });
+            }
+        }
+
+        document.getElementById('homeTab').onclick = function () {
+            setPrimaryView('home');
+        };
 
         document.getElementById('editorTab').onclick = function () {
-            document.querySelectorAll('.sidebar-tab').forEach(t => t.classList.remove('active'));
-            this.classList.add('active');
-            document.getElementById('editor').classList.add('active');
-            document.getElementById('htmlOutput').classList.remove('active');
-            document.getElementById('htmlOutputLabel').classList.remove('active');
-            document.getElementById('consoleWrap').classList.remove('active');
-            document.getElementById('consoleHandle').classList.remove('active');
-            if (editor) {
-                requestAnimationFrame(() => editor.layout());
-            }
+            setPrimaryView('editor');
         };
 
         document.getElementById('htmlOutputTab').onclick = function () {
-            document.querySelectorAll('.sidebar-tab').forEach(t => t.classList.remove('active'));
-            this.classList.add('active');
-            document.getElementById('htmlOutput').classList.add('active');
-            document.getElementById('editor').classList.remove('active');
-            document.getElementById('consoleWrap').classList.add('active');
-            document.getElementById('consoleHandle').classList.add('active');
-
-            const label = document.getElementById('htmlOutputLabel');
-            if (label.textContent) {
-                label.classList.add('active');
-            }
+            setPrimaryView('html');
         };
+
+        setPrimaryView('home');
 
         document.getElementById("scriptHub").onclick = () => {
             showScriptHub();
@@ -2849,6 +3282,7 @@ console.log('Dark mode applied!');`
         document.getElementById('executionMode').onchange = (e) => {
             executionMode = e.target.value;
             showToast(`Switched to ${e.target.value === 'local' ? 'Local' : 'Browser'} mode`);
+            updateDashboardMetrics();
         };
 
         function normalizeBrowserTabList(rawData) {
