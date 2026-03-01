@@ -12,6 +12,8 @@
         :root {
             /* CHANGE THIS NUMBER TO ADJUST SPEED GLOBALLY */
             --hover-speed: 0.2s; 
+            --tabs-left-bleed: 52px; /* horizontal offscreen amount for tabs + tab line */
+            --tabs-left-overlay: 18px; /* black -> transparent overlay width on left edge */
             --bug-btn-offset-x: 5px; /* increase to move bug button right */
             --bug-btn-size: 32px; /* overall clickable bug button size */
             --bug-icon-size: 13px; /* bug icon size inside button */
@@ -290,6 +292,18 @@
             position: relative;
         }
 
+            #topbar::before {
+                content: '';
+                position: absolute;
+                left: 0;
+                top: 0;
+                bottom: 0;
+                width: var(--tabs-left-overlay);
+                background: linear-gradient(to right, #000 0%, rgba(0, 0, 0, 0) 100%);
+                pointer-events: none;
+                z-index: 10;
+            }
+
             #topbar::after {
                 content: '';
                 position: absolute;
@@ -306,13 +320,15 @@
         #tabs {
             flex: 1;
             display: flex;
-            align-items: center;
+            align-items: flex-end;
             align-self: center;
             gap: 6px;
             overflow-x: auto;
             scroll-behavior: auto;
             position: relative;
             margin-bottom: 0;
+            margin-left: calc(-1 * var(--tabs-left-bleed));
+            padding-left: var(--tabs-left-bleed);
             border-bottom: 1px solid rgba(255, 255, 255, 0.55);
         }
 
@@ -343,6 +359,21 @@
             white-space: nowrap;
             flex-shrink: 0;
             position: relative;
+        }
+
+            .tab.tab-enter {
+                animation: tabEnter 130ms ease-out;
+            }
+
+        @keyframes tabEnter {
+            from {
+                opacity: 0;
+                transform: translateY(3px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
             .tab::after {
@@ -377,7 +408,7 @@
             }
 
             .tab.active {
-                background: linear-gradient(to right, #3a3a3a 0%, #424242 100%);
+                background: linear-gradient(to right, #3a3a3a 0%, #4f4f4f 100%);
                 border-radius: 8px 8px 0 0;
                 z-index: 2;
             }
@@ -2548,6 +2579,11 @@ console.log('Dark mode applied!');`
             });
 
             tabs[id] = { name, content: `` };
+
+            tab.classList.add("tab-enter");
+            tab.addEventListener("animationend", () => {
+                tab.classList.remove("tab-enter");
+            }, { once: true });
 
             tabsEl.insertBefore(tab, addTabBtn);
             tab.click();
