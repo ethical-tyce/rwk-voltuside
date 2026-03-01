@@ -55,6 +55,21 @@
             display: flex;
             flex-direction: column;
             overflow: hidden;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
+        /* Prevent accidental highlight on UI labels, but keep editing/selecting in inputs/editor. */
+        input,
+        textarea,
+        select,
+        [contenteditable="true"],
+        #editor,
+        #editor *,
+        .monaco-editor,
+        .monaco-editor * {
+            -webkit-user-select: text;
+            user-select: text;
         }
 
         #windowChrome {
@@ -80,6 +95,7 @@
         body.startup-active #windowChrome {
             opacity: 0;
             pointer-events: none;
+            -webkit-app-region: no-drag;
         }
 
         #windowTitlebarBg {

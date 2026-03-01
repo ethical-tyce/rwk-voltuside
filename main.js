@@ -92,12 +92,8 @@ function createWindow() {
     const ANIM_DURATION_MS = 800; // ← make this bigger for slower
     const ANIM_INTERVAL_MS = 10;
 
-    // use a single path for the window icon so the taskbar icon
-    // can match whatever we show in the title bar (index.html uses
-    // the same `icon.png`).  on Windows an .ico file is preferred
-    // when you package the app, but a PNG works in development.
-    const iconPath = path.join(__dirname,
-        process.platform === 'win32' ? 'icon.ico' : 'icon.png');
+    // Use a dedicated Windows icon asset for taskbar/shell visuals.
+    const iconPath = path.join(__dirname, process.platform === 'win32' ? 'winico.png' : 'icon.png');
 
     win = new BrowserWindow({
         width: START_WIDTH,
