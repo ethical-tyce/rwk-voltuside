@@ -12,6 +12,12 @@
         :root {
             /* CHANGE THIS NUMBER TO ADJUST SPEED GLOBALLY */
             --hover-speed: 0.2s; 
+            --primary-view-transition: 460ms;
+            --primary-view-ease: cubic-bezier(0.22, 1, 0.36, 1);
+            --menu-transition: 320ms;
+            --menu-ease: cubic-bezier(0.22, 1, 0.36, 1);
+            --sidebar-tab-transition: 380ms;
+            --sidebar-tab-ease: cubic-bezier(0.22, 1, 0.36, 1);
             --tabs-left-bleed: 52px; /* horizontal offscreen amount for tabs + tab line */
             --tabs-left-overlay: 18px; /* black -> transparent overlay width on left edge */
             --bug-btn-offset-x: 5px; /* increase to move bug button right */
@@ -303,9 +309,18 @@
             align-items: center;
             gap: 10px;
             padding: 0px 12px 8px 12px;
+            max-height: 56px;
+            overflow: hidden;
             border-bottom: none;
             background: #000;
             position: relative;
+            opacity: 1;
+            transform: translateY(0);
+            transition:
+                max-height var(--primary-view-transition) var(--primary-view-ease),
+                padding var(--primary-view-transition) var(--primary-view-ease),
+                opacity var(--primary-view-transition) var(--primary-view-ease),
+                transform var(--primary-view-transition) var(--primary-view-ease);
         }
 
             #topbar::before {
@@ -333,7 +348,12 @@
             }
 
         body.dashboard-open #topbar {
-            display: none;
+            max-height: 0;
+            padding-top: 0;
+            padding-bottom: 0;
+            opacity: 0;
+            transform: translateY(-8px);
+            pointer-events: none;
         }
 
         /* ---------- TABS ---------- */
@@ -609,7 +629,12 @@
             justify-content: center;
             border-radius: 8px; /* Slightly rounder look */
             cursor: pointer;
-            transition: all 0.2s ease !important;
+            transition:
+                background-color var(--sidebar-tab-transition) var(--sidebar-tab-ease),
+                color var(--sidebar-tab-transition) var(--sidebar-tab-ease),
+                border-color var(--sidebar-tab-transition) var(--sidebar-tab-ease),
+                box-shadow var(--sidebar-tab-transition) var(--sidebar-tab-ease),
+                transform var(--sidebar-tab-transition) var(--sidebar-tab-ease) !important;
         }
 
         /* Hover: Glass lights up and icon brightens */
@@ -620,7 +645,7 @@
                 0 4px 12px rgba(0, 0, 0, 0.4),
                 inset 0 0 0 1px rgba(255, 255, 255, 0.2),
                 inset 0 2px 10px rgba(255, 255, 255, 0.1) !important;
-            transform: scale(1.05); /* Subtle pop effect */
+            transform: scale(1.03); /* Subtle pop effect */
         }
 
         /* Active: The "Pressed Glass" look */
@@ -628,10 +653,15 @@
             background: rgba(255, 255, 255, 0.15) !important;
             color: #ffffff !important;
             border: 1px solid rgba(255, 255, 255, 0.2) !important;
+            transform: scale(1.02);
             box-shadow: 
                 0 0 15px rgba(255, 255, 255, 0.05),           /* Outer glow */
                 inset 0 0 0 1px rgba(255, 255, 255, 0.4),     /* Much brighter edge */
                 inset 0 2px 10px rgba(255, 255, 255, 0.1) !important;
+        }
+
+        .sidebar-tab:active {
+            transform: scale(0.98);
         }
 
         /* Ensure the SVGs inside catch the glow */
@@ -657,10 +687,10 @@
             position: absolute;
             inset: 0;
             opacity: 0;
-            transform: translateY(10px) scale(0.995);
+            transform: translateY(6px) scale(0.998);
             pointer-events: none;
             visibility: hidden;
-            transition: opacity 220ms ease, transform 220ms ease, visibility 0s linear 220ms;
+            transition: opacity var(--primary-view-transition) var(--primary-view-ease), transform var(--primary-view-transition) var(--primary-view-ease), visibility 0s linear var(--primary-view-transition);
             will-change: opacity, transform;
         }
 
@@ -669,17 +699,17 @@
             transform: translateY(0) scale(1);
             pointer-events: auto;
             visibility: visible;
-            transition: opacity 220ms ease, transform 220ms ease, visibility 0s;
+            transition: opacity var(--primary-view-transition) var(--primary-view-ease), transform var(--primary-view-transition) var(--primary-view-ease), visibility 0s;
             z-index: 2;
         }
 
         .primary-view.is-leaving {
             opacity: 0;
-            transform: translateY(-8px) scale(0.995);
+            transform: translateY(-5px) scale(0.998);
             pointer-events: none;
             visibility: visible;
             z-index: 3;
-            transition: opacity 220ms ease, transform 220ms ease;
+            transition: opacity var(--primary-view-transition) var(--primary-view-ease), transform var(--primary-view-transition) var(--primary-view-ease);
         }
 
         #dashboard {
@@ -987,11 +1017,11 @@
             align-items: center;
             justify-content: center;
             z-index: 10000;
-            animation: modalFadeIn 0.2s ease-out;
+            animation: modalFadeIn var(--menu-transition) var(--menu-ease);
         }
 
             .modal-backdrop.hide {
-                animation: modalFadeOut 0.2s ease-out;
+                animation: modalFadeOut var(--menu-transition) var(--menu-ease);
             }
 
         /* Match Settings menu feel: no dark veil behind these menus */
@@ -1020,22 +1050,22 @@
             max-width: 500px;
             display: flex;
             flex-direction: column;
-            animation: modalSlideIn 0.2s ease-out;
+            animation: modalSlideIn var(--menu-transition) var(--menu-ease);
         }
 
         #tabBrowserModal.hide .modal-content {
-            animation: modalSlideOut 0.2s ease-out forwards;
+            animation: modalSlideOut var(--menu-transition) var(--menu-ease) forwards;
         }
 
         .modal-content {
             background: #0a0a0a;
             border: 1px solid #2a2a2a;
             border-radius: 6px;
-            animation: modalSlideIn 0.2s ease-out;
+            animation: modalSlideIn var(--menu-transition) var(--menu-ease);
         }
 
         .modal-backdrop.hide .modal-content {
-            animation: modalSlideOut 0.2s ease-out forwards;
+            animation: modalSlideOut var(--menu-transition) var(--menu-ease) forwards;
         }
 
         /* ---------- MODAL ---------- */
@@ -1116,11 +1146,11 @@
             #modalOverlay.show {
                 opacity: 1;
                 pointer-events: auto;
-                animation: modalFadeIn 0.2s ease-out;
+                animation: modalFadeIn var(--menu-transition) var(--menu-ease);
             }
 
             #modalOverlay.hide {
-                animation: modalFadeOut 0.2s ease-out;
+                animation: modalFadeOut var(--menu-transition) var(--menu-ease);
             }
 
         #modal {
@@ -1132,11 +1162,11 @@
         }
 
         #modalOverlay.show #modal {
-            animation: modalSlideIn 0.2s ease-out;
+            animation: modalSlideIn var(--menu-transition) var(--menu-ease);
         }
 
         #modalOverlay.hide #modal {
-            animation: modalSlideOut 0.2s ease-out;
+            animation: modalSlideOut var(--menu-transition) var(--menu-ease);
         }
 
         #modal h3 {
@@ -1303,11 +1333,11 @@
         #settingsMenu.show {
             opacity: 1;
             pointer-events: auto;
-            animation: settingsSlideIn 0.2s ease-out;
+            animation: settingsSlideIn var(--menu-transition) var(--menu-ease);
         }
 
         #settingsMenu.hide {
-            animation: settingsSlideOut 0.2s ease-out;
+            animation: settingsSlideOut var(--menu-transition) var(--menu-ease);
         }
 
         .settings-header {
@@ -1519,8 +1549,8 @@
         /* --- Floating Status Capsule --- */
         #statusCapsule {
             position: fixed;
-            bottom: 25px;
-            right: 25px;
+            bottom: 12px;
+            right: 12px;
             background: #0a0a0a;
             border: 1px solid #1a1a1a;
             padding: 6px 14px;
@@ -2174,8 +2204,12 @@
             const splash = document.getElementById('startup-splash');
             const appContainer = document.getElementById('app');
             const body = document.body;
+            const statusCapsule = document.getElementById('statusCapsule');
             const windowChrome = document.getElementById('windowChrome');
             const titleIcon = document.getElementById('windowTitleIcon');
+            if (statusCapsule && statusCapsule.parentElement !== document.body) {
+                document.body.appendChild(statusCapsule);
+            }
             const bugButton = document.getElementById('bugButton');
             if (bugButton) {
                 bugButton.onclick = () => {
@@ -2744,13 +2778,13 @@ console.log('Dark mode applied!');`
                     overlay.classList.remove('hide');
                     // CHANGE THIS:
                     document.getElementById('app').classList.remove("ui-blur");
-                }, 200);
+                }, MENU_TRANSITION_MS);
             };
 
             cancelBtn.onclick = () => {
                 if (onCancel) {
                     close();
-                    setTimeout(() => onCancel(), 200);
+                    setTimeout(() => onCancel(), MENU_TRANSITION_MS);
                 } else {
                     close();
                 }
@@ -2758,7 +2792,7 @@ console.log('Dark mode applied!');`
 
             confirmBtn.onclick = () => {
                 close();
-                setTimeout(() => onConfirm?.(), 200);
+                setTimeout(() => onConfirm?.(), MENU_TRANSITION_MS);
             };
         }
 
@@ -3083,6 +3117,8 @@ console.log('Dark mode applied!');`
         let executionMode = 'browser';
         let currentPrimaryView = 'home';
         let primaryViewTransitionTimer = null;
+        const PRIMARY_VIEW_TRANSITION_MS = 460;
+        const MENU_TRANSITION_MS = 320;
 
         function updateDashboardMetrics() {
             const modeEl = document.getElementById('dashboardModeValue');
@@ -3147,7 +3183,7 @@ console.log('Dark mode applied!');`
                 primaryViewTransitionTimer = setTimeout(() => {
                     prevEl.classList.remove('is-leaving');
                     primaryViewTransitionTimer = null;
-                }, 230);
+                }, PRIMARY_VIEW_TRANSITION_MS);
             }
 
             nextEl.classList.remove('is-leaving');
@@ -3206,7 +3242,7 @@ console.log('Dark mode applied!');`
                 setTimeout(() => {
                     settingsMenu.classList.remove('hide');
                     app.classList.remove('ui-blur');
-                }, 200);
+                }, MENU_TRANSITION_MS);
             } else {
                 settingsMenu.classList.remove('hide');
                 settingsMenu.classList.add('show');
@@ -3220,7 +3256,7 @@ console.log('Dark mode applied!');`
             setTimeout(() => {
                 settingsMenu.classList.remove('hide');
                 app.classList.remove('ui-blur');
-            }, 200);
+            }, MENU_TRANSITION_MS);
         };
 
         document.addEventListener('click', (e) => {
@@ -3232,7 +3268,7 @@ console.log('Dark mode applied!');`
                 setTimeout(() => {
                     settingsMenu.classList.remove('hide');
                     app.classList.remove('ui-blur');
-                }, 200);
+                }, MENU_TRANSITION_MS);
             }
         });
 
