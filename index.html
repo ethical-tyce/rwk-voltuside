@@ -1561,6 +1561,10 @@
             z-index: 1999;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.6);
             transition: all 0.3s ease;
+            pointer-events: none;
+        }
+        #statusCapsule.is-nearby {
+            opacity: 0.7;
         }
 
         #statusDot {
@@ -2210,6 +2214,34 @@
             if (statusCapsule && statusCapsule.parentElement !== document.body) {
                 document.body.appendChild(statusCapsule);
             }
+            const STATUS_CAPSULE_PROXIMITY_PX = 130;
+            let capsuleNearby = false;
+
+            const updateCapsuleProximity = (mouseX, mouseY) => {
+                if (!statusCapsule) return;
+
+                const rect = statusCapsule.getBoundingClientRect();
+                const nearestX = Math.max(rect.left, Math.min(mouseX, rect.right));
+                const nearestY = Math.max(rect.top, Math.min(mouseY, rect.bottom));
+                const dx = mouseX - nearestX;
+                const dy = mouseY - nearestY;
+                const isNearby = (dx * dx + dy * dy) <= (STATUS_CAPSULE_PROXIMITY_PX * STATUS_CAPSULE_PROXIMITY_PX);
+
+                if (isNearby === capsuleNearby) return;
+                capsuleNearby = isNearby;
+                statusCapsule.classList.toggle('is-nearby', isNearby);
+            };
+
+            document.addEventListener('mousemove', (event) => {
+                updateCapsuleProximity(event.clientX, event.clientY);
+            });
+
+            document.addEventListener('mouseleave', () => {
+                if (!statusCapsule || !capsuleNearby) return;
+                capsuleNearby = false;
+                statusCapsule.classList.remove('is-nearby');
+            });
+
             const bugButton = document.getElementById('bugButton');
             if (bugButton) {
                 bugButton.onclick = () => {
