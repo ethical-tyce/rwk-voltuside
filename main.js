@@ -25,6 +25,21 @@ function isAllowedExplorerPath(targetPath) {
     return false;
 }
 
+function resolveExplorerPath(inputPath, errorMessage = 'Invalid path') {
+    const rawPath = typeof inputPath === 'string' ? inputPath.trim() : '';
+    if (!rawPath) {
+        throw new Error(errorMessage);
+    }
+    return path.resolve(rawPath);
+}
+
+function isOpenedRootPath(targetPath) {
+    for (const root of explorerRoots) {
+        if (path.resolve(root) === targetPath) return true;
+    }
+    return false;
+}
+
 async function buildExplorerTree(currentPath, depth = 0, state = { visited: 0, truncated: false }) {
     if (state.visited >= EXPLORER_MAX_ENTRIES) {
         state.truncated = true;
@@ -336,12 +351,7 @@ ipcMain.handle('explorer:pick-folder', async () => {
 });
 
 ipcMain.handle('explorer:read-tree', async (_event, rootPath) => {
-    const rawPath = typeof rootPath === 'string' ? rootPath.trim() : '';
-    if (!rawPath) {
-        throw new Error('No folder path provided');
-    }
-
-    const resolvedRoot = path.resolve(rawPath);
+    const resolvedRoot = resolveExplorerPath(rootPath, 'No folder path provided');
     if (!isAllowedExplorerPath(resolvedRoot)) {
         throw new Error('Folder is outside allowed explorer roots');
     }
@@ -361,12 +371,7 @@ ipcMain.handle('explorer:read-tree', async (_event, rootPath) => {
 });
 
 ipcMain.handle('explorer:read-file', async (_event, filePath) => {
-    const rawPath = typeof filePath === 'string' ? filePath.trim() : '';
-    if (!rawPath) {
-        throw new Error('No file path provided');
-    }
-
-    const resolvedPath = path.resolve(rawPath);
+    const resolvedPath = resolveExplorerPath(filePath, 'No file path provided');
     if (!isAllowedExplorerPath(resolvedPath)) {
         throw new Error('File is outside allowed explorer roots');
     }
@@ -380,18 +385,102 @@ ipcMain.handle('explorer:read-file', async (_event, filePath) => {
 });
 
 ipcMain.handle('explorer:write-file', async (_event, filePath, content) => {
-    const rawPath = typeof filePath === 'string' ? filePath.trim() : '';
-    if (!rawPath) {
-        throw new Error('No file path provided');
-    }
-
-    const resolvedPath = path.resolve(rawPath);
+    const resolvedPath = resolveExplorerPath(filePath, 'No file path provided');
     if (!isAllowedExplorerPath(resolvedPath)) {
         throw new Error('File is outside allowed explorer roots');
     }
 
     const nextContent = typeof content === 'string' ? content : String(content ?? '');
     await fs.writeFile(resolvedPath, nextContent, 'utf8');
+    return true;
+});
+
+ipcMain.handle('explorer:create-file', async (_event, filePath, content = '') => {
+    const resolvedPath = resolveExplorerPath(filePath, 'No file path provided');
+    if (!isAllowedExplorerPath(resolvedPath)) {
+        throw new Error('File is outside allowed explorer roots');
+    }
+
+    const parentPath = path.dirname(resolvedPath);
+    const parentStat = await fs.stat(parentPath).catch(() => null);
+    if (!parentStat || !parentStat.isDirectory()) {
+        throw new Error('Parent directory does not exist');
+    }
+
+    const exists = await fs.stat(resolvedPath).then(() => true).catch(() => false);
+    if (exists) {
+        throw new Error('A file or folder already exists at this path');
+    }
+
+    const nextContent = typeof content === 'string' ? content : String(content ?? '');
+    await fs.writeFile(resolvedPath, nextContent, 'utf8');
+    return resolvedPath;
+});
+
+ipcMain.handle('explorer:create-directory', async (_event, directoryPath) => {
+    const resolvedPath = resolveExplorerPath(directoryPath, 'No directory path provided');
+    if (!isAllowedExplorerPath(resolvedPath)) {
+        throw new Error('Directory is outside allowed explorer roots');
+    }
+
+    const exists = await fs.stat(resolvedPath).then(() => true).catch(() => false);
+    if (exists) {
+        throw new Error('A file or folder already exists at this path');
+    }
+
+    await fs.mkdir(resolvedPath, { recursive: false });
+    return resolvedPath;
+});
+
+ipcMain.handle('explorer:rename-path', async (_event, sourcePath, destinationPath) => {
+    const resolvedSource = resolveExplorerPath(sourcePath, 'No source path provided');
+    const resolvedDestination = resolveExplorerPath(destinationPath, 'No destination path provided');
+
+    if (!isAllowedExplorerPath(resolvedSource) || !isAllowedExplorerPath(resolvedDestination)) {
+        throw new Error('Source or destination path is outside allowed explorer roots');
+    }
+    if (resolvedSource === resolvedDestination) {
+        throw new Error('Source and destination are the same');
+    }
+    if (isOpenedRootPath(resolvedSource)) {
+        throw new Error('Renaming the opened root folder is not allowed');
+    }
+
+    const sourceStat = await fs.stat(resolvedSource).catch(() => null);
+    if (!sourceStat) {
+        throw new Error('Source file or folder does not exist');
+    }
+
+    const destinationExists = await fs.stat(resolvedDestination).then(() => true).catch(() => false);
+    if (destinationExists) {
+        throw new Error('Destination already exists');
+    }
+
+    const destinationParent = path.dirname(resolvedDestination);
+    const destinationParentStat = await fs.stat(destinationParent).catch(() => null);
+    if (!destinationParentStat || !destinationParentStat.isDirectory()) {
+        throw new Error('Destination parent directory does not exist');
+    }
+
+    await fs.rename(resolvedSource, resolvedDestination);
+    return resolvedDestination;
+});
+
+ipcMain.handle('explorer:delete-path', async (_event, targetPath) => {
+    const resolvedPath = resolveExplorerPath(targetPath, 'No target path provided');
+    if (!isAllowedExplorerPath(resolvedPath)) {
+        throw new Error('Target path is outside allowed explorer roots');
+    }
+    if (isOpenedRootPath(resolvedPath)) {
+        throw new Error('Deleting the opened root folder is not allowed');
+    }
+
+    const targetStat = await fs.stat(resolvedPath).catch(() => null);
+    if (!targetStat) {
+        throw new Error('Target file or folder does not exist');
+    }
+
+    await fs.rm(resolvedPath, { recursive: true, force: false });
     return true;
 });
 

@@ -43,7 +43,11 @@ contextBridge.exposeInMainWorld('fileExplorer', {
     pickFolder: () => ipcRenderer.invoke('explorer:pick-folder'),
     readTree: (rootPath) => ipcRenderer.invoke('explorer:read-tree', rootPath),
     readFile: (filePath) => ipcRenderer.invoke('explorer:read-file', filePath),
-    writeFile: (filePath, content) => ipcRenderer.invoke('explorer:write-file', filePath, content)
+    writeFile: (filePath, content) => ipcRenderer.invoke('explorer:write-file', filePath, content),
+    createFile: (filePath, content) => ipcRenderer.invoke('explorer:create-file', filePath, content),
+    createDirectory: (directoryPath) => ipcRenderer.invoke('explorer:create-directory', directoryPath),
+    renamePath: (sourcePath, destinationPath) => ipcRenderer.invoke('explorer:rename-path', sourcePath, destinationPath),
+    deletePath: (targetPath) => ipcRenderer.invoke('explorer:delete-path', targetPath)
 });
 
 // expose app version retrieval

@@ -23,6 +23,7 @@
             --bug-btn-offset-x: 5px; /* increase to move bug button right */
             --bug-btn-size: 32px; /* overall clickable bug button size */
             --bug-icon-size: 13px; /* bug icon size inside button */
+            --explorer-width: 260px;
             --menu-glass-bg: rgba(0, 0, 0, 0.1);
             --menu-glass-blur: 5px;
             --menu-glass-saturate: 210%;
@@ -674,9 +675,8 @@
 
         /* ---------- EXPLORER PANE ---------- */
         #explorerPane {
-            width: 260px;
-            min-width: 220px;
-            max-width: 360px;
+            width: var(--explorer-width);
+            min-width: 180px;
             background: #050505;
             border-right: 1px solid rgba(255, 255, 255, 0.08);
             display: flex;
@@ -696,6 +696,43 @@
             border-right-color: transparent;
             opacity: 0;
             pointer-events: none;
+        }
+
+        #explorerResizeHandle {
+            width: 6px;
+            flex-shrink: 0;
+            position: relative;
+            cursor: col-resize;
+            background: linear-gradient(to right, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.02));
+            transition: background 0.18s ease, width var(--primary-view-transition) var(--primary-view-ease);
+        }
+
+        #explorerResizeHandle::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 2px;
+            height: 54px;
+            transform: translate(-50%, -50%);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.18);
+        }
+
+        #explorerResizeHandle:hover,
+        #explorerResizeHandle.dragging {
+            background: linear-gradient(to right, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.06));
+        }
+
+        #explorerResizeHandle.hidden {
+            width: 0;
+            pointer-events: none;
+        }
+
+        body.explorer-resizing,
+        body.explorer-resizing * {
+            cursor: col-resize !important;
+            user-select: none !important;
         }
 
         .explorer-header {
@@ -773,11 +810,16 @@
             text-align: left;
             font-size: 12px;
             cursor: pointer;
+            user-select: none;
         }
 
         .explorer-item:hover {
             background: rgba(255, 255, 255, 0.06);
             color: #ffffff;
+        }
+
+        .explorer-item.is-dir {
+            color: #d7d7d7;
         }
 
         .explorer-item.is-file.active {
@@ -794,12 +836,122 @@
             line-height: 1;
         }
 
+        .explorer-icon {
+            width: 24px;
+            min-width: 24px;
+            height: 16px;
+            border-radius: 4px;
+            border: 1px solid rgba(255, 255, 255, 0.16);
+            background: rgba(255, 255, 255, 0.04);
+            color: #b9d6ff;
+            font-size: 9px;
+            line-height: 14px;
+            font-weight: 700;
+            letter-spacing: 0.03em;
+            text-align: center;
+            text-transform: uppercase;
+            flex-shrink: 0;
+            padding-top: 1px;
+        }
+
+        .explorer-icon[data-kind="dir"] {
+            color: #ffd589;
+            border-color: rgba(255, 213, 137, 0.35);
+            background: rgba(255, 213, 137, 0.08);
+        }
+
+        .explorer-icon[data-kind="js"] {
+            color: #ffe16a;
+            border-color: rgba(255, 225, 106, 0.34);
+            background: rgba(255, 225, 106, 0.09);
+        }
+
+        .explorer-icon[data-kind="ts"] {
+            color: #79c1ff;
+            border-color: rgba(121, 193, 255, 0.34);
+            background: rgba(121, 193, 255, 0.09);
+        }
+
+        .explorer-icon[data-kind="json"] {
+            color: #b39aff;
+            border-color: rgba(179, 154, 255, 0.34);
+            background: rgba(179, 154, 255, 0.09);
+        }
+
+        .explorer-icon[data-kind="html"] {
+            color: #ff9f7a;
+            border-color: rgba(255, 159, 122, 0.34);
+            background: rgba(255, 159, 122, 0.09);
+        }
+
+        .explorer-icon[data-kind="css"] {
+            color: #8de0ff;
+            border-color: rgba(141, 224, 255, 0.34);
+            background: rgba(141, 224, 255, 0.09);
+        }
+
+        .explorer-icon[data-kind="md"] {
+            color: #9bd7a4;
+            border-color: rgba(155, 215, 164, 0.34);
+            background: rgba(155, 215, 164, 0.09);
+        }
+
+        .explorer-icon[data-kind="img"] {
+            color: #ffadcb;
+            border-color: rgba(255, 173, 203, 0.34);
+            background: rgba(255, 173, 203, 0.09);
+        }
+
+        .explorer-icon[data-kind="txt"] {
+            color: #d0d0d0;
+            border-color: rgba(255, 255, 255, 0.22);
+            background: rgba(255, 255, 255, 0.05);
+        }
+
         .explorer-name {
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
             min-width: 0;
             flex: 1;
+        }
+
+        #explorerContextMenu {
+            position: fixed;
+            z-index: 26000;
+            min-width: 170px;
+            padding: 6px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            background: rgba(10, 10, 10, 0.92);
+            box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45);
+            backdrop-filter: blur(10px) saturate(160%);
+            -webkit-backdrop-filter: blur(10px) saturate(160%);
+        }
+
+        #explorerContextMenu[hidden] {
+            display: none;
+        }
+
+        .explorer-context-item {
+            width: 100%;
+            border: none;
+            background: transparent;
+            color: #d5d5d5;
+            text-align: left;
+            font-size: 12px;
+            border-radius: 6px;
+            padding: 7px 9px;
+            cursor: pointer;
+        }
+
+        .explorer-context-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: #ffffff;
+        }
+
+        .explorer-context-item.danger {
+            color: #ff9b9b;
         }
 
         /* ---------- MAIN CONTENT AREA ---------- */
@@ -2171,6 +2323,7 @@
                         <div class="explorer-empty">Open a folder to browse files.</div>
                     </div>
                 </div>
+                <div id="explorerResizeHandle" aria-hidden="true"></div>
 
                 <div id="mainContent">
                     <div id="dashboard" class="primary-view active">
@@ -2351,6 +2504,7 @@
             </div>
         </div>
     </div>
+    <div id="explorerContextMenu" hidden></div>
 
     <script src="node_modules/monaco-editor/min/vs/loader.js"></script>
     <script>
@@ -3005,6 +3159,12 @@ console.log('Dark mode applied!');`
         let explorerRootPath = '';
         let explorerTreeData = [];
         const collapsedExplorerDirs = new Set();
+        const EXPLORER_MIN_WIDTH = 190;
+        const EXPLORER_MAX_WIDTH = 560;
+        const EXPLORER_WIDTH_STORAGE_KEY = 'voltus.explorer.width';
+        let explorerContextTargetPath = '';
+        let explorerContextTargetType = '';
+        let explorerResizeActive = false;
 
         function clearDragOverState() {
             document.querySelectorAll(".tab.drag-over-left, .tab.drag-over-right").forEach(tab => {
@@ -3028,6 +3188,125 @@ console.log('Dark mode applied!');`
             return parts.length ? parts[parts.length - 1] : filePath;
         }
 
+        function getParentPath(filePath) {
+            if (!filePath || typeof filePath !== 'string') return '';
+            const normalized = filePath.replace(/[\\/]+$/, '');
+            const slashIndex = Math.max(normalized.lastIndexOf('\\'), normalized.lastIndexOf('/'));
+            return slashIndex > -1 ? normalized.slice(0, slashIndex) : '';
+        }
+
+        function joinExplorerPath(basePath, name) {
+            const base = typeof basePath === 'string' ? basePath.replace(/[\\/]+$/, '') : '';
+            const child = typeof name === 'string' ? name.replace(/^[\\/]+/, '') : '';
+            if (!base) return child;
+            if (!child) return base;
+            const separator = base.includes('\\') ? '\\' : '/';
+            return `${base}${separator}${child}`;
+        }
+
+        function normalizePathForCompare(pathValue) {
+            if (!pathValue || typeof pathValue !== 'string') return '';
+            return pathValue.replace(/\//g, '\\').replace(/\\+$/, '').toLowerCase();
+        }
+
+        function isSameOrChildPath(candidatePath, parentPath) {
+            const candidate = normalizePathForCompare(candidatePath);
+            const parent = normalizePathForCompare(parentPath);
+            if (!candidate || !parent) return false;
+            return candidate === parent || candidate.startsWith(parent + '\\');
+        }
+
+        function isValidExplorerName(inputName) {
+            const candidate = typeof inputName === 'string' ? inputName.trim() : '';
+            if (!candidate) return false;
+            if (candidate === '.' || candidate === '..') return false;
+            return !/[\\/:*?"<>|]/.test(candidate);
+        }
+
+        function setTabTitle(tabState, nextName) {
+            if (!tabState || typeof nextName !== 'string') return;
+            tabState.name = nextName;
+            if (!tabState.tabElement) return;
+            const titleEl = tabState.tabElement.querySelector('span');
+            if (titleEl) {
+                titleEl.textContent = nextName;
+            }
+        }
+
+        function markTabAsDeleted(tabState) {
+            if (!tabState) return;
+            const baseName = String(tabState.name || 'Untitled').replace(/^\[deleted\]\s*/i, '');
+            setTabTitle(tabState, `[deleted] ${baseName}`);
+            tabState.filePath = '';
+        }
+
+        function applyPathRenameToOpenTabs(sourcePath, destinationPath, isDirectory) {
+            Object.entries(tabs).forEach(([tabId, tabState]) => {
+                if (!tabState || !tabState.filePath) return;
+                const tabPath = tabState.filePath;
+                const shouldRename = isDirectory
+                    ? isSameOrChildPath(tabPath, sourcePath)
+                    : normalizePathForCompare(tabPath) === normalizePathForCompare(sourcePath);
+
+                if (!shouldRename) return;
+
+                let nextPath = destinationPath;
+                if (isDirectory && normalizePathForCompare(tabPath) !== normalizePathForCompare(sourcePath)) {
+                    const suffix = tabPath.slice(sourcePath.length);
+                    nextPath = destinationPath + suffix;
+                }
+
+                filePathToTabId.delete(tabState.filePath);
+                tabState.filePath = nextPath;
+                filePathToTabId.set(nextPath, tabId);
+                setTabTitle(tabState, getFileNameFromPath(nextPath) || tabState.name);
+            });
+            updateDashboardMetrics();
+        }
+
+        function removeDeletedPathFromTabs(targetPath, isDirectory) {
+            Object.values(tabs).forEach((tabState) => {
+                if (!tabState || !tabState.filePath) return;
+                const shouldClear = isDirectory
+                    ? isSameOrChildPath(tabState.filePath, targetPath)
+                    : normalizePathForCompare(tabState.filePath) === normalizePathForCompare(targetPath);
+
+                if (!shouldClear) return;
+                filePathToTabId.delete(tabState.filePath);
+                markTabAsDeleted(tabState);
+            });
+            updateDashboardMetrics();
+        }
+
+        function getExplorerFileKind(node) {
+            if (node && node.type === 'directory') return 'dir';
+            const fileName = String(node && node.name ? node.name : '').toLowerCase();
+            if (/\.(js|mjs|cjs)$/i.test(fileName)) return 'js';
+            if (/\.(ts|tsx)$/i.test(fileName)) return 'ts';
+            if (/\.(json)$/i.test(fileName)) return 'json';
+            if (/\.(html|htm)$/i.test(fileName)) return 'html';
+            if (/\.(css|scss|less)$/i.test(fileName)) return 'css';
+            if (/\.(md|markdown)$/i.test(fileName)) return 'md';
+            if (/\.(png|jpg|jpeg|gif|svg|webp|ico|bmp)$/i.test(fileName)) return 'img';
+            if (/\.(txt|log|ini|cfg|conf)$/i.test(fileName)) return 'txt';
+            return 'file';
+        }
+
+        function getExplorerIconLabel(kind) {
+            switch (kind) {
+                case 'dir': return 'DIR';
+                case 'js': return 'JS';
+                case 'ts': return 'TS';
+                case 'json': return '{}';
+                case 'html': return 'HT';
+                case 'css': return 'CS';
+                case 'md': return 'MD';
+                case 'img': return 'IMG';
+                case 'txt': return 'TXT';
+                default: return 'FILE';
+            }
+        }
+
         function getActiveTabFilePath() {
             if (!activeTabId || !tabs[activeTabId]) return '';
             return tabs[activeTabId].filePath || '';
@@ -3036,17 +3315,236 @@ console.log('Dark mode applied!');`
         function updateExplorerActiveFile() {
             const activePath = getActiveTabFilePath();
             document.querySelectorAll('.explorer-item.is-file').forEach((item) => {
-                item.classList.toggle('active', Boolean(activePath) && item.dataset.path === activePath);
+                item.classList.toggle('active', Boolean(activePath) && normalizePathForCompare(item.dataset.path) === normalizePathForCompare(activePath));
             });
+        }
+
+        function setExplorerWidth(widthPx, persist = true) {
+            const parsed = Number(widthPx);
+            if (!Number.isFinite(parsed)) return;
+            const clamped = Math.min(EXPLORER_MAX_WIDTH, Math.max(EXPLORER_MIN_WIDTH, Math.round(parsed)));
+            document.documentElement.style.setProperty('--explorer-width', `${clamped}px`);
+            if (persist) {
+                try {
+                    localStorage.setItem(EXPLORER_WIDTH_STORAGE_KEY, String(clamped));
+                } catch { }
+            }
+            if (editor) {
+                requestAnimationFrame(() => editor.layout());
+            }
+        }
+
+        function loadExplorerWidth() {
+            try {
+                const storedWidth = localStorage.getItem(EXPLORER_WIDTH_STORAGE_KEY);
+                if (!storedWidth) return;
+                setExplorerWidth(Number(storedWidth), false);
+            } catch { }
+        }
+
+        function hideExplorerContextMenu() {
+            const menu = document.getElementById('explorerContextMenu');
+            if (!menu) return;
+            menu.hidden = true;
+            menu.innerHTML = '';
+            explorerContextTargetPath = '';
+            explorerContextTargetType = '';
+        }
+
+        function getExplorerContextActions(targetType) {
+            if (!explorerRootPath) return [];
+
+            if (targetType === 'root') {
+                return [
+                    { id: 'new-file', label: 'New File' },
+                    { id: 'new-folder', label: 'New Folder' },
+                    { id: 'refresh', label: 'Refresh Explorer' }
+                ];
+            }
+
+            if (targetType === 'directory') {
+                return [
+                    { id: 'new-file', label: 'New File' },
+                    { id: 'new-folder', label: 'New Folder' },
+                    { id: 'rename', label: 'Rename' },
+                    { id: 'delete', label: 'Delete', danger: true },
+                    { id: 'refresh', label: 'Refresh Explorer' }
+                ];
+            }
+
+            if (targetType === 'file') {
+                return [
+                    { id: 'rename', label: 'Rename' },
+                    { id: 'delete', label: 'Delete', danger: true },
+                    { id: 'refresh', label: 'Refresh Explorer' }
+                ];
+            }
+
+            return [{ id: 'refresh', label: 'Refresh Explorer' }];
+        }
+
+        function showExplorerContextMenu(clientX, clientY, targetPath, targetType) {
+            const menu = document.getElementById('explorerContextMenu');
+            if (!menu) return;
+
+            const actions = getExplorerContextActions(targetType);
+            if (!actions.length) {
+                hideExplorerContextMenu();
+                return;
+            }
+
+            explorerContextTargetPath = targetPath || explorerRootPath;
+            explorerContextTargetType = targetType || 'root';
+
+            menu.innerHTML = '';
+            actions.forEach((action) => {
+                const item = document.createElement('button');
+                item.type = 'button';
+                item.className = 'explorer-context-item';
+                if (action.danger) item.classList.add('danger');
+                item.textContent = action.label;
+                item.onclick = (event) => {
+                    event.stopPropagation();
+                    handleExplorerContextAction(action.id, explorerContextTargetPath, explorerContextTargetType);
+                };
+                menu.appendChild(item);
+            });
+
+            menu.hidden = false;
+            menu.style.left = `${Math.max(6, clientX)}px`;
+            menu.style.top = `${Math.max(6, clientY)}px`;
+
+            const rect = menu.getBoundingClientRect();
+            const maxX = window.innerWidth - rect.width - 6;
+            const maxY = window.innerHeight - rect.height - 6;
+            menu.style.left = `${Math.max(6, Math.min(clientX, maxX))}px`;
+            menu.style.top = `${Math.max(6, Math.min(clientY, maxY))}px`;
+        }
+
+        async function handleExplorerContextAction(actionId, targetPath, targetType) {
+            hideExplorerContextMenu();
+
+            if (!window.fileExplorer) {
+                showToast('File explorer API unavailable');
+                return;
+            }
+
+            const targetDirectory = targetType === 'root'
+                ? explorerRootPath
+                : (targetType === 'directory' ? targetPath : getParentPath(targetPath));
+
+            try {
+                if (actionId === 'new-file') {
+                    const fileName = prompt('File name:', 'new-file.js');
+                    if (fileName === null) return;
+                    const trimmed = fileName.trim();
+                    if (!isValidExplorerName(trimmed)) {
+                        showToast('Invalid file name');
+                        return;
+                    }
+
+                    const newFilePath = joinExplorerPath(targetDirectory, trimmed);
+                    await window.fileExplorer.createFile(newFilePath, '');
+                    await refreshExplorerTree();
+                    await openFileFromExplorer(newFilePath, trimmed);
+                    return;
+                }
+
+                if (actionId === 'new-folder') {
+                    const folderName = prompt('Folder name:', 'new-folder');
+                    if (folderName === null) return;
+                    const trimmed = folderName.trim();
+                    if (!isValidExplorerName(trimmed)) {
+                        showToast('Invalid folder name');
+                        return;
+                    }
+
+                    const newFolderPath = joinExplorerPath(targetDirectory, trimmed);
+                    await window.fileExplorer.createDirectory(newFolderPath);
+                    await refreshExplorerTree();
+                    return;
+                }
+
+                if (actionId === 'rename') {
+                    if (!targetPath || targetType === 'root') return;
+                    const currentName = getFileNameFromPath(targetPath);
+                    const nextName = prompt('Rename to:', currentName);
+                    if (nextName === null) return;
+                    const trimmed = nextName.trim();
+                    if (!isValidExplorerName(trimmed)) {
+                        showToast('Invalid name');
+                        return;
+                    }
+                    if (trimmed === currentName) return;
+
+                    const parentPath = getParentPath(targetPath);
+                    const renamedPath = joinExplorerPath(parentPath, trimmed);
+                    await window.fileExplorer.renamePath(targetPath, renamedPath);
+                    applyPathRenameToOpenTabs(targetPath, renamedPath, targetType === 'directory');
+
+                    if (targetType === 'directory') {
+                        const updates = [];
+                        collapsedExplorerDirs.forEach((pathValue) => {
+                            if (isSameOrChildPath(pathValue, targetPath)) {
+                                const suffix = pathValue.slice(targetPath.length);
+                                updates.push([pathValue, renamedPath + suffix]);
+                            }
+                        });
+                        updates.forEach(([oldPath, nextPath]) => {
+                            collapsedExplorerDirs.delete(oldPath);
+                            collapsedExplorerDirs.add(nextPath);
+                        });
+                    }
+
+                    await refreshExplorerTree();
+                    updateExplorerActiveFile();
+                    return;
+                }
+
+                if (actionId === 'delete') {
+                    if (!targetPath || targetType === 'root') return;
+                    const noun = targetType === 'directory' ? 'folder' : 'file';
+                    const confirmed = confirm(`Delete this ${noun}?\n${targetPath}`);
+                    if (!confirmed) return;
+
+                    await window.fileExplorer.deletePath(targetPath);
+                    removeDeletedPathFromTabs(targetPath, targetType === 'directory');
+
+                    if (targetType === 'directory') {
+                        Array.from(collapsedExplorerDirs).forEach((pathValue) => {
+                            if (isSameOrChildPath(pathValue, targetPath)) {
+                                collapsedExplorerDirs.delete(pathValue);
+                            }
+                        });
+                    }
+
+                    await refreshExplorerTree();
+                    updateExplorerActiveFile();
+                    return;
+                }
+
+                if (actionId === 'refresh') {
+                    await refreshExplorerTree();
+                }
+            } catch (error) {
+                pushConsole('error', error && error.message ? error.message : String(error));
+                showToast('Explorer action failed');
+            }
         }
 
         function setExplorerPaneOpen(isOpen) {
             const explorerPane = document.getElementById('explorerPane');
             const explorerToggle = document.getElementById('explorerToggle');
-            if (!explorerPane || !explorerToggle) return;
+            const resizeHandle = document.getElementById('explorerResizeHandle');
+            if (!explorerPane || !explorerToggle || !resizeHandle) return;
 
             explorerPane.classList.toggle('collapsed', !isOpen);
             explorerToggle.classList.toggle('active', isOpen);
+            resizeHandle.classList.toggle('hidden', !isOpen);
+
+            if (!isOpen) {
+                hideExplorerContextMenu();
+            }
 
             if (editor) {
                 requestAnimationFrame(() => {
@@ -3062,27 +3560,44 @@ console.log('Dark mode applied!');`
 
             nodes.forEach((node) => {
                 const isDirectory = node && node.type === 'directory';
+                const nodePath = node && node.path ? node.path : '';
+                const nodeType = isDirectory ? 'directory' : 'file';
+
                 const row = document.createElement('button');
                 row.type = 'button';
                 row.className = `explorer-item ${isDirectory ? 'is-dir' : 'is-file'}`;
                 row.style.paddingLeft = `${10 + depth * 14}px`;
-                row.dataset.path = node.path || '';
+                row.dataset.path = nodePath;
+                row.dataset.type = nodeType;
 
                 const caret = document.createElement('span');
                 caret.className = 'explorer-caret';
 
+                const icon = document.createElement('span');
+                icon.className = 'explorer-icon';
+                const iconKind = getExplorerFileKind(node);
+                icon.dataset.kind = iconKind;
+                icon.textContent = getExplorerIconLabel(iconKind);
+
                 const name = document.createElement('span');
                 name.className = 'explorer-name';
-                name.textContent = node.name || 'Untitled';
+                name.textContent = node && node.name ? node.name : 'Untitled';
+
+                row.oncontextmenu = (event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    showExplorerContextMenu(event.clientX, event.clientY, nodePath, nodeType);
+                };
 
                 if (isDirectory) {
-                    const expanded = !collapsedExplorerDirs.has(node.path);
+                    const expanded = !collapsedExplorerDirs.has(nodePath);
                     caret.textContent = expanded ? 'v' : '>';
                     row.appendChild(caret);
+                    row.appendChild(icon);
                     row.appendChild(name);
                     row.onclick = () => {
-                        if (expanded) collapsedExplorerDirs.add(node.path);
-                        else collapsedExplorerDirs.delete(node.path);
+                        if (expanded) collapsedExplorerDirs.add(nodePath);
+                        else collapsedExplorerDirs.delete(nodePath);
                         renderExplorerTree();
                     };
 
@@ -3094,10 +3609,11 @@ console.log('Dark mode applied!');`
                 } else {
                     caret.textContent = '';
                     row.appendChild(caret);
+                    row.appendChild(icon);
                     row.appendChild(name);
-                    row.classList.toggle('active', Boolean(activeFilePath) && activeFilePath === node.path);
+                    row.classList.toggle('active', Boolean(activeFilePath) && normalizePathForCompare(activeFilePath) === normalizePathForCompare(nodePath));
                     row.onclick = () => {
-                        openFileFromExplorer(node.path, node.name);
+                        openFileFromExplorer(nodePath, node && node.name ? node.name : '');
                     };
                     fragment.appendChild(row);
                 }
@@ -3144,6 +3660,8 @@ console.log('Dark mode applied!');`
         }
 
         async function refreshExplorerTree() {
+            hideExplorerContextMenu();
+
             if (!explorerRootPath) {
                 renderExplorerTree();
                 return;
@@ -3185,6 +3703,7 @@ console.log('Dark mode applied!');`
                 if (!selectedPath) return;
                 explorerRootPath = selectedPath;
                 collapsedExplorerDirs.clear();
+                hideExplorerContextMenu();
                 await refreshExplorerTree();
             } catch (error) {
                 pushConsole('error', error && error.message ? error.message : String(error));
@@ -3654,9 +4173,14 @@ console.log('Dark mode applied!');`
         const explorerToggle = document.getElementById('explorerToggle');
         const explorerOpenFolderBtn = document.getElementById('explorerOpenFolder');
         const explorerRefreshBtn = document.getElementById('explorerRefresh');
+        const explorerTree = document.getElementById('explorerTree');
+        const explorerPane = document.getElementById('explorerPane');
+        const explorerResizeHandle = document.getElementById('explorerResizeHandle');
+        const explorerContextMenu = document.getElementById('explorerContextMenu');
+        let explorerResizeStartX = 0;
+        let explorerResizeStartWidth = 0;
 
         explorerToggle.onclick = () => {
-            const explorerPane = document.getElementById('explorerPane');
             const shouldOpen = explorerPane.classList.contains('collapsed');
             setExplorerPaneOpen(shouldOpen);
         };
@@ -3669,6 +4193,60 @@ console.log('Dark mode applied!');`
             refreshExplorerTree();
         };
 
+        explorerTree.addEventListener('contextmenu', (event) => {
+            const row = event.target.closest('.explorer-item');
+            if (row) return;
+            if (!explorerRootPath) return;
+            event.preventDefault();
+            showExplorerContextMenu(event.clientX, event.clientY, explorerRootPath, 'root');
+        });
+
+        explorerTree.addEventListener('scroll', () => {
+            hideExplorerContextMenu();
+        });
+
+        document.addEventListener('click', (event) => {
+            if (!explorerContextMenu || explorerContextMenu.hidden) return;
+            if (explorerContextMenu.contains(event.target)) return;
+            hideExplorerContextMenu();
+        });
+
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape') {
+                hideExplorerContextMenu();
+            }
+        });
+
+        window.addEventListener('resize', () => {
+            hideExplorerContextMenu();
+        });
+
+        explorerResizeHandle.addEventListener('mousedown', (event) => {
+            if (explorerPane.classList.contains('collapsed')) return;
+            explorerResizeActive = true;
+            explorerResizeStartX = event.clientX;
+            explorerResizeStartWidth = explorerPane.getBoundingClientRect().width;
+            explorerResizeHandle.classList.add('dragging');
+            document.body.classList.add('explorer-resizing');
+            event.preventDefault();
+        });
+
+        document.addEventListener('mousemove', (event) => {
+            if (!explorerResizeActive) return;
+            const delta = event.clientX - explorerResizeStartX;
+            setExplorerWidth(explorerResizeStartWidth + delta, false);
+        });
+
+        document.addEventListener('mouseup', () => {
+            if (!explorerResizeActive) return;
+            explorerResizeActive = false;
+            explorerResizeHandle.classList.remove('dragging');
+            document.body.classList.remove('explorer-resizing');
+            const computedWidth = parseFloat(getComputedStyle(explorerPane).width);
+            setExplorerWidth(computedWidth, true);
+        });
+
+        loadExplorerWidth();
         setExplorerPaneOpen(true);
         renderExplorerTree();
         setPrimaryView('home');
