@@ -1,10 +1,85 @@
-const { app, BrowserWindow, Menu, ipcMain, shell } = require('electron');
+const { app, BrowserWindow, Menu, ipcMain, shell, dialog } = require('electron');
 const path = require('path');
+const fs = require('fs/promises');
 
 let win;
 let extensionWss = null;
 const extensionClients = new Set();
 let extensionBridgeError = '';
+const explorerRoots = new Set();
+const EXPLORER_MAX_DEPTH = 8;
+const EXPLORER_MAX_ENTRIES = 3000;
+const EXPLORER_IGNORED_FOLDERS = new Set(['node_modules', '.git']);
+
+function isPathInsideRoot(targetPath, rootPath) {
+    const relative = path.relative(rootPath, targetPath);
+    return relative === '' || (!relative.startsWith('..') && !path.isAbsolute(relative));
+}
+
+function isAllowedExplorerPath(targetPath) {
+    for (const root of explorerRoots) {
+        if (isPathInsideRoot(targetPath, root)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+async function buildExplorerTree(currentPath, depth = 0, state = { visited: 0, truncated: false }) {
+    if (state.visited >= EXPLORER_MAX_ENTRIES) {
+        state.truncated = true;
+        return [];
+    }
+    if (depth > EXPLORER_MAX_DEPTH) {
+        return [];
+    }
+
+    let entries = [];
+    try {
+        entries = await fs.readdir(currentPath, { withFileTypes: true });
+    } catch {
+        return [];
+    }
+
+    entries = entries
+        .filter((entry) => {
+            if (!entry || !entry.name) return false;
+            if (entry.name.startsWith('.')) return false;
+            if (entry.isSymbolicLink()) return false;
+            if (entry.isDirectory() && EXPLORER_IGNORED_FOLDERS.has(entry.name.toLowerCase())) return false;
+            return true;
+        })
+        .sort((a, b) => {
+            if (a.isDirectory() && !b.isDirectory()) return -1;
+            if (!a.isDirectory() && b.isDirectory()) return 1;
+            return a.name.localeCompare(b.name, undefined, { sensitivity: 'base', numeric: true });
+        });
+
+    const tree = [];
+    for (const entry of entries) {
+        if (state.visited >= EXPLORER_MAX_ENTRIES) {
+            state.truncated = true;
+            break;
+        }
+
+        const absolutePath = path.join(currentPath, entry.name);
+        const node = {
+            name: entry.name,
+            path: absolutePath,
+            type: entry.isDirectory() ? 'directory' : 'file'
+        };
+
+        state.visited += 1;
+
+        if (entry.isDirectory() && depth < EXPLORER_MAX_DEPTH) {
+            node.children = await buildExplorerTree(absolutePath, depth + 1, state);
+        }
+
+        tree.push(node);
+    }
+
+    return tree;
+}
 
 function getBridgeStatus() {
     return {
@@ -241,6 +316,83 @@ ipcMain.handle('app:open-external', async (_event, url) => {
         console.error('[OpenExternal] Failed:', error && error.message ? error.message : String(error));
         return false;
     }
+});
+
+ipcMain.handle('explorer:pick-folder', async () => {
+    if (!win || win.isDestroyed()) return null;
+
+    const result = await dialog.showOpenDialog(win, {
+        title: 'Open Folder',
+        properties: ['openDirectory']
+    });
+
+    if (result.canceled || !Array.isArray(result.filePaths) || result.filePaths.length === 0) {
+        return null;
+    }
+
+    const selectedPath = path.resolve(result.filePaths[0]);
+    explorerRoots.add(selectedPath);
+    return selectedPath;
+});
+
+ipcMain.handle('explorer:read-tree', async (_event, rootPath) => {
+    const rawPath = typeof rootPath === 'string' ? rootPath.trim() : '';
+    if (!rawPath) {
+        throw new Error('No folder path provided');
+    }
+
+    const resolvedRoot = path.resolve(rawPath);
+    if (!isAllowedExplorerPath(resolvedRoot)) {
+        throw new Error('Folder is outside allowed explorer roots');
+    }
+
+    const stat = await fs.stat(resolvedRoot);
+    if (!stat.isDirectory()) {
+        throw new Error('Provided path is not a directory');
+    }
+
+    const state = { visited: 0, truncated: false };
+    const entries = await buildExplorerTree(resolvedRoot, 0, state);
+    return {
+        rootPath: resolvedRoot,
+        entries,
+        truncated: state.truncated
+    };
+});
+
+ipcMain.handle('explorer:read-file', async (_event, filePath) => {
+    const rawPath = typeof filePath === 'string' ? filePath.trim() : '';
+    if (!rawPath) {
+        throw new Error('No file path provided');
+    }
+
+    const resolvedPath = path.resolve(rawPath);
+    if (!isAllowedExplorerPath(resolvedPath)) {
+        throw new Error('File is outside allowed explorer roots');
+    }
+
+    const stat = await fs.stat(resolvedPath);
+    if (!stat.isFile()) {
+        throw new Error('Provided path is not a file');
+    }
+
+    return fs.readFile(resolvedPath, 'utf8');
+});
+
+ipcMain.handle('explorer:write-file', async (_event, filePath, content) => {
+    const rawPath = typeof filePath === 'string' ? filePath.trim() : '';
+    if (!rawPath) {
+        throw new Error('No file path provided');
+    }
+
+    const resolvedPath = path.resolve(rawPath);
+    if (!isAllowedExplorerPath(resolvedPath)) {
+        throw new Error('File is outside allowed explorer roots');
+    }
+
+    const nextContent = typeof content === 'string' ? content : String(content ?? '');
+    await fs.writeFile(resolvedPath, nextContent, 'utf8');
+    return true;
 });
 
 app.on('window-all-closed', () => {

@@ -39,6 +39,13 @@ contextBridge.exposeInMainWorld('startupEvents', {
     }
 });
 
+contextBridge.exposeInMainWorld('fileExplorer', {
+    pickFolder: () => ipcRenderer.invoke('explorer:pick-folder'),
+    readTree: (rootPath) => ipcRenderer.invoke('explorer:read-tree', rootPath),
+    readFile: (filePath) => ipcRenderer.invoke('explorer:read-file', filePath),
+    writeFile: (filePath, content) => ipcRenderer.invoke('explorer:write-file', filePath, content)
+});
+
 // expose app version retrieval
 contextBridge.exposeInMainWorld('appInfo', {
     getVersion: () => ipcRenderer.invoke('app:get-version'),

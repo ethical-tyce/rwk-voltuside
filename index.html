@@ -599,7 +599,7 @@
             display: flex;
             flex-direction: column;
             gap: 6px;
-            padding: 0px 6px;
+            padding: 6px 6px;
         }
 
         /* ---------- GLASSY SIDEBAR TABS ---------- */
@@ -670,6 +670,136 @@
             height: 18px;
             stroke-width: 2.5px; /* Slightly thicker for glass visibility */
             filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.5));
+        }
+
+        /* ---------- EXPLORER PANE ---------- */
+        #explorerPane {
+            width: 260px;
+            min-width: 220px;
+            max-width: 360px;
+            background: #050505;
+            border-right: 1px solid rgba(255, 255, 255, 0.08);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            opacity: 1;
+            transition:
+                width var(--primary-view-transition) var(--primary-view-ease),
+                min-width var(--primary-view-transition) var(--primary-view-ease),
+                opacity var(--primary-view-transition) var(--primary-view-ease),
+                border-color var(--primary-view-transition) var(--primary-view-ease);
+        }
+
+        #explorerPane.collapsed {
+            width: 0;
+            min-width: 0;
+            border-right-color: transparent;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .explorer-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            padding: 11px 12px 9px 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .explorer-title {
+            font-size: 11px;
+            letter-spacing: 0.14em;
+            color: #c5c5c5;
+            font-weight: 600;
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+
+        .explorer-actions {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-shrink: 0;
+        }
+
+        .explorer-btn {
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            background: rgba(255, 255, 255, 0.04);
+            color: #d2d2d2;
+            border-radius: 6px;
+            padding: 4px 8px;
+            font-size: 11px;
+            cursor: pointer;
+        }
+
+        .explorer-btn:hover {
+            background: rgba(255, 255, 255, 0.12);
+            color: #ffffff;
+        }
+
+        #explorerPath {
+            padding: 8px 12px;
+            font-size: 11px;
+            color: #7f7f7f;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        #explorerTree {
+            flex: 1;
+            min-height: 0;
+            overflow: auto;
+            padding: 6px 0;
+        }
+
+        .explorer-empty {
+            padding: 12px;
+            color: #737373;
+            font-size: 12px;
+        }
+
+        .explorer-item {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 5px 10px;
+            border: none;
+            background: transparent;
+            color: #b8b8b8;
+            text-align: left;
+            font-size: 12px;
+            cursor: pointer;
+        }
+
+        .explorer-item:hover {
+            background: rgba(255, 255, 255, 0.06);
+            color: #ffffff;
+        }
+
+        .explorer-item.is-file.active {
+            background: rgba(255, 255, 255, 0.14);
+            color: #ffffff;
+        }
+
+        .explorer-caret {
+            width: 10px;
+            flex-shrink: 0;
+            color: #7a7a7a;
+            text-align: center;
+            font-size: 10px;
+            line-height: 1;
+        }
+
+        .explorer-name {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            min-width: 0;
+            flex: 1;
         }
 
         /* ---------- MAIN CONTENT AREA ---------- */
@@ -2001,24 +2131,44 @@
         <div id="editorWrap">
             <div id="editorContainer">
                 <div id="leftSidebar">
-                    <div class="sidebar-tab active" id="homeTab" title="Home">
+                    <div class="sidebar-tab active" id="explorerToggle" title="Explorer">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <path d="M3 6h7l2 2h9v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                            <path d="M3 9h18"></path>
+                        </svg>
+                    </div>
+                    <div class="sidebar-tab active" id="homeTab" data-view="home" title="Home">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
                             <path d="M3 10.5L12 3l9 7.5"></path>
                             <path d="M5 10v10h14V10"></path>
                         </svg>
                     </div>
-                    <div class="sidebar-tab" id="editorTab" title="Editor">
+                    <div class="sidebar-tab" id="editorTab" data-view="editor" title="Editor">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
                             <polyline points="16 18 22 12 16 6"></polyline>
                             <polyline points="8 6 2 12 8 18"></polyline>
                         </svg>
                     </div>
-                    <div class="sidebar-tab" id="htmlOutputTab" title="HTML Output">
+                    <div class="sidebar-tab" id="htmlOutputTab" data-view="html" title="HTML Output">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
                             <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
                             <line x1="8" y1="21" x2="16" y2="21"></line>
                             <line x1="12" y1="17" x2="12" y2="21"></line>
                         </svg>
+                    </div>
+                </div>
+
+                <div id="explorerPane">
+                    <div class="explorer-header">
+                        <span class="explorer-title">Explorer</span>
+                        <div class="explorer-actions">
+                            <button id="explorerOpenFolder" class="explorer-btn" type="button">Open Folder</button>
+                            <button id="explorerRefresh" class="explorer-btn" type="button">Refresh</button>
+                        </div>
+                    </div>
+                    <div id="explorerPath">No folder opened</div>
+                    <div id="explorerTree">
+                        <div class="explorer-empty">Open a folder to browse files.</div>
                     </div>
                 </div>
 
@@ -2851,6 +3001,10 @@ console.log('Dark mode applied!');`
         let browserTabCache = [];
         let selectedBrowserTabIds = [];
         let activeBrowserTabId = null;
+        const filePathToTabId = new Map();
+        let explorerRootPath = '';
+        let explorerTreeData = [];
+        const collapsedExplorerDirs = new Set();
 
         function clearDragOverState() {
             document.querySelectorAll(".tab.drag-over-left, .tab.drag-over-right").forEach(tab => {
@@ -2866,6 +3020,212 @@ console.log('Dark mode applied!');`
             }
             clearDragOverState();
             draggingTab = null;
+        }
+
+        function getFileNameFromPath(filePath) {
+            if (!filePath || typeof filePath !== 'string') return '';
+            const parts = filePath.split(/[\\/]/).filter(Boolean);
+            return parts.length ? parts[parts.length - 1] : filePath;
+        }
+
+        function getActiveTabFilePath() {
+            if (!activeTabId || !tabs[activeTabId]) return '';
+            return tabs[activeTabId].filePath || '';
+        }
+
+        function updateExplorerActiveFile() {
+            const activePath = getActiveTabFilePath();
+            document.querySelectorAll('.explorer-item.is-file').forEach((item) => {
+                item.classList.toggle('active', Boolean(activePath) && item.dataset.path === activePath);
+            });
+        }
+
+        function setExplorerPaneOpen(isOpen) {
+            const explorerPane = document.getElementById('explorerPane');
+            const explorerToggle = document.getElementById('explorerToggle');
+            if (!explorerPane || !explorerToggle) return;
+
+            explorerPane.classList.toggle('collapsed', !isOpen);
+            explorerToggle.classList.toggle('active', isOpen);
+
+            if (editor) {
+                requestAnimationFrame(() => {
+                    requestAnimationFrame(() => editor.layout());
+                });
+            }
+        }
+
+        function buildExplorerTreeNodes(nodes, depth, fragment) {
+            if (!Array.isArray(nodes)) return;
+
+            const activeFilePath = getActiveTabFilePath();
+
+            nodes.forEach((node) => {
+                const isDirectory = node && node.type === 'directory';
+                const row = document.createElement('button');
+                row.type = 'button';
+                row.className = `explorer-item ${isDirectory ? 'is-dir' : 'is-file'}`;
+                row.style.paddingLeft = `${10 + depth * 14}px`;
+                row.dataset.path = node.path || '';
+
+                const caret = document.createElement('span');
+                caret.className = 'explorer-caret';
+
+                const name = document.createElement('span');
+                name.className = 'explorer-name';
+                name.textContent = node.name || 'Untitled';
+
+                if (isDirectory) {
+                    const expanded = !collapsedExplorerDirs.has(node.path);
+                    caret.textContent = expanded ? 'v' : '>';
+                    row.appendChild(caret);
+                    row.appendChild(name);
+                    row.onclick = () => {
+                        if (expanded) collapsedExplorerDirs.add(node.path);
+                        else collapsedExplorerDirs.delete(node.path);
+                        renderExplorerTree();
+                    };
+
+                    fragment.appendChild(row);
+
+                    if (expanded && Array.isArray(node.children) && node.children.length > 0) {
+                        buildExplorerTreeNodes(node.children, depth + 1, fragment);
+                    }
+                } else {
+                    caret.textContent = '';
+                    row.appendChild(caret);
+                    row.appendChild(name);
+                    row.classList.toggle('active', Boolean(activeFilePath) && activeFilePath === node.path);
+                    row.onclick = () => {
+                        openFileFromExplorer(node.path, node.name);
+                    };
+                    fragment.appendChild(row);
+                }
+            });
+        }
+
+        function renderExplorerTree(statusMessage = '') {
+            const treeEl = document.getElementById('explorerTree');
+            const pathEl = document.getElementById('explorerPath');
+            if (!treeEl || !pathEl) return;
+
+            pathEl.textContent = explorerRootPath || 'No folder opened';
+            pathEl.title = explorerRootPath || '';
+            treeEl.innerHTML = '';
+
+            if (statusMessage) {
+                const status = document.createElement('div');
+                status.className = 'explorer-empty';
+                status.textContent = statusMessage;
+                treeEl.appendChild(status);
+                return;
+            }
+
+            if (!explorerRootPath) {
+                const empty = document.createElement('div');
+                empty.className = 'explorer-empty';
+                empty.textContent = 'Open a folder to browse files.';
+                treeEl.appendChild(empty);
+                return;
+            }
+
+            if (!Array.isArray(explorerTreeData) || explorerTreeData.length === 0) {
+                const empty = document.createElement('div');
+                empty.className = 'explorer-empty';
+                empty.textContent = 'No files found in this folder.';
+                treeEl.appendChild(empty);
+                return;
+            }
+
+            const fragment = document.createDocumentFragment();
+            buildExplorerTreeNodes(explorerTreeData, 0, fragment);
+            treeEl.appendChild(fragment);
+            updateExplorerActiveFile();
+        }
+
+        async function refreshExplorerTree() {
+            if (!explorerRootPath) {
+                renderExplorerTree();
+                return;
+            }
+
+            if (!window.fileExplorer || typeof window.fileExplorer.readTree !== 'function') {
+                showToast('File explorer API unavailable');
+                renderExplorerTree('File explorer is unavailable in this build.');
+                return;
+            }
+
+            renderExplorerTree('Loading files...');
+
+            try {
+                const result = await window.fileExplorer.readTree(explorerRootPath);
+                explorerRootPath = result && result.rootPath ? result.rootPath : explorerRootPath;
+                explorerTreeData = Array.isArray(result && result.entries) ? result.entries : [];
+                renderExplorerTree();
+
+                if (result && result.truncated) {
+                    showToast('Explorer limited to first 3000 items');
+                }
+            } catch (error) {
+                explorerTreeData = [];
+                renderExplorerTree('Could not load folder.');
+                pushConsole('error', error && error.message ? error.message : String(error));
+                showToast('Failed to load folder');
+            }
+        }
+
+        async function chooseExplorerFolder() {
+            if (!window.fileExplorer || typeof window.fileExplorer.pickFolder !== 'function') {
+                showToast('File explorer API unavailable');
+                return;
+            }
+
+            try {
+                const selectedPath = await window.fileExplorer.pickFolder();
+                if (!selectedPath) return;
+                explorerRootPath = selectedPath;
+                collapsedExplorerDirs.clear();
+                await refreshExplorerTree();
+            } catch (error) {
+                pushConsole('error', error && error.message ? error.message : String(error));
+                showToast('Could not open folder');
+            }
+        }
+
+        async function openFileFromExplorer(filePath, fileName) {
+            if (!filePath) return;
+
+            const existingTabId = filePathToTabId.get(filePath);
+            if (existingTabId && tabs[existingTabId] && tabs[existingTabId].tabElement) {
+                tabs[existingTabId].tabElement.click();
+                setPrimaryView('editor');
+                return;
+            }
+
+            if (!window.fileExplorer || typeof window.fileExplorer.readFile !== 'function') {
+                showToast('File explorer API unavailable');
+                return;
+            }
+
+            try {
+                const content = await window.fileExplorer.readFile(filePath);
+                const nextTabName = fileName || getFileNameFromPath(filePath) || 'Untitled';
+                const newTabId = createTab(nextTabName, { filePath });
+                if (tabs[newTabId]) {
+                    tabs[newTabId].content = content;
+                }
+
+                if (editor) {
+                    editor.setValue(content);
+                }
+
+                setPrimaryView('editor');
+                updateExplorerActiveFile();
+                pushConsole('log', `Opened ${filePath}`);
+            } catch (error) {
+                pushConsole('error', error && error.message ? error.message : String(error));
+                showToast('Failed to open file');
+            }
         }
 
         function updateTabButtons() {
@@ -2906,9 +3266,12 @@ console.log('Dark mode applied!');`
             };
         }
 
-        function createTab(name = null) {
+        function createTab(name = null, options = {}) {
             tabCounter++;
             const id = "tab" + tabCounter;
+            const filePath = options && typeof options === 'object' && typeof options.filePath === 'string'
+                ? options.filePath
+                : '';
 
             if (!name) {
                 name = "Script " + tabCounter;
@@ -2938,6 +3301,10 @@ console.log('Dark mode applied!');`
                 }
 
                 const wasActive = tab.classList.contains("active");
+                const tabState = tabs[id];
+                if (tabState && tabState.filePath) {
+                    filePathToTabId.delete(tabState.filePath);
+                }
                 tab.remove();
                 delete tabs[id];
 
@@ -2948,6 +3315,7 @@ console.log('Dark mode applied!');`
                 updateTabButtons();
                 renderTabBrowserList();
                 updateDashboardMetrics();
+                updateExplorerActiveFile();
             };
 
             tab.append(title, btn);
@@ -2971,6 +3339,7 @@ console.log('Dark mode applied!');`
                     document.getElementById('editorTab').click();
                 }
                 updateDashboardMetrics();
+                updateExplorerActiveFile();
             };
 
             tab.addEventListener("dragstart", (e) => {
@@ -3010,7 +3379,16 @@ console.log('Dark mode applied!');`
                 finishTabDrag();
             });
 
-            tabs[id] = { name, content: `` };
+            tabs[id] = {
+                name,
+                content: ``,
+                filePath,
+                tabElement: tab
+            };
+
+            if (filePath) {
+                filePathToTabId.set(filePath, id);
+            }
 
             tab.classList.add("tab-enter");
             tab.addEventListener("animationend", () => {
@@ -3022,6 +3400,8 @@ console.log('Dark mode applied!');`
             updateTabButtons();
             renderTabBrowserList();
             updateDashboardMetrics();
+            updateExplorerActiveFile();
+            return id;
         }
 
         addTabBtn.onclick = () => createTab();
@@ -3083,7 +3463,7 @@ console.log('Dark mode applied!');`
             });
         };
 
-        document.getElementById("save").onclick = () => {
+        document.getElementById("save").onclick = async () => {
             const code = editor.getValue();
             if (!code.trim()) {
                 pushConsole("warn", "No code to save");
@@ -3091,7 +3471,21 @@ console.log('Dark mode applied!');`
                 return;
             }
 
-            const currentTabName = tabs[activeTabId].name;
+            const currentTab = tabs[activeTabId];
+            if (currentTab && currentTab.filePath && window.fileExplorer && typeof window.fileExplorer.writeFile === 'function') {
+                try {
+                    await window.fileExplorer.writeFile(currentTab.filePath, code);
+                    pushConsole("log", `Saved ${currentTab.filePath}`);
+                    showToast('File saved');
+                    return;
+                } catch (error) {
+                    pushConsole("error", error && error.message ? error.message : String(error));
+                    showToast('Failed to save file');
+                    return;
+                }
+            }
+
+            const currentTabName = currentTab ? currentTab.name : 'script';
             const blob = new Blob([code], { type: 'text/javascript' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
@@ -3177,7 +3571,7 @@ console.log('Dark mode applied!');`
                 primaryViewTransitionTimer = null;
             }
 
-            document.querySelectorAll('.sidebar-tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.sidebar-tab[data-view]').forEach(t => t.classList.remove('active'));
             document.body.classList.toggle('dashboard-open', view === 'home');
 
             const dashboardEl = document.getElementById('dashboard');
@@ -3257,6 +3651,26 @@ console.log('Dark mode applied!');`
             setPrimaryView('html');
         };
 
+        const explorerToggle = document.getElementById('explorerToggle');
+        const explorerOpenFolderBtn = document.getElementById('explorerOpenFolder');
+        const explorerRefreshBtn = document.getElementById('explorerRefresh');
+
+        explorerToggle.onclick = () => {
+            const explorerPane = document.getElementById('explorerPane');
+            const shouldOpen = explorerPane.classList.contains('collapsed');
+            setExplorerPaneOpen(shouldOpen);
+        };
+
+        explorerOpenFolderBtn.onclick = () => {
+            chooseExplorerFolder();
+        };
+
+        explorerRefreshBtn.onclick = () => {
+            refreshExplorerTree();
+        };
+
+        setExplorerPaneOpen(true);
+        renderExplorerTree();
         setPrimaryView('home');
 
         document.getElementById("scriptHub").onclick = () => {
