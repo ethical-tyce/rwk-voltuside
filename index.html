@@ -471,7 +471,7 @@
                 pointer-events: none;
             }
 
-            .tab span {
+            .tab .tab-title {
                 flex: 1;
                 overflow: hidden;
                 text-overflow: ellipsis;
@@ -479,8 +479,80 @@
                 color: #909090;
             }
 
-            .tab.active span {
+            .tab.active .tab-title {
                 color: #e0e0e0;
+            }
+
+            .tab .tab-file-icon {
+                width: 22px;
+                min-width: 22px;
+                height: 14px;
+                border-radius: 4px;
+                border: 1px solid rgba(255, 255, 255, 0.16);
+                background: rgba(255, 255, 255, 0.04);
+                color: #b9d6ff;
+                font-size: 8px;
+                line-height: 12px;
+                font-weight: 700;
+                letter-spacing: 0.02em;
+                text-align: center;
+                text-transform: uppercase;
+                flex-shrink: 0;
+                padding-top: 1px;
+            }
+
+            .tab .tab-file-icon[data-kind="js"] {
+                color: #ffe16a;
+                border-color: rgba(255, 225, 106, 0.34);
+                background: rgba(255, 225, 106, 0.09);
+            }
+
+            .tab .tab-file-icon[data-kind="ts"] {
+                color: #79c1ff;
+                border-color: rgba(121, 193, 255, 0.34);
+                background: rgba(121, 193, 255, 0.09);
+            }
+
+            .tab .tab-file-icon[data-kind="json"] {
+                color: #b39aff;
+                border-color: rgba(179, 154, 255, 0.34);
+                background: rgba(179, 154, 255, 0.09);
+            }
+
+            .tab .tab-file-icon[data-kind="html"] {
+                color: #ff9f7a;
+                border-color: rgba(255, 159, 122, 0.34);
+                background: rgba(255, 159, 122, 0.09);
+            }
+
+            .tab .tab-file-icon[data-kind="css"] {
+                color: #8de0ff;
+                border-color: rgba(141, 224, 255, 0.34);
+                background: rgba(141, 224, 255, 0.09);
+            }
+
+            .tab .tab-file-icon[data-kind="md"] {
+                color: #9bd7a4;
+                border-color: rgba(155, 215, 164, 0.34);
+                background: rgba(155, 215, 164, 0.09);
+            }
+
+            .tab .tab-file-icon[data-kind="img"] {
+                color: #ffadcb;
+                border-color: rgba(255, 173, 203, 0.34);
+                background: rgba(255, 173, 203, 0.09);
+            }
+
+            .tab .tab-file-icon[data-kind="txt"] {
+                color: #d0d0d0;
+                border-color: rgba(255, 255, 255, 0.22);
+                background: rgba(255, 255, 255, 0.05);
+            }
+
+            .tab .tab-file-icon[data-kind="deleted"] {
+                color: #ff9b9b;
+                border-color: rgba(255, 155, 155, 0.35);
+                background: rgba(255, 155, 155, 0.12);
             }
 
             .tab button {
@@ -733,6 +805,11 @@
         body.explorer-resizing * {
             cursor: col-resize !important;
             user-select: none !important;
+        }
+
+        body.explorer-resizing #explorerPane,
+        body.explorer-resizing #explorerResizeHandle {
+            transition: none !important;
         }
 
         .explorer-header {
@@ -2838,11 +2915,7 @@ console.log('Dark mode applied!');`
                         editor.setValue(script.code);
                     }
                     if (activeTabId && tabs[activeTabId]) {
-                        tabs[activeTabId].name = script.name;
-                        const activeTab = document.querySelector('.tab.active span');
-                        if (activeTab) {
-                            activeTab.textContent = script.name;
-                        }
+                        setTabTitle(tabs[activeTabId], script.name);
                         updateDashboardMetrics();
                     }
                     showToast(`Loaded: ${script.name}`);
@@ -3165,6 +3238,7 @@ console.log('Dark mode applied!');`
         let explorerContextTargetPath = '';
         let explorerContextTargetType = '';
         let explorerResizeActive = false;
+        let explorerLayoutRaf = null;
 
         function clearDragOverState() {
             document.querySelectorAll(".tab.drag-over-left, .tab.drag-over-right").forEach(tab => {
@@ -3223,14 +3297,58 @@ console.log('Dark mode applied!');`
             return !/[\\/:*?"<>|]/.test(candidate);
         }
 
+        function getTabIconKind(tabState) {
+            const tabName = String(tabState && tabState.name ? tabState.name : '');
+            const source = String(tabState && tabState.filePath ? tabState.filePath : tabName).toLowerCase();
+
+            if (/^\[deleted\]/i.test(tabName)) return 'deleted';
+            if (/\.(js|mjs|cjs)$/i.test(source)) return 'js';
+            if (/\.(ts|tsx)$/i.test(source)) return 'ts';
+            if (/\.(json)$/i.test(source)) return 'json';
+            if (/\.(html|htm)$/i.test(source)) return 'html';
+            if (/\.(css|scss|less)$/i.test(source)) return 'css';
+            if (/\.(md|markdown)$/i.test(source)) return 'md';
+            if (/\.(png|jpg|jpeg|gif|svg|webp|ico|bmp)$/i.test(source)) return 'img';
+            if (/\.(txt|log|ini|cfg|conf)$/i.test(source)) return 'txt';
+            if (!/\.[a-z0-9]+$/i.test(source)) return 'js';
+            return 'file';
+        }
+
+        function getTabIconLabel(kind) {
+            switch (kind) {
+                case 'js': return 'JS';
+                case 'ts': return 'TS';
+                case 'json': return '{}';
+                case 'html': return 'HT';
+                case 'css': return 'CS';
+                case 'md': return 'MD';
+                case 'img': return 'IMG';
+                case 'txt': return 'TXT';
+                case 'deleted': return 'DEL';
+                default: return 'FILE';
+            }
+        }
+
+        function updateTabIcon(tabState) {
+            if (!tabState || !tabState.tabElement) return;
+            const iconEl = tabState.iconElement || tabState.tabElement.querySelector('.tab-file-icon');
+            if (!iconEl) return;
+            const kind = getTabIconKind(tabState);
+            iconEl.dataset.kind = kind;
+            iconEl.textContent = getTabIconLabel(kind);
+            tabState.iconElement = iconEl;
+        }
+
         function setTabTitle(tabState, nextName) {
             if (!tabState || typeof nextName !== 'string') return;
             tabState.name = nextName;
             if (!tabState.tabElement) return;
-            const titleEl = tabState.tabElement.querySelector('span');
+            const titleEl = tabState.titleElement || tabState.tabElement.querySelector('.tab-title');
             if (titleEl) {
                 titleEl.textContent = nextName;
+                tabState.titleElement = titleEl;
             }
+            updateTabIcon(tabState);
         }
 
         function markTabAsDeleted(tabState) {
@@ -3319,6 +3437,15 @@ console.log('Dark mode applied!');`
             });
         }
 
+        function scheduleExplorerEditorLayout() {
+            if (!editor) return;
+            if (explorerLayoutRaf !== null) return;
+            explorerLayoutRaf = requestAnimationFrame(() => {
+                explorerLayoutRaf = null;
+                editor.layout();
+            });
+        }
+
         function setExplorerWidth(widthPx, persist = true) {
             const parsed = Number(widthPx);
             if (!Number.isFinite(parsed)) return;
@@ -3329,9 +3456,7 @@ console.log('Dark mode applied!');`
                     localStorage.setItem(EXPLORER_WIDTH_STORAGE_KEY, String(clamped));
                 } catch { }
             }
-            if (editor) {
-                requestAnimationFrame(() => editor.layout());
-            }
+            scheduleExplorerEditorLayout();
         }
 
         function loadExplorerWidth() {
@@ -3769,8 +3894,7 @@ console.log('Dark mode applied!');`
 
             const finish = save => {
                 if (save && input.value.trim()) {
-                    titleEl.textContent = input.value.trim();
-                    tabs[id].name = input.value.trim();
+                    setTabTitle(tabs[id], input.value.trim());
                     renderTabBrowserList();
                     updateDashboardMetrics();
                 }
@@ -3801,7 +3925,11 @@ console.log('Dark mode applied!');`
             tab.draggable = true;
             tab.dataset.tabId = id;
 
+            const icon = document.createElement("span");
+            icon.className = "tab-file-icon";
+
             const title = document.createElement("span");
+            title.className = "tab-title";
             title.textContent = name;
             title.ondblclick = e => {
                 e.stopPropagation();
@@ -3837,7 +3965,7 @@ console.log('Dark mode applied!');`
                 updateExplorerActiveFile();
             };
 
-            tab.append(title, btn);
+            tab.append(icon, title, btn);
 
             tab.onclick = () => {
                 if (activeTabId && tabs[activeTabId]) {
@@ -3902,12 +4030,16 @@ console.log('Dark mode applied!');`
                 name,
                 content: ``,
                 filePath,
-                tabElement: tab
+                tabElement: tab,
+                titleElement: title,
+                iconElement: icon
             };
 
             if (filePath) {
                 filePathToTabId.set(filePath, id);
             }
+
+            updateTabIcon(tabs[id]);
 
             tab.classList.add("tab-enter");
             tab.addEventListener("animationend", () => {
