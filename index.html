@@ -2360,7 +2360,7 @@
         <div id="editorWrap">
             <div id="editorContainer">
                 <div id="leftSidebar">
-                    <div class="sidebar-tab active" id="explorerToggle" title="Explorer">
+                    <div class="sidebar-tab" id="explorerToggle" title="Explorer">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
                             <path d="M3 6h7l2 2h9v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
                             <path d="M3 9h18"></path>
@@ -2387,7 +2387,7 @@
                     </div>
                 </div>
 
-                <div id="explorerPane">
+                <div id="explorerPane" class="collapsed">
                     <div class="explorer-header">
                         <span class="explorer-title">Explorer</span>
                         <div class="explorer-actions">
@@ -2400,7 +2400,7 @@
                         <div class="explorer-empty">Open a folder to browse files.</div>
                     </div>
                 </div>
-                <div id="explorerResizeHandle" aria-hidden="true"></div>
+                <div id="explorerResizeHandle" class="hidden" aria-hidden="true"></div>
 
                 <div id="mainContent">
                     <div id="dashboard" class="primary-view active">
@@ -4379,7 +4379,7 @@ console.log('Dark mode applied!');`
         });
 
         loadExplorerWidth();
-        setExplorerPaneOpen(true);
+        setExplorerPaneOpen(false);
         renderExplorerTree();
         setPrimaryView('home');
 
