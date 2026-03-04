@@ -1259,6 +1259,20 @@
             font-size: 12px;
         }
 
+        .changelog-list ul {
+            margin: 0;
+            padding-left: 18px;
+        }
+
+        .changelog-list li {
+            margin: 0 0 6px 0;
+            line-height: 1.45;
+        }
+
+        .changelog-list li:last-child {
+            margin-bottom: 0;
+        }
+
         #editor {
             min-height: 0;
             min-width: 0;
@@ -2658,7 +2672,14 @@
                                     <p class="link-subtitle">Stay updated with the latest features and improvements</p>
                                 </div>
                             </div>
-                            <div class="changelog-list" style="padding-right: 8px;"></div>
+                            <div class="changelog-list" style="padding-right: 8px;">
+                                <!-- Add or remove dot points by editing the <li> items below -->
+                                <ul id="latestUpdatesList">
+                                    <li>Added project run support for linked HTML/CSS/JS assets.</li>
+                                    <li>Improved dashboard cards and quick-link actions.</li>
+                                    <li>Refined tab handling and explorer interactions.</li>
+                                </ul>
+                            </div>
                         </div>
                     </div>
                     <div id="editor" class="primary-view"></div>
