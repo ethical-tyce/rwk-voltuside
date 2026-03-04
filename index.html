@@ -1294,7 +1294,7 @@
 
         /* ---------- CONSOLE ---------- */
         #consoleWrap {
-            height: 240px;
+            height: 140px;
             overflow: auto;
             flex: none;
             border-top: none;
@@ -2719,6 +2719,10 @@
                         <option value="browser" selected>Browser Execution</option>
                         <option value="local">Local Execution</option>
                     </select>
+                </div>
+                <div class="settings-item">
+                    <span class="settings-label">Run as Project</span>
+                    <div class="settings-toggle" id="toggleRunAsProject"></div>
                 </div>
             </div>
 
@@ -4785,6 +4789,7 @@ console.log('Dark mode applied!');`
         };
 
         let executionMode = 'browser';
+        let runAsProject = false;
         let currentPrimaryView = 'home';
         let primaryViewTransitionTimer = null;
         const PRIMARY_VIEW_TRANSITION_MS = 460;
@@ -5150,6 +5155,18 @@ console.log('Dark mode applied!');`
             window.windowControls.getAlwaysOnTop().then(setAlwaysOnTopToggleUI).catch(() => { });
         }
 
+        const runAsProjectToggle = document.getElementById('toggleRunAsProject');
+        const setRunAsProjectUI = (enabled) => {
+            runAsProject = Boolean(enabled);
+            runAsProjectToggle.classList.toggle('active', runAsProject);
+        };
+
+        runAsProjectToggle.onclick = function () {
+            const nextState = !this.classList.contains('active');
+            setRunAsProjectUI(nextState);
+            showToast(`Run as Project ${nextState ? 'enabled' : 'disabled'}`);
+        };
+
         document.getElementById('executionMode').onchange = (e) => {
             executionMode = e.target.value;
             showToast(`Switched to ${e.target.value === 'local' ? 'Local' : 'Browser'} mode`);
@@ -5470,7 +5487,303 @@ console.log('Dark mode applied!');`
             return editor ? editor.getValue() : '';
         }
 
-        function runCodeLocally(code) {
+        function escapeHtmlForPreview(rawValue) {
+            return String(rawValue || '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;');
+        }
+
+        function getLocalExecutionKindForActiveTab() {
+            const activeTab = activeTabId && tabs[activeTabId] ? tabs[activeTabId] : null;
+            if (!activeTab) {
+                return { kind: 'javascript', label: 'JavaScript' };
+            }
+
+            const sourceName = String(activeTab.filePath || activeTab.name || '').toLowerCase();
+            if (isImageLikePath(sourceName)) {
+                return { kind: 'image', label: 'Image' };
+            }
+
+            const languageId = getTabLanguageId(activeTab);
+            if (languageId === 'html') return { kind: 'html', label: 'HTML' };
+            if (languageId === 'css' || languageId === 'scss' || languageId === 'less') return { kind: 'css', label: 'CSS' };
+            if (languageId === 'javascript') return { kind: 'javascript', label: 'JavaScript' };
+            if (languageId === 'typescript') return { kind: 'javascript', label: 'TypeScript' };
+            return { kind: 'text', label: languageId || 'Text' };
+        }
+
+        function resolveProjectAssetPath(baseDirectory, rawRef) {
+            const original = String(rawRef || '').trim();
+            if (!original) return '';
+            if (/^(https?:|data:|blob:|javascript:|mailto:|tel:|\/\/)/i.test(original)) return '';
+
+            const normalizedRef = original.split('#')[0].split('?')[0].trim();
+            if (!normalizedRef) return '';
+
+            if (/^[a-zA-Z]:[\\/]/.test(normalizedRef) || /^\\\\/.test(normalizedRef)) {
+                return normalizedRef;
+            }
+
+            if (/^[\\/]/.test(normalizedRef)) {
+                const driveMatch = String(baseDirectory || '').match(/^[a-zA-Z]:/);
+                if (driveMatch) {
+                    return `${driveMatch[0]}\\${normalizedRef.replace(/^[\\/]+/, '').replace(/\//g, '\\')}`;
+                }
+                return normalizedRef.replace(/^\//, '');
+            }
+
+            return joinExplorerPath(baseDirectory, normalizedRef);
+        }
+
+        function normalizeProjectRef(rawRef) {
+            return String(rawRef || '')
+                .trim()
+                .replace(/\\/g, '/')
+                .split('#')[0]
+                .split('?')[0]
+                .replace(/^\.\/+/, '')
+                .replace(/\/+/g, '/')
+                .toLowerCase();
+        }
+
+        function isExternalProjectRef(rawRef) {
+            return /^(https?:|data:|blob:|javascript:|mailto:|tel:|\/\/)/i.test(String(rawRef || '').trim());
+        }
+
+        function getOpenTabContentForProjectRef(rawRef, baseFilePath = '') {
+            if (isExternalProjectRef(rawRef)) return null;
+
+            const normalizedRef = normalizeProjectRef(rawRef);
+            if (!normalizedRef) return null;
+
+            const refFileName = getFileNameFromPath(normalizedRef).toLowerCase();
+            const baseDirectory = baseFilePath ? getParentPath(baseFilePath) : '';
+            const resolvedPathFromBase = baseDirectory ? resolveProjectAssetPath(baseDirectory, rawRef) : '';
+            const resolvedPathNorm = normalizePathForCompare(resolvedPathFromBase);
+            const refPathNorm = normalizePathForCompare(normalizedRef);
+
+            const openTabs = Object.values(tabs);
+
+            for (const tabState of openTabs) {
+                if (!tabState || typeof tabState.content !== 'string') continue;
+                const tabPath = String(tabState.filePath || '');
+                const tabName = String(tabState.name || '');
+
+                const tabPathNorm = normalizePathForCompare(tabPath);
+                if (resolvedPathNorm && tabPathNorm && tabPathNorm === resolvedPathNorm) {
+                    return tabState.content;
+                }
+                if (refPathNorm && tabPathNorm && tabPathNorm === refPathNorm) {
+                    return tabState.content;
+                }
+
+                const tabNameRef = normalizeProjectRef(tabName);
+                const tabPathRef = normalizeProjectRef(tabPath);
+                if (tabNameRef === normalizedRef || tabPathRef === normalizedRef) {
+                    return tabState.content;
+                }
+
+                const tabFileName = getFileNameFromPath(tabPath || tabName).toLowerCase();
+                if (refFileName && tabFileName && tabFileName === refFileName) {
+                    return tabState.content;
+                }
+            }
+
+            return null;
+        }
+
+        async function transformHtmlForProjectRun(htmlSource, baseFilePath) {
+            const fallbackResult = { html: htmlSource, didInline: false, resolvedCount: 0, failedAssets: 0 };
+            if (!runAsProject) return fallbackResult;
+
+            let parsedDoc;
+            try {
+                const parser = new DOMParser();
+                parsedDoc = parser.parseFromString(htmlSource, 'text/html');
+            } catch {
+                return fallbackResult;
+            }
+            if (!parsedDoc || !parsedDoc.documentElement) return fallbackResult;
+
+            const baseDirectory = baseFilePath ? getParentPath(baseFilePath) : '';
+            let didInline = false;
+            let resolvedCount = 0;
+            let failedAssets = 0;
+
+            let headEl = parsedDoc.querySelector('head');
+            if (!headEl) {
+                headEl = parsedDoc.createElement('head');
+                if (parsedDoc.documentElement.firstChild) {
+                    parsedDoc.documentElement.insertBefore(headEl, parsedDoc.documentElement.firstChild);
+                } else {
+                    parsedDoc.documentElement.appendChild(headEl);
+                }
+            }
+
+            const baseHref = baseDirectory ? toDirectoryFileUrl(baseDirectory) : '';
+            if (baseHref) {
+                const existingBase = parsedDoc.querySelector('base[data-voltus-project-base="1"]');
+                const baseNode = existingBase || parsedDoc.createElement('base');
+                baseNode.setAttribute('data-voltus-project-base', '1');
+                baseNode.setAttribute('href', baseHref);
+                if (!existingBase) {
+                    headEl.prepend(baseNode);
+                }
+                didInline = true;
+                resolvedCount += 1;
+            }
+
+            const scriptNodes = Array.from(parsedDoc.querySelectorAll('script[src]'));
+            for (const scriptNode of scriptNodes) {
+                const sourceRef = scriptNode.getAttribute('src') || '';
+                if (!sourceRef || isExternalProjectRef(sourceRef)) continue;
+
+                const tabSource = getOpenTabContentForProjectRef(sourceRef, baseFilePath);
+                if (typeof tabSource === 'string') {
+                    const inlineScript = parsedDoc.createElement('script');
+                    const sourceType = scriptNode.getAttribute('type');
+                    if (sourceType) inlineScript.setAttribute('type', sourceType);
+                    inlineScript.textContent = `${tabSource}\n//# sourceURL=${sourceRef}`;
+                    scriptNode.replaceWith(inlineScript);
+                    didInline = true;
+                    resolvedCount += 1;
+                    continue;
+                }
+
+                const resolvedPath = baseDirectory ? resolveProjectAssetPath(baseDirectory, sourceRef) : '';
+                const scriptUrl = resolvedPath ? toFileUrl(resolvedPath) : '';
+                if (scriptUrl) {
+                    scriptNode.setAttribute('src', scriptUrl);
+                    didInline = true;
+                    resolvedCount += 1;
+                    continue;
+                }
+
+                failedAssets += 1;
+            }
+
+            const linkNodes = Array.from(parsedDoc.querySelectorAll('link[href]'));
+            for (const linkNode of linkNodes) {
+                const relValue = String(linkNode.getAttribute('rel') || '').toLowerCase();
+                if (!relValue.includes('stylesheet')) continue;
+
+                const hrefRef = linkNode.getAttribute('href') || '';
+                if (!hrefRef || isExternalProjectRef(hrefRef)) continue;
+
+                const tabCss = getOpenTabContentForProjectRef(hrefRef, baseFilePath);
+                if (typeof tabCss === 'string') {
+                    const styleNode = parsedDoc.createElement('style');
+                    styleNode.textContent = String(tabCss || '');
+                    linkNode.replaceWith(styleNode);
+                    didInline = true;
+                    resolvedCount += 1;
+                    continue;
+                }
+
+                const resolvedPath = baseDirectory ? resolveProjectAssetPath(baseDirectory, hrefRef) : '';
+                const cssUrl = resolvedPath ? toFileUrl(resolvedPath) : '';
+                if (cssUrl) {
+                    linkNode.setAttribute('href', cssUrl);
+                    didInline = true;
+                    resolvedCount += 1;
+                    continue;
+                }
+
+                failedAssets += 1;
+            }
+
+            if (failedAssets > 0) {
+                pushConsole('warn', `Project run: unresolved linked assets (${failedAssets})`);
+            }
+
+            let htmlOut = '';
+            if (parsedDoc.doctype && parsedDoc.doctype.name) {
+                htmlOut += `<!DOCTYPE ${parsedDoc.doctype.name}>\n`;
+            }
+            htmlOut += parsedDoc.documentElement.outerHTML;
+
+            return { html: htmlOut || htmlSource, didInline, resolvedCount, failedAssets };
+        }
+
+        function toFileUrl(filePath) {
+            const normalized = String(filePath || '').replace(/\\/g, '/');
+            if (!normalized) return '';
+            if (/^[a-zA-Z]:\//.test(normalized)) return `file:///${encodeURI(normalized)}`;
+            if (normalized.startsWith('//')) return `file:${encodeURI(normalized)}`;
+            return `file://${encodeURI(normalized)}`;
+        }
+
+        function toDirectoryFileUrl(directoryPath) {
+            const withSlash = /[\\/]$/.test(String(directoryPath || ''))
+                ? String(directoryPath || '')
+                : `${String(directoryPath || '')}\\`;
+            return toFileUrl(withSlash);
+        }
+
+        function getTabProjectFilePath(activeTab) {
+            if (activeTab && activeTab.filePath) {
+                return activeTab.filePath;
+            }
+            const tabName = String(activeTab && activeTab.name ? activeTab.name : '').trim();
+            if (!tabName || !explorerRootPath) return '';
+            if (!isValidExplorerName(tabName)) return '';
+            return joinExplorerPath(explorerRootPath, tabName);
+        }
+
+        function runJavaScriptProjectLocally(projectFilePath) {
+            if (!projectFilePath) return false;
+
+            const htmlOutput = document.getElementById('htmlOutput');
+            const htmlDoc = htmlOutput.contentDocument || htmlOutput.contentWindow.document;
+            const moduleUrl = toFileUrl(projectFilePath);
+            if (!moduleUrl) return false;
+
+            const serializedModuleUrl = JSON.stringify(moduleUrl).replace(/<\//g, '<\\/');
+            setHtmlOutputLabel('Project Run');
+
+            htmlDoc.open();
+            htmlDoc.write(`
+                <!DOCTYPE html>
+                <html>
+                <body style="background:#000;color:#909090;font-family:monospace;padding:20px;">
+                    <script>
+                        (function() {
+                            const relay = (type, args) => {
+                                window.parent.postMessage({
+                                    isLocalLog: true,
+                                    type: type,
+                                    args: Array.from(args).map(arg => {
+                                        try { return typeof arg === 'object' ? JSON.stringify(arg) : String(arg); }
+                                        catch(e) { return String(arg); }
+                                    })
+                                }, '*');
+                            };
+
+                            console.log = (...args) => relay('log', args);
+                            console.warn = (...args) => relay('warn', args);
+                            console.error = (...args) => relay('error', args);
+
+                            window.addEventListener('error', (event) => {
+                                relay('error', [event && event.message ? event.message : 'Module load error']);
+                            });
+
+                            const moduleScript = document.createElement('script');
+                            moduleScript.type = 'module';
+                            moduleScript.src = ${serializedModuleUrl};
+                            moduleScript.onerror = () => relay('error', ['Failed to load project module']);
+                            document.body.appendChild(moduleScript);
+                        })();
+                    <\/script>
+                </body>
+                </html>
+            `);
+            htmlDoc.close();
+            document.getElementById('htmlOutputTab').click();
+            return true;
+        }
+
+        function runJavaScriptLocally(code) {
             const htmlOutput = document.getElementById('htmlOutput');
             const htmlDoc = htmlOutput.contentDocument || htmlOutput.contentWindow.document;
             const serializedCode = JSON.stringify(code).replace(/<\//g, '<\\/');
@@ -5514,6 +5827,145 @@ console.log('Dark mode applied!');`
             document.getElementById('htmlOutputTab').click();
         }
 
+        async function runCodeLocally(code) {
+            const activeTab = activeTabId && tabs[activeTabId] ? tabs[activeTabId] : null;
+            const execType = getLocalExecutionKindForActiveTab();
+            const projectFilePath = getTabProjectFilePath(activeTab);
+
+            if (execType.kind === 'image') {
+                if (activeTab && activeTab.imageDataUrl) {
+                    renderImagePreview(activeTab);
+                    document.getElementById('htmlOutputTab').click();
+                } else {
+                    showToast('No image preview available');
+                }
+                return;
+            }
+
+            if (execType.kind === 'javascript') {
+                if (runAsProject) {
+                    if (execType.label === 'TypeScript') {
+                        showToast('Run as Project does not transpile TypeScript');
+                    } else {
+                        if (runJavaScriptProjectLocally(projectFilePath)) {
+                            showToast('Project run uses file content from disk');
+                            return;
+                        }
+                        showToast('Run as Project needs a project file path');
+                    }
+                }
+                if (execType.label === 'TypeScript') {
+                    showToast('TypeScript runs as JavaScript in local mode');
+                }
+                runJavaScriptLocally(code);
+                return;
+            }
+
+            const htmlOutput = document.getElementById('htmlOutput');
+            const htmlDoc = htmlOutput.contentDocument || htmlOutput.contentWindow.document;
+
+            if (execType.kind === 'html') {
+                const hasDocumentShell = /<\s*!doctype|<\s*html|<\s*body|<\s*head/i.test(code);
+                let htmlContent = hasDocumentShell
+                    ? code
+                    : `<!DOCTYPE html><html><body>${code}</body></html>`;
+
+                let label = 'HTML Preview';
+                if (runAsProject) {
+                    if (hasDocumentShell) {
+                        const transformed = await transformHtmlForProjectRun(htmlContent, projectFilePath);
+                        htmlContent = transformed.html;
+                        label = 'Project Preview';
+
+                        if (transformed.resolvedCount > 0) {
+                            pushConsole('log', `Project run: resolved ${transformed.resolvedCount} linked asset(s)`);
+                        } else if (!projectFilePath) {
+                            pushConsole('warn', 'Project run: no disk path; open linked files as tabs for resolution');
+                        }
+                    } else {
+                        showToast('Run as Project works best with full HTML files');
+                    }
+                }
+
+                htmlDoc.open();
+                htmlDoc.write(htmlContent);
+                htmlDoc.close();
+                setHtmlOutputLabel(label);
+                document.getElementById('htmlOutputTab').click();
+                return;
+            }
+
+            if (execType.kind === 'css') {
+                const serializedCss = JSON.stringify(code).replace(/<\//g, '<\\/');
+                htmlDoc.open();
+                htmlDoc.write(`
+                    <!DOCTYPE html>
+                    <html>
+                    <head>
+                        <style>
+                            body {
+                                margin: 0;
+                                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+                                background: #0d0d0d;
+                                color: #d7d7d7;
+                            }
+                            .css-preview-root {
+                                min-height: 100vh;
+                                padding: 28px;
+                            }
+                            .css-preview-card {
+                                border: 1px solid rgba(255,255,255,0.12);
+                                border-radius: 10px;
+                                padding: 16px;
+                                background: rgba(255,255,255,0.03);
+                                max-width: 560px;
+                            }
+                            .css-preview-title {
+                                margin: 0 0 10px;
+                                font-size: 17px;
+                            }
+                            .css-preview-text {
+                                margin: 0;
+                                color: #b8b8b8;
+                                line-height: 1.5;
+                            }
+                        </style>
+                        <style id="voltus-local-css-preview"></style>
+                    </head>
+                    <body>
+                        <div class="css-preview-root">
+                            <div class="css-preview-card">
+                                <h3 class="css-preview-title">CSS Preview</h3>
+                                <p class="css-preview-text">Your stylesheet is applied to this sample block.</p>
+                            </div>
+                        </div>
+                        <script>
+                            document.getElementById('voltus-local-css-preview').textContent = ${serializedCss};
+                        <\/script>
+                    </body>
+                    </html>
+                `);
+                htmlDoc.close();
+                setHtmlOutputLabel('CSS Preview');
+                document.getElementById('htmlOutputTab').click();
+                return;
+            }
+
+            const escapedCode = escapeHtmlForPreview(code);
+            htmlDoc.open();
+            htmlDoc.write(`
+                <!DOCTYPE html>
+                <html>
+                <body style="margin:0;padding:20px;background:#0d0d0d;color:#b8b8b8;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;">
+                    <pre style="margin:0;white-space:pre-wrap;word-break:break-word;">${escapedCode}</pre>
+                </body>
+                </html>
+            `);
+            htmlDoc.close();
+            setHtmlOutputLabel(`${execType.label} Preview`);
+            document.getElementById('htmlOutputTab').click();
+        }
+
         document.getElementById("execute").onclick = async () => {
             const code = getCurrentEditorCode();
 
@@ -5523,7 +5975,7 @@ console.log('Dark mode applied!');`
             }
 
             if (executionMode === 'local') {
-                runCodeLocally(code);
+                await runCodeLocally(code);
                 return;
             }
 
