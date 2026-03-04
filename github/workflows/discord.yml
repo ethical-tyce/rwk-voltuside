@@ -1,0 +1,13 @@
+name: Discord Commit Notifications
+
+on:
+  push:
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: tsickert/discord-commits@v1
+        with:
+          webhook: ${{ secrets.DISCORD_WEBHOOK }}
