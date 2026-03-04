@@ -406,6 +406,11 @@
                 animation: tabEnter 130ms ease-out;
             }
 
+            .tab.tab-poof {
+                animation: tabPoof 130ms ease-out forwards;
+                pointer-events: none;
+            }
+
         @keyframes tabEnter {
             from {
                 opacity: 0;
@@ -414,6 +419,19 @@
             to {
                 opacity: 1;
                 transform: translateY(0);
+            }
+        }
+
+        @keyframes tabPoof {
+            from {
+                opacity: 1;
+                transform: scale(1);
+                filter: blur(0);
+            }
+            to {
+                opacity: 0;
+                transform: scale(0.97);
+                filter: blur(1px);
             }
         }
 
@@ -1547,6 +1565,151 @@
             gap: 8px;
         }
 
+        #addTabChoiceModal.modal-backdrop {
+            background: transparent;
+            z-index: 20001;
+        }
+
+        #addTabChoiceModal .modal-content {
+            width: min(360px, calc(100vw - 24px));
+            padding: 18px;
+        }
+
+        #addTabChoiceModal h3 {
+            margin: 0 0 10px;
+            color: #c0c0c0;
+            font-size: 16px;
+        }
+
+        #addTabChoiceModal p {
+            margin: 0;
+            color: #808080;
+            font-size: 13px;
+            line-height: 1.45;
+        }
+
+        #addTabChoiceModal .add-tab-actions {
+            margin-top: 16px;
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+        }
+
+        #addTabChoiceModal .modal-btn {
+            min-width: 106px;
+        }
+
+        #createFileTypeModal.modal-backdrop {
+            background: transparent;
+            z-index: 20001;
+        }
+
+        #createFileTypeModal .modal-content {
+            width: min(430px, calc(100vw - 24px));
+            padding: 18px;
+        }
+
+        #createFileTypeModal h3 {
+            margin: 0 0 10px;
+            color: #c0c0c0;
+            font-size: 16px;
+        }
+
+        #createFileTypeModal p {
+            margin: 0;
+            color: #808080;
+            font-size: 13px;
+            line-height: 1.45;
+        }
+
+        #createTypeSearch {
+            width: 100%;
+            margin-top: 14px;
+            background: #080808;
+            color: #d0d0d0;
+            border: 1px solid #2f2f2f;
+            border-radius: 6px;
+            font-size: 13px;
+            padding: 8px 10px;
+            outline: none;
+        }
+
+        #createTypeSearch:focus {
+            border-color: #525252;
+        }
+
+        #createTypeList {
+            margin-top: 10px;
+            max-height: 220px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .create-type-item {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 10px;
+            border-radius: 6px;
+            border: 1px solid #2a2a2a;
+            background: #111111;
+            color: #b8b8b8;
+            cursor: pointer;
+            text-align: left;
+        }
+
+        .create-type-item:hover {
+            border-color: #414141;
+            background: #151515;
+            color: #d8d8d8;
+        }
+
+        .create-type-item.selected {
+            border-color: #6a6a6a;
+            background: #1a1a1a;
+            color: #ececec;
+        }
+
+        .create-type-ext {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+            font-size: 12px;
+            letter-spacing: 0.02em;
+        }
+
+        .create-type-label {
+            font-size: 11px;
+            text-transform: uppercase;
+            color: #888888;
+            letter-spacing: 0.05em;
+        }
+
+        .create-type-item.selected .create-type-label {
+            color: #b0b0b0;
+        }
+
+        .create-type-warning,
+        .create-type-empty {
+            font-size: 12px;
+            line-height: 1.4;
+            border-radius: 6px;
+            padding: 8px 10px;
+        }
+
+        .create-type-warning {
+            color: #f4c2c2;
+            background: rgba(120, 20, 20, 0.18);
+            border: 1px solid rgba(255, 140, 140, 0.2);
+        }
+
+        .create-type-empty {
+            color: #8a8a8a;
+            background: #101010;
+            border: 1px solid #242424;
+        }
+
         .modal-btn {
             padding: 8px 16px;
             border-radius: 4px;
@@ -2358,18 +2521,18 @@
         </div>
 
         <div id="editorWrap">
-            <div id="editorContainer">
-                <div id="leftSidebar">
-                    <div class="sidebar-tab" id="explorerToggle" title="Explorer">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                            <path d="M3 6h7l2 2h9v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
-                            <path d="M3 9h18"></path>
-                        </svg>
-                    </div>
+                <div id="editorContainer">
+                    <div id="leftSidebar">
                     <div class="sidebar-tab active" id="homeTab" data-view="home" title="Home">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
                             <path d="M3 10.5L12 3l9 7.5"></path>
                             <path d="M5 10v10h14V10"></path>
+                        </svg>
+                    </div>
+                    <div class="sidebar-tab" id="explorerToggle" title="Explorer">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <path d="M3 6h7l2 2h9v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                            <path d="M3 9h18"></path>
                         </svg>
                     </div>
                     <div class="sidebar-tab" id="editorTab" data-view="editor" title="Editor">
@@ -3297,6 +3460,63 @@ console.log('Dark mode applied!');`
             return !/[\\/:*?"<>|]/.test(candidate);
         }
 
+        function isImageLikePath(pathValue) {
+            const source = String(pathValue || '').toLowerCase();
+            return /\.(img|png|jpg|jpeg|gif|svg|webp|ico|bmp|avif|tif|tiff)$/i.test(source);
+        }
+
+        function getTabLanguageId(tabState) {
+            const tabName = String(tabState && tabState.name ? tabState.name : '');
+            const source = String(tabState && tabState.filePath ? tabState.filePath : tabName).toLowerCase();
+
+            if (/^\[deleted\]/i.test(tabName)) return 'plaintext';
+            if (isImageLikePath(source)) return 'plaintext';
+            if (/\.(js|mjs|cjs|jsx)$/i.test(source)) return 'javascript';
+            if (/\.(ts|tsx)$/i.test(source)) return 'typescript';
+            if (/\.(json)$/i.test(source)) return 'json';
+            if (/\.(html|htm)$/i.test(source)) return 'html';
+            if (/\.(css)$/i.test(source)) return 'css';
+            if (/\.(scss)$/i.test(source)) return 'scss';
+            if (/\.(less)$/i.test(source)) return 'less';
+            if (/\.(md|markdown)$/i.test(source)) return 'markdown';
+            if (/\.(xml)$/i.test(source)) return 'xml';
+            if (/\.(py)$/i.test(source)) return 'python';
+            if (/\.(sql)$/i.test(source)) return 'sql';
+            if (/\.(yml|yaml)$/i.test(source)) return 'yaml';
+            if (/\.(sh|bash)$/i.test(source)) return 'shell';
+            if (/\.(txt|log|ini|cfg|conf)$/i.test(source)) return 'plaintext';
+            if (!/\.[a-z0-9]+$/i.test(source)) return 'javascript';
+            return 'plaintext';
+        }
+
+        function resolveMonacoLanguageId(languageId) {
+            const fallback = 'plaintext';
+            if (typeof monaco === 'undefined' || !monaco.languages || typeof monaco.languages.getLanguages !== 'function') {
+                return languageId || fallback;
+            }
+
+            const normalized = String(languageId || '').trim().toLowerCase();
+            const ids = new Set(monaco.languages.getLanguages().map((entry) => String(entry.id || '').toLowerCase()));
+            if (normalized && ids.has(normalized)) {
+                return normalized;
+            }
+            if (ids.has(fallback)) {
+                return fallback;
+            }
+            return 'javascript';
+        }
+
+        function applyEditorLanguageForActiveTab() {
+            if (!editor || typeof monaco === 'undefined' || !monaco.editor || !activeTabId || !tabs[activeTabId]) return;
+            const model = editor.getModel();
+            if (!model) return;
+
+            const desiredLanguage = resolveMonacoLanguageId(getTabLanguageId(tabs[activeTabId]));
+            if (model.getLanguageId() !== desiredLanguage) {
+                monaco.editor.setModelLanguage(model, desiredLanguage);
+            }
+        }
+
         function getTabIconKind(tabState) {
             const tabName = String(tabState && tabState.name ? tabState.name : '');
             const source = String(tabState && tabState.filePath ? tabState.filePath : tabName).toLowerCase();
@@ -3308,7 +3528,7 @@ console.log('Dark mode applied!');`
             if (/\.(html|htm)$/i.test(source)) return 'html';
             if (/\.(css|scss|less)$/i.test(source)) return 'css';
             if (/\.(md|markdown)$/i.test(source)) return 'md';
-            if (/\.(png|jpg|jpeg|gif|svg|webp|ico|bmp)$/i.test(source)) return 'img';
+            if (isImageLikePath(source)) return 'img';
             if (/\.(txt|log|ini|cfg|conf)$/i.test(source)) return 'txt';
             if (!/\.[a-z0-9]+$/i.test(source)) return 'js';
             return 'file';
@@ -3349,6 +3569,9 @@ console.log('Dark mode applied!');`
                 tabState.titleElement = titleEl;
             }
             updateTabIcon(tabState);
+            if (activeTabId && tabs[activeTabId] === tabState) {
+                applyEditorLanguageForActiveTab();
+            }
         }
 
         function markTabAsDeleted(tabState) {
@@ -3405,7 +3628,7 @@ console.log('Dark mode applied!');`
             if (/\.(html|htm)$/i.test(fileName)) return 'html';
             if (/\.(css|scss|less)$/i.test(fileName)) return 'css';
             if (/\.(md|markdown)$/i.test(fileName)) return 'md';
-            if (/\.(png|jpg|jpeg|gif|svg|webp|ico|bmp)$/i.test(fileName)) return 'img';
+            if (isImageLikePath(fileName)) return 'img';
             if (/\.(txt|log|ini|cfg|conf)$/i.test(fileName)) return 'txt';
             return 'file';
         }
@@ -3839,6 +4062,11 @@ console.log('Dark mode applied!');`
         async function openFileFromExplorer(filePath, fileName) {
             if (!filePath) return;
 
+            if (isImageLikePath(filePath)) {
+                showToast('Image files are upload-only right now');
+                return;
+            }
+
             const existingTabId = filePathToTabId.get(filePath);
             if (existingTabId && tabs[existingTabId] && tabs[existingTabId].tabElement) {
                 tabs[existingTabId].tabElement.click();
@@ -3915,9 +4143,12 @@ console.log('Dark mode applied!');`
             const filePath = options && typeof options === 'object' && typeof options.filePath === 'string'
                 ? options.filePath
                 : '';
+            const imageDataUrl = options && typeof options === 'object' && typeof options.imageDataUrl === 'string'
+                ? options.imageDataUrl
+                : '';
 
             if (!name) {
-                name = "Script " + tabCounter;
+                name = "Script " + tabCounter + ".js";
             }
 
             const tab = document.createElement("div");
@@ -3952,17 +4183,20 @@ console.log('Dark mode applied!');`
                 if (tabState && tabState.filePath) {
                     filePathToTabId.delete(tabState.filePath);
                 }
-                tab.remove();
-                delete tabs[id];
+                tab.classList.add("tab-poof");
+                setTimeout(() => {
+                    tab.remove();
+                    delete tabs[id];
 
-                if (wasActive) {
-                    const firstTab = document.querySelector(".tab");
-                    if (firstTab) firstTab.click();
-                }
-                updateTabButtons();
-                renderTabBrowserList();
-                updateDashboardMetrics();
-                updateExplorerActiveFile();
+                    if (wasActive) {
+                        const firstTab = document.querySelector(".tab");
+                        if (firstTab) firstTab.click();
+                    }
+                    updateTabButtons();
+                    renderTabBrowserList();
+                    updateDashboardMetrics();
+                    updateExplorerActiveFile();
+                }, 110);
             };
 
             tab.append(icon, title, btn);
@@ -3981,9 +4215,16 @@ console.log('Dark mode applied!');`
                 if (editor) {
                     editor.setValue(tabs[id].content);
                 }
+                applyEditorLanguageForActiveTab();
 
-                if (document.getElementById('htmlOutput').classList.contains('active')) {
-                    document.getElementById('editorTab').click();
+                if (isImageLikePath(tabs[id].filePath || tabs[id].name)) {
+                    renderImagePreview(tabs[id]);
+                    setPrimaryView('html');
+                } else {
+                    setHtmlOutputLabel('');
+                    if (document.getElementById('htmlOutput').classList.contains('active')) {
+                        document.getElementById('editorTab').click();
+                    }
                 }
                 updateDashboardMetrics();
                 updateExplorerActiveFile();
@@ -4030,6 +4271,7 @@ console.log('Dark mode applied!');`
                 name,
                 content: ``,
                 filePath,
+                imageDataUrl,
                 tabElement: tab,
                 titleElement: title,
                 iconElement: icon
@@ -4055,7 +4297,394 @@ console.log('Dark mode applied!');`
             return id;
         }
 
-        addTabBtn.onclick = () => createTab();
+        function openLocalFiles() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.js,.mjs,.cjs,.ts,.tsx,.jsx,.json,.html,.htm,.css,.scss,.less,.md,.txt,.xml,.yaml,.yml,.py,.sql,.sh,.img,.png,.jpg,.jpeg,.gif,.svg,.webp,.bmp,.ico,.avif,.tif,.tiff';
+            input.multiple = true;
+
+            input.onchange = (e) => {
+                const files = Array.from(e.target.files);
+                if (files.length === 0) return;
+
+                let filesLoaded = 0;
+
+                files.forEach((file) => {
+                    const reader = new FileReader();
+                    const isImageFile = isImageLikePath(file.name);
+
+                    reader.onload = (event) => {
+                        const result = event && event.target ? event.target.result : '';
+                        const fileName = file.name;
+                        const nextOptions = isImageFile
+                            ? { imageDataUrl: String(result || '') }
+                            : {};
+                        const newTabId = createTab(fileName, nextOptions);
+
+                        if (tabs[newTabId]) {
+                            if (isImageFile) {
+                                tabs[newTabId].content = '';
+                                tabs[newTabId].imageDataUrl = String(result || '');
+                            } else {
+                                tabs[newTabId].content = typeof result === 'string' ? result : '';
+                            }
+                        }
+
+                        if (!isImageFile && editor && activeTabId === newTabId) {
+                            editor.setValue(tabs[newTabId].content);
+                        }
+
+                        filesLoaded++;
+
+                        if (filesLoaded === files.length) {
+                            showToast(`Opened ${files.length} file(s)`);
+                            pushConsole("log", `Opened ${files.length} file(s)`);
+                        }
+                    };
+
+                    if (isImageFile) {
+                        reader.readAsDataURL(file);
+                    } else {
+                        reader.readAsText(file);
+                    }
+                });
+            };
+
+            input.click();
+        }
+
+        const IMAGE_FILE_EXTENSIONS = new Set([
+            'img', 'png', 'jpg', 'jpeg', 'gif', 'svg', 'webp', 'bmp', 'ico', 'avif', 'tif', 'tiff'
+        ]);
+
+        const CREATE_FILE_TYPE_OPTIONS = [
+            { ext: 'js', label: 'JavaScript' },
+            { ext: 'ts', label: 'TypeScript' },
+            { ext: 'jsx', label: 'React JSX' },
+            { ext: 'tsx', label: 'React TSX' },
+            { ext: 'html', label: 'HTML' },
+            { ext: 'css', label: 'CSS' },
+            { ext: 'scss', label: 'SCSS' },
+            { ext: 'json', label: 'JSON' },
+            { ext: 'md', label: 'Markdown' },
+            { ext: 'txt', label: 'Text' },
+            { ext: 'xml', label: 'XML' },
+            { ext: 'yaml', label: 'YAML' },
+            { ext: 'yml', label: 'YAML' },
+            { ext: 'py', label: 'Python' },
+            { ext: 'sql', label: 'SQL' },
+            { ext: 'sh', label: 'Shell Script' }
+        ];
+
+        function normalizeFileExtension(inputValue) {
+            return String(inputValue || '')
+                .trim()
+                .toLowerCase()
+                .replace(/^\./, '')
+                .replace(/\s+/g, '');
+        }
+
+        function extractExtensionQuery(inputValue) {
+            const raw = String(inputValue || '').trim().toLowerCase();
+            if (!raw) return '';
+
+            const normalized = normalizeFileExtension(raw);
+            const fileLike = raw.split(/[\\/]/).pop() || raw;
+            const dotIndex = fileLike.lastIndexOf('.');
+
+            if (dotIndex > -1 && dotIndex < fileLike.length - 1) {
+                return normalizeFileExtension(fileLike.slice(dotIndex + 1));
+            }
+
+            return normalized;
+        }
+
+        function isValidFileExtension(inputValue) {
+            return /^[a-z0-9][a-z0-9_-]{0,19}$/i.test(inputValue);
+        }
+
+        function isImageFileExtension(inputValue) {
+            return IMAGE_FILE_EXTENSIONS.has(normalizeFileExtension(inputValue));
+        }
+
+        function createUniqueFileName(requestedName, fallbackExtension) {
+            const fallbackExt = normalizeFileExtension(fallbackExtension);
+            const existingNames = new Set(
+                Object.values(tabs).map((tabState) => String(tabState && tabState.name ? tabState.name : '').toLowerCase())
+            );
+
+            const baseName = String(requestedName || '').trim() || `untitled.${fallbackExt}`;
+            if (!existingNames.has(baseName.toLowerCase())) {
+                return baseName;
+            }
+
+            const dotIndex = baseName.lastIndexOf('.');
+            const hasExtension = dotIndex > 0 && dotIndex < baseName.length - 1;
+            const stem = hasExtension ? baseName.slice(0, dotIndex) : baseName;
+            const extSuffix = hasExtension ? baseName.slice(dotIndex) : '';
+
+            let count = 2;
+            let candidate = `${stem}-${count}${extSuffix}`;
+            while (existingNames.has(candidate.toLowerCase())) {
+                count += 1;
+                candidate = `${stem}-${count}${extSuffix}`;
+            }
+
+            return candidate;
+        }
+
+        function looksLikeFileNameInput(inputValue) {
+            const raw = String(inputValue || '').trim();
+            if (!raw) return false;
+            return raw.includes('.') || raw.includes('/') || raw.includes('\\');
+        }
+
+        function normalizeRequestedFileName(inputValue) {
+            const raw = String(inputValue || '').trim();
+            if (!raw) return '';
+            const fileLike = raw.split(/[\\/]/).pop();
+            return String(fileLike || '').trim();
+        }
+
+        function validateRequestedFileName(fileName) {
+            const candidate = String(fileName || '').trim();
+            if (!candidate) return '';
+            if (candidate === '.' || candidate === '..') return 'Invalid file name';
+            if (/[\\/:*?"<>|]/.test(candidate)) return 'Invalid file name';
+            if (candidate.endsWith('.')) return 'Invalid file name';
+            return '';
+        }
+
+        function createNewTabWithType(fileExtension, preferredFileName = '') {
+            const extension = normalizeFileExtension(fileExtension);
+
+            if (!extension) {
+                showToast('Select a file type');
+                return false;
+            }
+
+            if (!isValidFileExtension(extension)) {
+                showToast('Invalid file type');
+                return false;
+            }
+
+            if (isImageFileExtension(extension)) {
+                showToast('Image files must be uploaded');
+                return false;
+            }
+
+            let requestedName = normalizeRequestedFileName(preferredFileName);
+            const nameValidationError = validateRequestedFileName(requestedName);
+            if (nameValidationError) {
+                showToast(nameValidationError);
+                return false;
+            }
+
+            if (requestedName && !requestedName.includes('.')) {
+                requestedName = `${requestedName}.${extension}`;
+            }
+
+            if (requestedName && requestedName.includes('.')) {
+                const requestedExt = extractExtensionQuery(requestedName);
+                if (!isValidFileExtension(requestedExt)) {
+                    showToast('Invalid file type');
+                    return false;
+                }
+                if (isImageFileExtension(requestedExt)) {
+                    showToast('Image files must be uploaded');
+                    return false;
+                }
+            }
+
+            const fileName = createUniqueFileName(requestedName, extension);
+            createTab(fileName);
+            pushConsole('log', `Created ${fileName}`);
+            showToast(`Created ${fileName}`);
+            return true;
+        }
+
+        function showCreateFileTypeModal() {
+            const existing = document.getElementById('createFileTypeModal');
+            if (existing) existing.remove();
+
+            const overlay = document.createElement('div');
+            overlay.id = 'createFileTypeModal';
+            overlay.className = 'modal-backdrop';
+            overlay.innerHTML = `
+                <div class="modal-content">
+                    <h3>Create New File</h3>
+                    <p>Search and select a file type. Image file types are upload-only.</p>
+                    <input id="createTypeSearch" type="text" placeholder="Search type or extension (js, html, txt)" autocomplete="off" />
+                    <div id="createTypeList"></div>
+                    <div class="add-tab-actions">
+                        <button type="button" class="modal-btn cancel" id="cancelCreateTypeBtn">Cancel</button>
+                        <button type="button" class="modal-btn confirm" id="createTypedFileBtn">Create</button>
+                    </div>
+                </div>`;
+
+            document.body.appendChild(overlay);
+            document.getElementById('app').classList.add('ui-blur');
+
+            const searchInput = document.getElementById('createTypeSearch');
+            const listEl = document.getElementById('createTypeList');
+            const createBtn = document.getElementById('createTypedFileBtn');
+            const cancelBtn = document.getElementById('cancelCreateTypeBtn');
+
+            let selectedType = 'js';
+
+            const closeModal = () => {
+                overlay.classList.add('hide');
+                setTimeout(() => {
+                    overlay.remove();
+                    document.getElementById('app').classList.remove('ui-blur');
+                }, 200);
+            };
+
+            const renderTypeList = () => {
+                const queryRaw = String(searchInput.value || '').trim().toLowerCase();
+                const queryExt = extractExtensionQuery(queryRaw);
+                const hasImageQuery = queryExt && isImageFileExtension(queryExt);
+
+                const filtered = CREATE_FILE_TYPE_OPTIONS.filter((option) => {
+                    if (!queryRaw) return true;
+                    return option.ext.includes(queryExt) || option.label.toLowerCase().includes(queryRaw);
+                });
+
+                const hasCustomOption = Boolean(queryExt)
+                    && isValidFileExtension(queryExt)
+                    && !isImageFileExtension(queryExt)
+                    && !CREATE_FILE_TYPE_OPTIONS.some((option) => option.ext === queryExt);
+
+                let displayOptions = filtered.slice();
+                if (hasCustomOption) {
+                    displayOptions = [{ ext: queryExt, label: 'Custom Type' }, ...displayOptions];
+                }
+
+                if (!displayOptions.some((option) => option.ext === selectedType)) {
+                    selectedType = displayOptions.length > 0 ? displayOptions[0].ext : (hasCustomOption ? queryExt : '');
+                }
+
+                listEl.innerHTML = '';
+
+                if (hasImageQuery) {
+                    const warning = document.createElement('div');
+                    warning.className = 'create-type-warning';
+                    warning.textContent = 'Image file types must be uploaded, not created as blank files.';
+                    listEl.appendChild(warning);
+                }
+
+                if (displayOptions.length === 0) {
+                    const empty = document.createElement('div');
+                    empty.className = 'create-type-empty';
+                    empty.textContent = 'No matching text/code file type.';
+                    listEl.appendChild(empty);
+                } else {
+                    displayOptions.forEach((option) => {
+                        const item = document.createElement('button');
+                        item.type = 'button';
+                        item.className = 'create-type-item';
+                        item.classList.toggle('selected', option.ext === selectedType);
+
+                        const extEl = document.createElement('span');
+                        extEl.className = 'create-type-ext';
+                        extEl.textContent = `.${option.ext}`;
+
+                        const labelEl = document.createElement('span');
+                        labelEl.className = 'create-type-label';
+                        labelEl.textContent = option.label;
+
+                        item.appendChild(extEl);
+                        item.appendChild(labelEl);
+                        item.onclick = () => {
+                            selectedType = option.ext;
+                            renderTypeList();
+                        };
+
+                        listEl.appendChild(item);
+                    });
+                }
+
+                createBtn.disabled = !selectedType || isImageFileExtension(selectedType);
+            };
+
+            const submitCreate = () => {
+                const queryRaw = String(searchInput.value || '').trim();
+                const typedExt = extractExtensionQuery(searchInput.value);
+                const extension = selectedType || typedExt;
+                const preferredName = looksLikeFileNameInput(queryRaw) ? queryRaw : '';
+                if (!createNewTabWithType(extension, preferredName)) return;
+                closeModal();
+            };
+
+            overlay.addEventListener('click', (event) => {
+                if (event.target === overlay) {
+                    closeModal();
+                }
+            });
+
+            cancelBtn.onclick = closeModal;
+            createBtn.onclick = submitCreate;
+
+            searchInput.addEventListener('input', renderTypeList);
+            searchInput.addEventListener('keydown', (event) => {
+                if (event.key === 'Enter') {
+                    event.preventDefault();
+                    submitCreate();
+                } else if (event.key === 'Escape') {
+                    closeModal();
+                }
+            });
+
+            renderTypeList();
+            setTimeout(() => searchInput.focus(), 0);
+        }
+
+        function showAddTabChoiceModal() {
+            const existing = document.getElementById('addTabChoiceModal');
+            if (existing) existing.remove();
+
+            const overlay = document.createElement('div');
+            overlay.id = 'addTabChoiceModal';
+            overlay.className = 'modal-backdrop';
+            overlay.innerHTML = `
+                <div class="modal-content">
+                    <h3>New File</h3>
+                    <p>Choose how you want to add a file.</p>
+                    <div class="add-tab-actions">
+                        <button type="button" class="modal-btn cancel" id="createNewFromPlus">Create New</button>
+                        <button type="button" class="modal-btn confirm" id="uploadFromPlus">Upload</button>
+                    </div>
+                </div>`;
+
+            document.body.appendChild(overlay);
+            document.getElementById('app').classList.add('ui-blur');
+
+            const closeModal = () => {
+                overlay.classList.add('hide');
+                setTimeout(() => {
+                    overlay.remove();
+                    document.getElementById('app').classList.remove('ui-blur');
+                }, 200);
+            };
+
+            overlay.addEventListener('click', (event) => {
+                if (event.target === overlay) {
+                    closeModal();
+                }
+            });
+
+            document.getElementById('createNewFromPlus').onclick = () => {
+                closeModal();
+                setTimeout(() => showCreateFileTypeModal(), 200);
+            };
+
+            document.getElementById('uploadFromPlus').onclick = () => {
+                closeModal();
+                setTimeout(() => openLocalFiles(), 200);
+            };
+        }
+
+        addTabBtn.onclick = () => showAddTabChoiceModal();
 
         tabsEl.addEventListener("dragover", (e) => {
             if (!draggingTab) return;
@@ -4152,43 +4781,7 @@ console.log('Dark mode applied!');`
         };
 
         document.getElementById("open").onclick = () => {
-            const input = document.createElement('input');
-            input.type = 'file';
-            input.accept = '.js,.txt';
-            input.multiple = true;
-
-            input.onchange = (e) => {
-                const files = Array.from(e.target.files);
-                if (files.length === 0) return;
-
-                let filesLoaded = 0;
-
-                files.forEach((file) => {
-                    const reader = new FileReader();
-
-                    reader.onload = (event) => {
-                        const content = event.target.result;
-                        const fileName = file.name.replace(/\.[^/.]+$/, "");
-
-                        createTab(fileName);
-                        tabs[activeTabId].content = content;
-                        if (editor) {
-                            editor.setValue(content);
-                        }
-
-                        filesLoaded++;
-
-                        if (filesLoaded === files.length) {
-                            showToast(`Opened ${files.length} file(s)`);
-                            pushConsole("log", `Opened ${files.length} file(s)`);
-                        }
-                    };
-
-                    reader.readAsText(file);
-                });
-            };
-
-            input.click();
+            openLocalFiles();
         };
 
         let executionMode = 'browser';
@@ -4196,6 +4789,92 @@ console.log('Dark mode applied!');`
         let primaryViewTransitionTimer = null;
         const PRIMARY_VIEW_TRANSITION_MS = 460;
         const MENU_TRANSITION_MS = 320;
+
+        function setHtmlOutputLabel(textValue = '') {
+            const htmlOutputLabelEl = document.getElementById('htmlOutputLabel');
+            if (!htmlOutputLabelEl) return;
+            htmlOutputLabelEl.textContent = textValue || '';
+            if (currentPrimaryView === 'html') {
+                htmlOutputLabelEl.classList.toggle('active', Boolean(htmlOutputLabelEl.textContent));
+            }
+        }
+
+        function renderImagePreview(tabState) {
+            const htmlOutput = document.getElementById('htmlOutput');
+            if (!htmlOutput) return;
+
+            const htmlDoc = htmlOutput.contentDocument || htmlOutput.contentWindow.document;
+            const imageSrc = tabState && typeof tabState.imageDataUrl === 'string' ? tabState.imageDataUrl : '';
+            const serializedSrc = JSON.stringify(imageSrc).replace(/<\//g, '<\\/');
+
+            htmlDoc.open();
+            htmlDoc.write(`
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <meta charset="UTF-8">
+                    <style>
+                        html, body {
+                            width: 100%;
+                            height: 100%;
+                            margin: 0;
+                            overflow: hidden;
+                        }
+
+                        body {
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            background-color: #131313;
+                            background-image:
+                                linear-gradient(45deg, #1f1f1f 25%, transparent 25%),
+                                linear-gradient(-45deg, #1f1f1f 25%, transparent 25%),
+                                linear-gradient(45deg, transparent 75%, #1f1f1f 75%),
+                                linear-gradient(-45deg, transparent 75%, #1f1f1f 75%);
+                            background-size: 24px 24px;
+                            background-position: 0 0, 0 12px, 12px -12px, -12px 0;
+                            color: #a8a8a8;
+                            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+                        }
+
+                        .preview-wrap {
+                            width: 100%;
+                            height: 100%;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            padding: 18px;
+                        }
+
+                        .preview-wrap img {
+                            max-width: 100%;
+                            max-height: 100%;
+                            object-fit: contain;
+                            box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45);
+                        }
+
+                        .preview-empty {
+                            padding: 12px 14px;
+                            border-radius: 8px;
+                            background: rgba(0, 0, 0, 0.45);
+                            border: 1px solid rgba(255, 255, 255, 0.08);
+                            font-size: 12px;
+                            letter-spacing: 0.02em;
+                        }
+                    </style>
+                </head>
+                <body>
+                    <div class="preview-wrap">
+                        ${imageSrc
+                            ? `<img src=${serializedSrc} alt="Image preview">`
+                            : '<div class="preview-empty">No image preview available.</div>'}
+                    </div>
+                </body>
+                </html>
+            `);
+            htmlDoc.close();
+            setHtmlOutputLabel('Image Preview');
+        }
 
         function updateDashboardMetrics() {
             const modeEl = document.getElementById('dashboardModeValue');
@@ -4795,6 +5474,7 @@ console.log('Dark mode applied!');`
             const htmlOutput = document.getElementById('htmlOutput');
             const htmlDoc = htmlOutput.contentDocument || htmlOutput.contentWindow.document;
             const serializedCode = JSON.stringify(code).replace(/<\//g, '<\\/');
+            setHtmlOutputLabel('');
 
             htmlDoc.open();
             htmlDoc.write(`
