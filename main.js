@@ -350,6 +350,12 @@ ipcMain.handle('explorer:pick-folder', async () => {
     return selectedPath;
 });
 
+ipcMain.handle('explorer:close-folder', async (_event, rootPath) => {
+    const resolvedRoot = resolveExplorerPath(rootPath, 'No folder path provided');
+    explorerRoots.delete(resolvedRoot);
+    return true;
+});
+
 ipcMain.handle('explorer:read-tree', async (_event, rootPath) => {
     const resolvedRoot = resolveExplorerPath(rootPath, 'No folder path provided');
     if (!isAllowedExplorerPath(resolvedRoot)) {

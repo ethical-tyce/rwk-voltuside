@@ -1014,7 +1014,9 @@
         #explorerContextMenu {
             position: fixed;
             z-index: 26000;
-            min-width: 170px;
+            width: max-content;
+            min-width: 0;
+            max-width: 220px;
             padding: 6px;
             border-radius: 10px;
             border: 1px solid rgba(255, 255, 255, 0.14);
@@ -1029,11 +1031,13 @@
         }
 
         .explorer-context-item {
-            width: 100%;
+            display: block;
+            width: auto;
             border: none;
             background: transparent;
             color: #d5d5d5;
             text-align: left;
+            white-space: nowrap;
             font-size: 12px;
             border-radius: 6px;
             padding: 7px 9px;
@@ -1659,6 +1663,13 @@
             display: flex;
             flex-direction: column;
             gap: 6px;
+        }
+
+        #createFileTypeModal .add-tab-actions {
+            margin-top: 16px;
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
         }
 
         .create-type-item {
@@ -3421,7 +3432,7 @@ console.log('Dark mode applied!');`
         let explorerRootPath = '';
         let explorerTreeData = [];
         const collapsedExplorerDirs = new Set();
-        const EXPLORER_MIN_WIDTH = 190;
+        const EXPLORER_MIN_WIDTH = 250;
         const EXPLORER_MAX_WIDTH = 560;
         const EXPLORER_WIDTH_STORAGE_KEY = 'voltus.explorer.width';
         let explorerContextTargetPath = '';
@@ -3732,6 +3743,7 @@ console.log('Dark mode applied!');`
                 return [
                     { id: 'new-file', label: 'New File' },
                     { id: 'new-folder', label: 'New Folder' },
+                    { id: 'close-folder', label: 'Close Folder' },
                     { id: 'refresh', label: 'Refresh Explorer' }
                 ];
             }
@@ -3899,6 +3911,11 @@ console.log('Dark mode applied!');`
 
                 if (actionId === 'refresh') {
                     await refreshExplorerTree();
+                    return;
+                }
+
+                if (actionId === 'close-folder') {
+                    await closeExplorerFolder();
                 }
             } catch (error) {
                 pushConsole('error', error && error.message ? error.message : String(error));
@@ -4083,6 +4100,31 @@ console.log('Dark mode applied!');`
                 pushConsole('error', error && error.message ? error.message : String(error));
                 showToast('Could not open folder');
             }
+        }
+
+        async function closeExplorerFolder() {
+            hideExplorerContextMenu();
+
+            const rootPathToClose = explorerRootPath;
+            if (!rootPathToClose) {
+                renderExplorerTree();
+                return;
+            }
+
+            try {
+                if (window.fileExplorer && typeof window.fileExplorer.closeFolder === 'function') {
+                    await window.fileExplorer.closeFolder(rootPathToClose);
+                }
+            } catch (error) {
+                pushConsole('warn', error && error.message ? error.message : String(error));
+            }
+
+            explorerRootPath = '';
+            explorerTreeData = [];
+            collapsedExplorerDirs.clear();
+            renderExplorerTree();
+            updateExplorerActiveFile();
+            showToast('Folder closed');
         }
 
         async function openFileFromExplorer(filePath, fileName) {
@@ -4540,7 +4582,7 @@ console.log('Dark mode applied!');`
                 <div class="modal-content">
                     <h3>Create New File</h3>
                     <p>Search and select a file type. Image file types are upload-only.</p>
-                    <input id="createTypeSearch" type="text" placeholder="Search type or extension (js, html, txt)" autocomplete="off" />
+                    <input id="createTypeSearch" type="text" placeholder="Search type or extension (js, html, txt)" autocomplete="on" />
                     <div id="createTypeList"></div>
                     <div class="add-tab-actions">
                         <button type="button" class="modal-btn cancel" id="cancelCreateTypeBtn">Cancel</button>

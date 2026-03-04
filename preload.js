@@ -41,6 +41,7 @@ contextBridge.exposeInMainWorld('startupEvents', {
 
 contextBridge.exposeInMainWorld('fileExplorer', {
     pickFolder: () => ipcRenderer.invoke('explorer:pick-folder'),
+    closeFolder: (rootPath) => ipcRenderer.invoke('explorer:close-folder', rootPath),
     readTree: (rootPath) => ipcRenderer.invoke('explorer:read-tree', rootPath),
     readFile: (filePath) => ipcRenderer.invoke('explorer:read-file', filePath),
     writeFile: (filePath, content) => ipcRenderer.invoke('explorer:write-file', filePath, content),
