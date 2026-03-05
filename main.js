@@ -212,7 +212,7 @@ function createWindow() {
         opacity: 0,
         frame: false,
         roundedCorners: false,
-        alwaysOnTop: true,
+        alwaysOnTop: false,
         titleBarStyle: 'hidden',
         backgroundColor: '#000',
         webPreferences: {
