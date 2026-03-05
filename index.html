@@ -5600,6 +5600,10 @@ console.log('Dark mode applied!');`
             explorerResizeStartWidth = explorerPane.getBoundingClientRect().width;
             explorerResizeHandle.classList.add('dragging');
             document.body.classList.add('explorer-resizing');
+            const htmlOutputEl = document.getElementById('htmlOutput');
+            if (htmlOutputEl) {
+                htmlOutputEl.style.pointerEvents = 'none';
+            }
             event.preventDefault();
         });
 
@@ -5629,6 +5633,10 @@ console.log('Dark mode applied!');`
             }
             explorerResizeHandle.classList.remove('dragging');
             document.body.classList.remove('explorer-resizing');
+            const htmlOutputEl = document.getElementById('htmlOutput');
+            if (htmlOutputEl) {
+                htmlOutputEl.style.pointerEvents = 'auto';
+            }
             const computedWidth = parseFloat(getComputedStyle(explorerPane).width);
             setExplorerWidth(computedWidth, true);
         });
