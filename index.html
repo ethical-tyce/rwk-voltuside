@@ -1024,6 +1024,19 @@
             box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45);
             backdrop-filter: blur(10px) saturate(160%);
             -webkit-backdrop-filter: blur(10px) saturate(160%);
+            opacity: 0;
+            transform: translateY(4px) scale(0.985);
+            transition: opacity 150ms ease, transform 150ms ease;
+        }
+
+        #explorerContextMenu.is-open {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+
+        #explorerContextMenu.is-closing {
+            opacity: 0;
+            transform: translateY(4px) scale(0.985);
         }
 
         #explorerContextMenu[hidden] {
@@ -1304,6 +1317,7 @@
             z-index: 100;
             pointer-events: none;
             display: none;
+            transition: opacity 150ms ease;
         }
 
             #htmlOutputLabel.active {
@@ -3091,7 +3105,7 @@ console.log('Dark mode applied!');`
                 setTimeout(() => {
                     overlay.remove();
                     app.classList.remove('ui-blur');
-                }, 200);
+                }, MENU_TRANSITION_MS);
             };
 
             document.getElementById('closeScriptHub').onclick = closeScriptHub;
@@ -3352,8 +3366,10 @@ console.log('Dark mode applied!');`
                     }
                 });
 
-                // Create first tab after editor is ready
-                createTab();
+                // Restore previous tab session when possible; otherwise start fresh.
+                if (!restoreTabSession()) {
+                    createTab();
+                }
             });
         }, 500);
 
@@ -3441,6 +3457,11 @@ console.log('Dark mode applied!');`
         let explorerContextTargetType = '';
         let explorerResizeActive = false;
         let explorerLayoutRaf = null;
+        let explorerContextCloseTimer = null;
+        const EXPLORER_CONTEXT_MENU_TRANSITION_MS = 150;
+        const TAB_SESSION_STORAGE_KEY = 'voltus.tab-session.v1';
+        const TAB_SESSION_VERSION = 1;
+        const TAB_SESSION_MAX_TABS = 120;
 
         function clearDragOverState() {
             document.querySelectorAll(".tab.drag-over-left, .tab.drag-over-right").forEach(tab => {
@@ -3448,6 +3469,107 @@ console.log('Dark mode applied!');`
             });
             dragOverTab = null;
             dragOverSide = null;
+        }
+
+        function captureCurrentTabEditorContent() {
+            if (!editor || !activeTabId || !tabs[activeTabId]) return;
+            const activeTab = tabs[activeTabId];
+            if (isImageLikePath(activeTab.filePath || activeTab.name)) return;
+            activeTab.content = editor.getValue();
+        }
+
+        function getTabOrder() {
+            return [...tabsEl.querySelectorAll('.tab')]
+                .map((tabEl) => tabEl && tabEl.dataset ? tabEl.dataset.tabId : '')
+                .filter((tabId) => Boolean(tabId && tabs[tabId]));
+        }
+
+        function buildTabSessionPayload() {
+            captureCurrentTabEditorContent();
+            const orderedTabIds = getTabOrder();
+            const sessionTabs = orderedTabIds
+                .slice(0, TAB_SESSION_MAX_TABS)
+                .map((tabId) => {
+                    const tabState = tabs[tabId];
+                    return {
+                        name: String(tabState && tabState.name ? tabState.name : 'Untitled'),
+                        content: String(tabState && typeof tabState.content === 'string' ? tabState.content : ''),
+                        filePath: String(tabState && tabState.filePath ? tabState.filePath : ''),
+                        imageDataUrl: String(tabState && tabState.imageDataUrl ? tabState.imageDataUrl : '')
+                    };
+                });
+
+            return {
+                version: TAB_SESSION_VERSION,
+                savedAt: Date.now(),
+                activeIndex: Math.max(0, orderedTabIds.indexOf(activeTabId)),
+                tabCounter: Number(tabCounter) || 0,
+                tabs: sessionTabs
+            };
+        }
+
+        function persistTabSession() {
+            try {
+                const payload = buildTabSessionPayload();
+                if (!payload.tabs.length) {
+                    localStorage.removeItem(TAB_SESSION_STORAGE_KEY);
+                    return;
+                }
+                localStorage.setItem(TAB_SESSION_STORAGE_KEY, JSON.stringify(payload));
+            } catch { }
+        }
+
+        function restoreTabSession() {
+            let parsedSession = null;
+            try {
+                const rawSession = localStorage.getItem(TAB_SESSION_STORAGE_KEY);
+                if (!rawSession) return false;
+                parsedSession = JSON.parse(rawSession);
+            } catch {
+                try {
+                    localStorage.removeItem(TAB_SESSION_STORAGE_KEY);
+                } catch { }
+                return false;
+            }
+
+            if (!parsedSession || parsedSession.version !== TAB_SESSION_VERSION || !Array.isArray(parsedSession.tabs)) {
+                return false;
+            }
+
+            const sessionTabs = parsedSession.tabs.slice(0, TAB_SESSION_MAX_TABS);
+            if (!sessionTabs.length) return false;
+
+            sessionTabs.forEach((savedTab) => {
+                const tabName = String(savedTab && savedTab.name ? savedTab.name : 'Untitled');
+                const filePath = String(savedTab && savedTab.filePath ? savedTab.filePath : '');
+                const imageDataUrl = String(savedTab && savedTab.imageDataUrl ? savedTab.imageDataUrl : '');
+                const newTabId = createTab(tabName, { filePath, imageDataUrl });
+
+                if (!tabs[newTabId]) return;
+                tabs[newTabId].content = String(savedTab && typeof savedTab.content === 'string' ? savedTab.content : '');
+                tabs[newTabId].imageDataUrl = imageDataUrl;
+
+                if (editor && activeTabId === newTabId && !isImageLikePath(filePath || tabName)) {
+                    editor.setValue(tabs[newTabId].content);
+                }
+            });
+
+            const restoredOrder = getTabOrder();
+            const requestedActiveIndex = Number(parsedSession.activeIndex);
+            const activeIndex = Number.isInteger(requestedActiveIndex)
+                ? Math.min(Math.max(requestedActiveIndex, 0), restoredOrder.length - 1)
+                : (restoredOrder.length - 1);
+            const activeTabToClick = restoredOrder[activeIndex];
+            if (activeTabToClick && tabs[activeTabToClick] && tabs[activeTabToClick].tabElement) {
+                tabs[activeTabToClick].tabElement.click();
+            }
+
+            const savedCounter = Number(parsedSession.tabCounter);
+            if (Number.isFinite(savedCounter)) {
+                tabCounter = Math.max(tabCounter, Math.floor(savedCounter));
+            }
+
+            return true;
         }
 
         function finishTabDrag() {
@@ -3732,10 +3854,29 @@ console.log('Dark mode applied!');`
         function hideExplorerContextMenu() {
             const menu = document.getElementById('explorerContextMenu');
             if (!menu) return;
-            menu.hidden = true;
-            menu.innerHTML = '';
-            explorerContextTargetPath = '';
-            explorerContextTargetType = '';
+            if (explorerContextCloseTimer) {
+                clearTimeout(explorerContextCloseTimer);
+                explorerContextCloseTimer = null;
+            }
+
+            if (menu.hidden) {
+                menu.innerHTML = '';
+                explorerContextTargetPath = '';
+                explorerContextTargetType = '';
+                menu.classList.remove('is-open', 'is-closing');
+                return;
+            }
+
+            menu.classList.remove('is-open');
+            menu.classList.add('is-closing');
+            explorerContextCloseTimer = setTimeout(() => {
+                menu.hidden = true;
+                menu.classList.remove('is-closing');
+                menu.innerHTML = '';
+                explorerContextTargetPath = '';
+                explorerContextTargetType = '';
+                explorerContextCloseTimer = null;
+            }, EXPLORER_CONTEXT_MENU_TRANSITION_MS);
         }
 
         function getExplorerContextActions(targetType) {
@@ -3774,6 +3915,10 @@ console.log('Dark mode applied!');`
         function showExplorerContextMenu(clientX, clientY, targetPath, targetType) {
             const menu = document.getElementById('explorerContextMenu');
             if (!menu) return;
+            if (explorerContextCloseTimer) {
+                clearTimeout(explorerContextCloseTimer);
+                explorerContextCloseTimer = null;
+            }
 
             const actions = getExplorerContextActions(targetType);
             if (!actions.length) {
@@ -3799,6 +3944,7 @@ console.log('Dark mode applied!');`
             });
 
             menu.hidden = false;
+            menu.classList.remove('is-closing');
             menu.style.left = `${Math.max(6, clientX)}px`;
             menu.style.top = `${Math.max(6, clientY)}px`;
 
@@ -3807,6 +3953,9 @@ console.log('Dark mode applied!');`
             const maxY = window.innerHeight - rect.height - 6;
             menu.style.left = `${Math.max(6, Math.min(clientX, maxX))}px`;
             menu.style.top = `${Math.max(6, Math.min(clientY, maxY))}px`;
+            requestAnimationFrame(() => {
+                menu.classList.add('is-open');
+            });
         }
 
         async function handleExplorerContextAction(actionId, targetPath, targetType) {
@@ -4132,15 +4281,9 @@ console.log('Dark mode applied!');`
         async function openFileFromExplorer(filePath, fileName) {
             if (!filePath) return;
 
-            if (isImageLikePath(filePath)) {
-                showToast('Image files are upload-only right now');
-                return;
-            }
-
             const existingTabId = filePathToTabId.get(filePath);
             if (existingTabId && tabs[existingTabId] && tabs[existingTabId].tabElement) {
                 tabs[existingTabId].tabElement.click();
-                setPrimaryView('editor');
                 return;
             }
 
@@ -4150,8 +4293,29 @@ console.log('Dark mode applied!');`
             }
 
             try {
-                const content = await window.fileExplorer.readFile(filePath);
                 const nextTabName = fileName || getFileNameFromPath(filePath) || 'Untitled';
+                const isImageFile = isImageLikePath(filePath);
+
+                if (isImageFile) {
+                    if (typeof window.fileExplorer.readImageDataUrl !== 'function') {
+                        showToast('Image preview API unavailable');
+                        return;
+                    }
+
+                    const imageDataUrl = await window.fileExplorer.readImageDataUrl(filePath);
+                    const newTabId = createTab(nextTabName, { filePath, imageDataUrl });
+                    if (tabs[newTabId]) {
+                        tabs[newTabId].content = '';
+                        tabs[newTabId].imageDataUrl = String(imageDataUrl || '');
+                    }
+
+                    setPrimaryView('html');
+                    updateExplorerActiveFile();
+                    pushConsole('log', `Opened ${filePath}`);
+                    return;
+                }
+
+                const content = await window.fileExplorer.readFile(filePath);
                 const newTabId = createTab(nextTabName, { filePath });
                 if (tabs[newTabId]) {
                     tabs[newTabId].content = content;
@@ -4607,7 +4771,7 @@ console.log('Dark mode applied!');`
                 setTimeout(() => {
                     overlay.remove();
                     document.getElementById('app').classList.remove('ui-blur');
-                }, 200);
+                }, MENU_TRANSITION_MS);
             };
 
             const renderTypeList = () => {
@@ -4734,7 +4898,7 @@ console.log('Dark mode applied!');`
                 setTimeout(() => {
                     overlay.remove();
                     document.getElementById('app').classList.remove('ui-blur');
-                }, 200);
+                }, MENU_TRANSITION_MS);
             };
 
             overlay.addEventListener('click', (event) => {
@@ -4745,12 +4909,12 @@ console.log('Dark mode applied!');`
 
             document.getElementById('createNewFromPlus').onclick = () => {
                 closeModal();
-                setTimeout(() => showCreateFileTypeModal(), 200);
+                setTimeout(() => showCreateFileTypeModal(), MENU_TRANSITION_MS);
             };
 
             document.getElementById('uploadFromPlus').onclick = () => {
                 closeModal();
-                setTimeout(() => openLocalFiles(), 200);
+                setTimeout(() => openLocalFiles(), MENU_TRANSITION_MS);
             };
         }
 
@@ -4860,14 +5024,83 @@ console.log('Dark mode applied!');`
         let primaryViewTransitionTimer = null;
         const PRIMARY_VIEW_TRANSITION_MS = 460;
         const MENU_TRANSITION_MS = 320;
+        const PROJECT_LABEL_FADE_DISTANCE_PX = 170;
+        const PROJECT_LABEL_MIN_OPACITY = 0;
+        let htmlOutputTrackedDoc = null;
+        let htmlOutputDocMouseMoveHandler = null;
+        let htmlOutputDocMouseLeaveHandler = null;
 
         function setHtmlOutputLabel(textValue = '') {
             const htmlOutputLabelEl = document.getElementById('htmlOutputLabel');
             if (!htmlOutputLabelEl) return;
             htmlOutputLabelEl.textContent = textValue || '';
+            htmlOutputLabelEl.style.opacity = '1';
             if (currentPrimaryView === 'html') {
                 htmlOutputLabelEl.classList.toggle('active', Boolean(htmlOutputLabelEl.textContent));
             }
+        }
+
+        function updateProjectLabelProximityFade(mouseEvent) {
+            const htmlOutputLabelEl = document.getElementById('htmlOutputLabel');
+            if (!htmlOutputLabelEl || !htmlOutputLabelEl.classList.contains('active')) return;
+
+            const labelText = String(htmlOutputLabelEl.textContent || '').trim();
+            if (!/^project\b/i.test(labelText) || currentPrimaryView !== 'html') {
+                htmlOutputLabelEl.style.opacity = '1';
+                return;
+            }
+
+            if (!mouseEvent || typeof mouseEvent.clientX !== 'number' || typeof mouseEvent.clientY !== 'number') {
+                htmlOutputLabelEl.style.opacity = '1';
+                return;
+            }
+
+            const rect = htmlOutputLabelEl.getBoundingClientRect();
+            const clampedX = Math.min(Math.max(mouseEvent.clientX, rect.left), rect.right);
+            const clampedY = Math.min(Math.max(mouseEvent.clientY, rect.top), rect.bottom);
+            const dx = mouseEvent.clientX - clampedX;
+            const dy = mouseEvent.clientY - clampedY;
+            const distance = Math.hypot(dx, dy);
+            const ratio = Math.max(0, Math.min(1, distance / PROJECT_LABEL_FADE_DISTANCE_PX));
+            const opacity = PROJECT_LABEL_MIN_OPACITY + ((1 - PROJECT_LABEL_MIN_OPACITY) * ratio);
+            htmlOutputLabelEl.style.opacity = opacity.toFixed(3);
+        }
+
+        function bindHtmlOutputProximityTracking() {
+            const htmlOutputEl = document.getElementById('htmlOutput');
+            if (!htmlOutputEl) return;
+
+            let nextDoc = null;
+            try {
+                nextDoc = htmlOutputEl.contentDocument || (htmlOutputEl.contentWindow ? htmlOutputEl.contentWindow.document : null);
+            } catch {
+                nextDoc = null;
+            }
+
+            if (!nextDoc || nextDoc === htmlOutputTrackedDoc) return;
+
+            if (htmlOutputTrackedDoc && htmlOutputDocMouseMoveHandler && htmlOutputDocMouseLeaveHandler) {
+                htmlOutputTrackedDoc.removeEventListener('mousemove', htmlOutputDocMouseMoveHandler);
+                htmlOutputTrackedDoc.removeEventListener('mouseleave', htmlOutputDocMouseLeaveHandler);
+            }
+
+            htmlOutputDocMouseMoveHandler = (event) => {
+                const rect = htmlOutputEl.getBoundingClientRect();
+                const translatedEvent = {
+                    clientX: rect.left + Number(event && event.clientX ? event.clientX : 0),
+                    clientY: rect.top + Number(event && event.clientY ? event.clientY : 0)
+                };
+                updateProjectLabelProximityFade(translatedEvent);
+            };
+            htmlOutputDocMouseLeaveHandler = () => {
+                const htmlOutputLabelEl = document.getElementById('htmlOutputLabel');
+                if (!htmlOutputLabelEl) return;
+                htmlOutputLabelEl.style.opacity = '1';
+            };
+
+            nextDoc.addEventListener('mousemove', htmlOutputDocMouseMoveHandler);
+            nextDoc.addEventListener('mouseleave', htmlOutputDocMouseLeaveHandler);
+            htmlOutputTrackedDoc = nextDoc;
         }
 
         function renderImagePreview(tabState) {
@@ -4906,6 +5139,7 @@ console.log('Dark mode applied!');`
                             background-position: 0 0, 0 12px, 12px -12px, -12px 0;
                             color: #a8a8a8;
                             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+                            position: relative;
                         }
 
                         .preview-wrap {
@@ -4932,14 +5166,60 @@ console.log('Dark mode applied!');`
                             font-size: 12px;
                             letter-spacing: 0.02em;
                         }
+
+                        .preview-dimensions {
+                            position: absolute;
+                            right: 12px;
+                            bottom: 12px;
+                            padding: 5px 9px;
+                            border-radius: 999px;
+                            border: 1px solid rgba(255, 255, 255, 0.14);
+                            background: rgba(8, 8, 8, 0.72);
+                            color: #d0d0d0;
+                            font-size: 11px;
+                            letter-spacing: 0.02em;
+                            backdrop-filter: blur(2px);
+                            display: none;
+                        }
+
+                        .preview-dimensions.visible {
+                            display: inline-flex;
+                        }
                     </style>
                 </head>
                 <body>
                     <div class="preview-wrap">
                         ${imageSrc
-                            ? `<img src=${serializedSrc} alt="Image preview">`
+                            ? `<img id="previewImage" src=${serializedSrc} alt="Image preview">`
                             : '<div class="preview-empty">No image preview available.</div>'}
                     </div>
+                    ${imageSrc ? '<div id="previewDimensions" class="preview-dimensions"></div>' : ''}
+                    <script>
+                        (function () {
+                            const imageEl = document.getElementById('previewImage');
+                            const dimensionsEl = document.getElementById('previewDimensions');
+                            if (!imageEl || !dimensionsEl) return;
+
+                            const applyDimensions = () => {
+                                const width = Number(imageEl.naturalWidth || 0);
+                                const height = Number(imageEl.naturalHeight || 0);
+                                if (width > 0 && height > 0) {
+                                    dimensionsEl.textContent = width + ' x ' + height;
+                                    dimensionsEl.classList.add('visible');
+                                }
+                            };
+
+                            if (imageEl.complete) {
+                                applyDimensions();
+                            }
+
+                            imageEl.addEventListener('load', applyDimensions);
+                            imageEl.addEventListener('error', () => {
+                                dimensionsEl.classList.remove('visible');
+                                dimensionsEl.textContent = '';
+                            });
+                        })();
+                    <\/script>
                 </body>
                 </html>
             `);
@@ -5025,6 +5305,7 @@ console.log('Dark mode applied!');`
                 document.getElementById('htmlOutputTab').classList.add('active');
                 consoleWrapEl.classList.add('active');
                 consoleHandleEl.classList.add('active');
+                bindHtmlOutputProximityTracking();
 
                 if (htmlOutputLabelEl.textContent) {
                     htmlOutputLabelEl.classList.add('active');
@@ -5051,6 +5332,17 @@ console.log('Dark mode applied!');`
         document.getElementById('htmlOutputTab').onclick = function () {
             setPrimaryView('html');
         };
+
+        document.addEventListener('mousemove', updateProjectLabelProximityFade);
+        document.addEventListener('mouseleave', () => {
+            const htmlOutputLabelEl = document.getElementById('htmlOutputLabel');
+            if (!htmlOutputLabelEl) return;
+            htmlOutputLabelEl.style.opacity = '1';
+        });
+        document.getElementById('htmlOutput').addEventListener('load', bindHtmlOutputProximityTracking);
+        window.addEventListener('beforeunload', () => {
+            persistTabSession();
+        });
 
         const explorerToggle = document.getElementById('explorerToggle');
         const explorerOpenFolderBtn = document.getElementById('explorerOpenFolder');
@@ -5534,7 +5826,7 @@ console.log('Dark mode applied!');`
                 setTimeout(() => {
                     overlay.remove();
                     document.getElementById('app').classList.remove('ui-blur');
-                }, 200);
+                }, MENU_TRANSITION_MS);
             }
         }
 

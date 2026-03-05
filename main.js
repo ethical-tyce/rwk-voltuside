@@ -10,6 +10,19 @@ const explorerRoots = new Set();
 const EXPLORER_MAX_DEPTH = 8;
 const EXPLORER_MAX_ENTRIES = 3000;
 const EXPLORER_IGNORED_FOLDERS = new Set(['node_modules', '.git']);
+const IMAGE_MIME_TYPES = {
+    '.png': 'image/png',
+    '.jpg': 'image/jpeg',
+    '.jpeg': 'image/jpeg',
+    '.gif': 'image/gif',
+    '.svg': 'image/svg+xml',
+    '.webp': 'image/webp',
+    '.ico': 'image/x-icon',
+    '.bmp': 'image/bmp',
+    '.avif': 'image/avif',
+    '.tif': 'image/tiff',
+    '.tiff': 'image/tiff'
+};
 
 function isPathInsideRoot(targetPath, rootPath) {
     const relative = path.relative(rootPath, targetPath);
@@ -38,6 +51,11 @@ function isOpenedRootPath(targetPath) {
         if (path.resolve(root) === targetPath) return true;
     }
     return false;
+}
+
+function getImageMimeType(filePath) {
+    const ext = String(path.extname(filePath || '')).toLowerCase();
+    return IMAGE_MIME_TYPES[ext] || 'application/octet-stream';
 }
 
 async function buildExplorerTree(currentPath, depth = 0, state = { visited: 0, truncated: false }) {
@@ -388,6 +406,22 @@ ipcMain.handle('explorer:read-file', async (_event, filePath) => {
     }
 
     return fs.readFile(resolvedPath, 'utf8');
+});
+
+ipcMain.handle('explorer:read-image-data-url', async (_event, filePath) => {
+    const resolvedPath = resolveExplorerPath(filePath, 'No file path provided');
+    if (!isAllowedExplorerPath(resolvedPath)) {
+        throw new Error('File is outside allowed explorer roots');
+    }
+
+    const stat = await fs.stat(resolvedPath);
+    if (!stat.isFile()) {
+        throw new Error('Provided path is not a file');
+    }
+
+    const buffer = await fs.readFile(resolvedPath);
+    const mimeType = getImageMimeType(resolvedPath);
+    return `data:${mimeType};base64,${buffer.toString('base64')}`;
 });
 
 ipcMain.handle('explorer:write-file', async (_event, filePath, content) => {

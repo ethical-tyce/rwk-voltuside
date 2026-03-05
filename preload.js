@@ -44,6 +44,7 @@ contextBridge.exposeInMainWorld('fileExplorer', {
     closeFolder: (rootPath) => ipcRenderer.invoke('explorer:close-folder', rootPath),
     readTree: (rootPath) => ipcRenderer.invoke('explorer:read-tree', rootPath),
     readFile: (filePath) => ipcRenderer.invoke('explorer:read-file', filePath),
+    readImageDataUrl: (filePath) => ipcRenderer.invoke('explorer:read-image-data-url', filePath),
     writeFile: (filePath, content) => ipcRenderer.invoke('explorer:write-file', filePath, content),
     createFile: (filePath, content) => ipcRenderer.invoke('explorer:create-file', filePath, content),
     createDirectory: (directoryPath) => ipcRenderer.invoke('explorer:create-directory', directoryPath),
