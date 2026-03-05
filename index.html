@@ -6512,6 +6512,113 @@ console.log('Dark mode applied!');`
             document.getElementById('htmlOutputTab').click();
         }
 
+        function createBrowserProjectInjectionScript(htmlContent) {
+            const serializedHtml = JSON.stringify(String(htmlContent || '')).replace(/<\//g, '<\\/');
+            return `
+                (() => {
+                    try {
+                        const projectHtml = ${serializedHtml};
+                        const existingOverlay = document.getElementById('voltus-project-run-overlay');
+                        if (existingOverlay) {
+                            existingOverlay.remove();
+                        }
+
+                        const overlay = document.createElement('div');
+                        overlay.id = 'voltus-project-run-overlay';
+                        overlay.style.position = 'fixed';
+                        overlay.style.inset = '0';
+                        overlay.style.zIndex = '2147483647';
+                        overlay.style.background = 'rgba(0, 0, 0, 0.35)';
+                        overlay.style.display = 'flex';
+                        overlay.style.flexDirection = 'column';
+
+                        const topBar = document.createElement('div');
+                        topBar.style.height = '36px';
+                        topBar.style.background = '#111';
+                        topBar.style.color = '#e5e5e5';
+                        topBar.style.display = 'flex';
+                        topBar.style.alignItems = 'center';
+                        topBar.style.justifyContent = 'space-between';
+                        topBar.style.padding = '0 10px';
+                        topBar.style.font = '12px -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif';
+                        topBar.style.letterSpacing = '0.02em';
+                        topBar.textContent = 'Voltus Project Run';
+
+                        const closeBtn = document.createElement('button');
+                        closeBtn.type = 'button';
+                        closeBtn.textContent = 'Close';
+                        closeBtn.style.border = '1px solid rgba(255, 255, 255, 0.2)';
+                        closeBtn.style.background = '#1f1f1f';
+                        closeBtn.style.color = '#f0f0f0';
+                        closeBtn.style.borderRadius = '4px';
+                        closeBtn.style.padding = '4px 10px';
+                        closeBtn.style.cursor = 'pointer';
+                        closeBtn.onclick = () => overlay.remove();
+                        topBar.appendChild(closeBtn);
+
+                        const frame = document.createElement('iframe');
+                        frame.title = 'Voltus Project Preview';
+                        frame.style.flex = '1';
+                        frame.style.width = '100%';
+                        frame.style.border = 'none';
+                        frame.style.background = '#fff';
+                        frame.srcdoc = projectHtml;
+
+                        overlay.appendChild(topBar);
+                        overlay.appendChild(frame);
+                        document.documentElement.appendChild(overlay);
+                    } catch (error) {
+                        const detail = error && error.stack ? error.stack : (error && error.message ? error.message : String(error));
+                        console.error('Voltus project run failed:', detail);
+                    }
+                })();
+            `.trim();
+        }
+
+        async function prepareBrowserExecutionPayload(code) {
+            const payload = {
+                code: String(code || ''),
+                isProjectRun: false
+            };
+
+            if (!runAsProject) {
+                return payload;
+            }
+
+            const activeTab = activeTabId && tabs[activeTabId] ? tabs[activeTabId] : null;
+            const execType = getLocalExecutionKindForActiveTab();
+            if (execType.kind !== 'html') {
+                if (execType.kind === 'javascript' && execType.label === 'TypeScript') {
+                    showToast('Run as Project does not transpile TypeScript');
+                } else {
+                    pushConsole('warn', 'Run as Project (browser) supports HTML tabs only; sending raw code');
+                }
+                return payload;
+            }
+
+            const projectFilePath = getTabProjectFilePath(activeTab);
+            const hasDocumentShell = /<\s*!doctype|<\s*html|<\s*body|<\s*head/i.test(code);
+            let htmlContent = hasDocumentShell
+                ? String(code || '')
+                : `<!DOCTYPE html><html><body>${String(code || '')}</body></html>`;
+
+            if (hasDocumentShell) {
+                const transformed = await transformHtmlForProjectRun(htmlContent, projectFilePath);
+                htmlContent = transformed.html;
+                if (transformed.resolvedCount > 0) {
+                    pushConsole('log', `Project run: resolved ${transformed.resolvedCount} linked asset(s)`);
+                } else if (!projectFilePath) {
+                    pushConsole('warn', 'Project run: no disk path; open linked files as tabs for resolution');
+                }
+            } else {
+                showToast('Run as Project works best with full HTML files');
+            }
+
+            payload.code = createBrowserProjectInjectionScript(htmlContent);
+            payload.isProjectRun = true;
+            return payload;
+        }
+
         document.getElementById("execute").onclick = async () => {
             const code = getCurrentEditorCode();
 
@@ -6522,6 +6629,15 @@ console.log('Dark mode applied!');`
 
             if (executionMode === 'local') {
                 await runCodeLocally(code);
+                return;
+            }
+
+            let browserPayload;
+            try {
+                browserPayload = await prepareBrowserExecutionPayload(code);
+            } catch (error) {
+                showToast('Project run preparation failed');
+                pushConsole('error', error && error.message ? error.message : String(error));
                 return;
             }
 
@@ -6546,12 +6662,15 @@ console.log('Dark mode applied!');`
             try {
                 sendExtensionMessage({
                     type: 'EXECUTE',
-                    code: code,
+                    code: browserPayload.code,
                     target: selectedExecutionTarget,
                     tabIds: targetTabIds
                 });
-                showToast(`Sent to ${targetTabIds.length} browser tab(s)`);
-                pushConsole("log", `Sent code to ${targetTabIds.length} browser tab(s)`);
+                const sendMessage = browserPayload.isProjectRun
+                    ? `Project run sent to ${targetTabIds.length} browser tab(s)`
+                    : `Sent to ${targetTabIds.length} browser tab(s)`;
+                showToast(sendMessage);
+                pushConsole("log", sendMessage);
             } catch (error) {
                 showToast('Failed to send to extension');
                 pushConsole("error", error.message);
