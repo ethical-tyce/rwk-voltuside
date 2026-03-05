@@ -374,6 +374,16 @@ ipcMain.handle('explorer:close-folder', async (_event, rootPath) => {
     return true;
 });
 
+ipcMain.handle('explorer:restore-folder', async (_event, rootPath) => {
+    const resolvedRoot = resolveExplorerPath(rootPath, 'No folder path provided');
+    const stat = await fs.stat(resolvedRoot);
+    if (!stat.isDirectory()) {
+        throw new Error('Provided path is not a directory');
+    }
+    explorerRoots.add(resolvedRoot);
+    return resolvedRoot;
+});
+
 ipcMain.handle('explorer:read-tree', async (_event, rootPath) => {
     const resolvedRoot = resolveExplorerPath(rootPath, 'No folder path provided');
     if (!isAllowedExplorerPath(resolvedRoot)) {

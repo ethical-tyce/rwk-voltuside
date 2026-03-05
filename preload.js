@@ -42,6 +42,7 @@ contextBridge.exposeInMainWorld('startupEvents', {
 contextBridge.exposeInMainWorld('fileExplorer', {
     pickFolder: () => ipcRenderer.invoke('explorer:pick-folder'),
     closeFolder: (rootPath) => ipcRenderer.invoke('explorer:close-folder', rootPath),
+    restoreFolder: (rootPath) => ipcRenderer.invoke('explorer:restore-folder', rootPath),
     readTree: (rootPath) => ipcRenderer.invoke('explorer:read-tree', rootPath),
     readFile: (filePath) => ipcRenderer.invoke('explorer:read-file', filePath),
     readImageDataUrl: (filePath) => ipcRenderer.invoke('explorer:read-image-data-url', filePath),

@@ -24,6 +24,8 @@
             --bug-btn-size: 32px; /* overall clickable bug button size */
             --bug-icon-size: 13px; /* bug icon size inside button */
             --explorer-width: 260px;
+            --console-left-offset: 0px;
+            --preview-console-height: 140px;
             --menu-glass-bg: rgba(0, 0, 0, 0.1);
             --menu-glass-blur: 5px;
             --menu-glass-saturate: 210%;
@@ -295,8 +297,8 @@
             z-index: 20000;
         }
 
-        /* Standardized Glass for ALL Modals (Settings, Hub, Browser, Clear) */
-        .modal-content, #modal, #settingsMenu {
+        /* Standardized Glass for modal surfaces */
+        .modal-content, #modal {
             background: var(--menu-glass-bg) !important;
             backdrop-filter: blur(var(--menu-glass-blur)) saturate(var(--menu-glass-saturate)) !important;
             -webkit-backdrop-filter: blur(var(--menu-glass-blur)) saturate(var(--menu-glass-saturate)) !important;
@@ -672,6 +674,7 @@
             flex-direction: column;
             min-height: 0;
             min-width: 0;
+            position: relative;
         }
 
         #editorContainer {
@@ -680,6 +683,7 @@
             min-height: 0;
             min-width: 0;
             padding-top: 0;
+            height: 100%;
         }
 
         /* ---------- LEFT SIDEBAR ---------- */
@@ -691,6 +695,8 @@
             flex-direction: column;
             gap: 6px;
             padding: 6px 6px;
+            flex-shrink: 0;
+            min-height: 100%;
         }
 
         /* ---------- GLASSY SIDEBAR TABS ---------- */
@@ -720,6 +726,7 @@
             justify-content: center;
             border-radius: 8px; /* Slightly rounder look */
             cursor: pointer;
+            flex-shrink: 0;
             transition:
                 background-color var(--sidebar-tab-transition) var(--sidebar-tab-ease),
                 color var(--sidebar-tab-transition) var(--sidebar-tab-ease),
@@ -773,6 +780,8 @@
             flex-direction: column;
             overflow: hidden;
             opacity: 1;
+            min-height: 100%;
+            flex-shrink: 0;
             transition:
                 width var(--primary-view-transition) var(--primary-view-ease),
                 min-width var(--primary-view-transition) var(--primary-view-ease),
@@ -794,6 +803,7 @@
             position: relative;
             cursor: col-resize;
             background: linear-gradient(to right, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.02));
+            min-height: 100%;
             transition: background 0.18s ease, width var(--primary-view-transition) var(--primary-view-ease);
         }
 
@@ -827,6 +837,16 @@
 
         body.explorer-resizing #explorerPane,
         body.explorer-resizing #explorerResizeHandle {
+            transition: none !important;
+        }
+
+        body.explorer-resizing #consoleWrap,
+        body.explorer-resizing #consoleHandle {
+            transition: none !important;
+        }
+
+        body.console-resizing #consoleWrap,
+        body.console-resizing #consoleHandle {
             transition: none !important;
         }
 
@@ -1077,6 +1097,10 @@
             overflow: hidden;
         }
 
+        #mainContent.console-open #htmlOutput.primary-view {
+            bottom: calc(var(--preview-console-height) + 4px);
+        }
+
         .primary-view {
             position: absolute;
             inset: 0;
@@ -1106,13 +1130,15 @@
             transition: opacity var(--primary-view-transition) var(--primary-view-ease), transform var(--primary-view-transition) var(--primary-view-ease);
         }
 
-        #dashboard {
+        #dashboard,
+        #settingsView {
             padding: 22px;
             color: #d2d2d2;
             overflow-y: auto;
         }
 
-        #dashboard h2 {
+        #dashboard h2,
+        #settingsView h2 {
             margin: 0 0 10px 0;
             font-size: 20px;
             font-weight: 600;
@@ -1171,22 +1197,33 @@
             min-height: 112px;
         }
 
+        .connected-content .link-card {
+            align-items: center;
+            text-align: center;
+        }
+
         .link-icon {
-            width: 28px;
-            height: 28px;
-            border-radius: 7px;
             display: flex;
             align-items: center;
             justify-content: center;
             color: #d8d8d8;
-            background: rgba(255, 255, 255, 0.06);
-            border: 1px solid rgba(255, 255, 255, 0.08);
             flex-shrink: 0;
         }
 
         .link-icon svg {
             width: 14px;
             height: 14px;
+            display: block;
+            margin: auto;
+        }
+
+        .connected-content .link-card .link-icon {
+            margin: 0 auto;
+        }
+
+        .connected-content .link-card .toolbar-button.run {
+            margin-left: auto;
+            margin-right: auto;
         }
 
         .link-title {
@@ -1328,11 +1365,18 @@
         #consoleWrap {
             height: 140px;
             overflow: auto;
-            flex: none;
             border-top: none;
             display: none;
             flex-direction: column;
             background: #000;
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 5;
+            transition:
+                left var(--primary-view-transition) var(--primary-view-ease),
+                right var(--primary-view-transition) var(--primary-view-ease);
         }
 
             #consoleWrap.active {
@@ -1780,6 +1824,16 @@
             cursor: ns-resize;
             background: #1a1a1a;
             display: none;
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: 140px;
+            z-index: 6;
+            transition:
+                left var(--primary-view-transition) var(--primary-view-ease),
+                right var(--primary-view-transition) var(--primary-view-ease),
+                bottom 0.18s ease,
+                background 0.18s ease;
         }
 
             #consoleHandle.active {
@@ -1870,35 +1924,32 @@
             font-size: 16px;
         }
 
-        /* ---------- GLASSY SETTINGS MENU (Layout Preserved) ---------- */
-        #settingsMenu {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            width: 90%;
-            max-width: 500px;
-            /* The Glass Secret */
-            background: var(--menu-glass-bg) !important;
-            backdrop-filter: blur(var(--menu-glass-blur)) saturate(var(--menu-glass-saturate));
-            -webkit-backdrop-filter: blur(var(--menu-glass-blur)) saturate(var(--menu-glass-saturate));
-            box-shadow: var(--menu-glass-shadow);
-            border: 1px solid var(--menu-glass-border);
-            border-radius: 6px; 
-            padding: 0;
-            z-index: 1500;
-            opacity: 0;
-            pointer-events: none;
-            transform: translate(-50%, -50%);
+        /* ---------- SETTINGS PAGE ---------- */
+        #settingsView .settings-grid {
+            grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
         }
 
-        #settingsMenu.show {
-            opacity: 1;
-            pointer-events: auto;
-            animation: settingsSlideIn var(--menu-transition) var(--menu-ease);
+        #settingsView .settings-card {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            min-height: 116px;
         }
 
-        #settingsMenu.hide {
-            animation: settingsSlideOut var(--menu-transition) var(--menu-ease);
+        #settingsView .settings-setting-name {
+            margin: 0;
+            font-size: 14px;
+            color: #efefef;
+        }
+
+        #settingsView .settings-select {
+            width: 100%;
+            margin-top: auto;
+        }
+
+        #settingsView .settings-toggle {
+            margin-top: auto;
+            align-self: flex-start;
         }
 
         .settings-header {
@@ -2509,12 +2560,6 @@
                 <button id="addTab">+</button>
             </div>
 
-            <button class="icon-btn" id="client" title="Settings">
-                <svg viewBox="0 0 512 512" fill="none" stroke="currentColor" style="stroke-width: 43 !important">
-                    <path d="M262.29,192.31a64,64,0,1,0,57.4,57.4A64.13,64.13,0,0,0,262.29,192.31ZM416.39,256a154.34,154.34,0,0,1-1.53,20.79l45.21,35.46A10.81,10.81,0,0,1,462.52,326l-42.77,74a10.81,10.81,0,0,1-13.14,4.59l-44.9-18.08a16.11,16.11,0,0,0-15.17,1.75A164.48,164.48,0,0,1,325,400.8a15.94,15.94,0,0,0-8.82,12.14l-6.73,47.89A11.08,11.08,0,0,1,298.77,470H213.23a11.11,11.11,0,0,1-10.69-8.87l-6.72-47.82a16.07,16.07,0,0,0-9-12.22,155.3,155.3,0,0,1-21.46-12.57,16,16,0,0,0-15.11-1.71l-44.89,18.07a10.81,10.81,0,0,1-13.14-4.58l-42.77-74a10.8,10.8,0,0,1,2.45-13.75l38.21-30a16.05,16.05,0,0,0,6-14.08c-.36-4.17-.58-8.33-.58-12.5s.21-8.27.58-12.35a16,16,0,0,0-6.07-13.94l-38.19-30A10.81,10.81,0,0,1,49.48,186l42.77-74a10.81,10.81,0,0,1,13.14-4.59l44.9,18.08a16.11,16.11,0,0,0,15.17-1.75A164.48,164.48,0,0,1,187,111.2a15.94,15.94,0,0,0,8.82-12.14l6.73-47.89A11.08,11.08,0,0,1,213.23,42h85.54a11.11,11.11,0,0,1,10.69,8.87l6.72,47.82a16.07,16.07,0,0,0,9,12.22,155.3,155.3,0,0,1,21.46,12.57,16,16,0,0,0,15.11,1.71l44.89-18.07a10.81,10.81,0,0,1,13.14,4.58l42.77,74a10.8,10.8,0,0,1-2.45,13.75l-38.21,30a16.05,16.05,0,0,0-6.05,14.08C416.17,247.67,416.39,251.83,416.39,256Z" />
-                </svg>
-            </button>
-
             <button class="icon-btn" id="scriptHub" title="Script Hub">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
                     <path d="M4 22h14a2 2 0 0 0 2-2V7l-5-5H6a2 2 0 0 0-2 2v4"></path>
@@ -2525,12 +2570,7 @@
             </button>
 
             <button class="icon-btn" id="tabBrowser" title="Tab Browser">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                    <path d="M20 7h-9"></path>
-                    <path d="M14 17H5"></path>
-                    <circle cx="17" cy="17" r="3"></circle>
-                    <circle cx="7" cy="7" r="3"></circle>
-                </svg>
+                <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="#e3e3e3"><path d="M467-120q-73-1-136-14t-110-34.5q-47-21.5-74-50T120-280q0 33 27 61.5t74 50Q268-147 331-134t136 14Zm-15-200q-38-2-73.5-6.5t-67.5-12q-32-7.5-60-17.5t-51-23q23 13 51 23t60 17.5q32 7.5 67.5 12T452-320Zm28-279q89 0 179-26.5T760-679q-11-29-100.5-55T480-760q-91 0-178.5 25.5T200-679q14 27 101.5 53.5T480-599Zm220 479h40v-164l72 72 28-28-120-120-120 120 28 28 72-72v164ZM578.5-98.5Q520-157 520-240t58.5-141.5Q637-440 720-440t141.5 58.5Q920-323 920-240T861.5-98.5Q803-40 720-40T578.5-98.5ZM443-201q3 22 9 42t15 39q-73-1-136-14t-110-34.5q-47-21.5-74-50T120-280v-400q0-66 105.5-113T480-840q149 0 254.5 47T840-680v187q-19-9-39-15t-41-9v-62q-52 29-124 44t-156 15q-85 0-157-15t-123-44v101q51 47 130.5 62.5T480-400h11q-13 18-22.5 38T452-320q-76-4-141-18.5T200-379v99q7 13 30 26.5t56 24q33 10.5 73.5 18T443-201Z"/></svg>
             </button>
 
             <button class="icon-btn" id="open" title="Open">
@@ -2572,6 +2612,12 @@
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
                             <path d="M3 6h7l2 2h9v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
                             <path d="M3 9h18"></path>
+                        </svg>
+                    </div>
+                    <div class="sidebar-tab" id="client" data-view="settings" title="Settings">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <circle cx="12" cy="12" r="3"></circle>
+                            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
                         </svg>
                     </div>
                     <div class="sidebar-tab" id="editorTab" data-view="editor" title="Editor">
@@ -2710,76 +2756,61 @@
                             </div>
                         </div>
                     </div>
+                    <div id="settingsView" class="primary-view">
+                        <h2>Settings</h2>
+                        <div class="dashboard-grid settings-grid">
+                            <div class="dashboard-card settings-card">
+                                <div class="dashboard-card-label">Editor</div>
+                                <h3 class="settings-setting-name">Font Size</h3>
+                                <select class="settings-select" id="fontSize">
+                                    <option value="12" selected>12px</option>
+                                    <option value="14">14px</option>
+                                    <option value="16">16px</option>
+                                    <option value="18">18px</option>
+                                </select>
+                            </div>
+                            <div class="dashboard-card settings-card">
+                                <div class="dashboard-card-label">Editor</div>
+                                <h3 class="settings-setting-name">Show Minimap</h3>
+                                <div class="settings-toggle active" id="toggleMinimap"></div>
+                            </div>
+                            <div class="dashboard-card settings-card">
+                                <div class="dashboard-card-label">Editor</div>
+                                <h3 class="settings-setting-name">Word Wrap</h3>
+                                <div class="settings-toggle" id="toggleWordWrap"></div>
+                            </div>
+                            <div class="dashboard-card settings-card">
+                                <div class="dashboard-card-label">Execution</div>
+                                <h3 class="settings-setting-name">Execution Mode</h3>
+                                <select class="settings-select" id="executionMode">
+                                    <option value="browser" selected>Browser Execution</option>
+                                    <option value="local">Local Execution</option>
+                                </select>
+                            </div>
+                            <div class="dashboard-card settings-card">
+                                <div class="dashboard-card-label">Execution</div>
+                                <h3 class="settings-setting-name">Run as Project</h3>
+                                <div class="settings-toggle" id="toggleRunAsProject"></div>
+                            </div>
+                            <div class="dashboard-card settings-card">
+                                <div class="dashboard-card-label">Window</div>
+                                <h3 class="settings-setting-name">Always On Top</h3>
+                                <div class="settings-toggle active" id="toggleAlwaysOnTop"></div>
+                            </div>
+                        </div>
+                    </div>
                     <div id="editor" class="primary-view"></div>
                     <iframe id="htmlOutput" class="primary-view"></iframe>
                     <div id="htmlOutputLabel"></div>
-                </div>
-            </div>
+                    <div id="consoleHandle"></div>
 
-            <div id="consoleHandle"></div>
-
-            <div id="consoleWrap">
-                <div id="consoleTop">
-                    <span>Console</span>
-                    <button id="clearConsole" class="icon-btn">Clear</button>
-                </div>
-                <div id="console"></div>
-            </div>
-        </div>
-    </div>
-
-    <div id="settingsMenu">
-        <div class="settings-header">
-            <h3>Settings</h3>
-            <button class="settings-close" id="closeSettings">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <line x1="18" y1="6" x2="6" y2="18"></line>
-                    <line x1="6" y1="6" x2="18" y2="18"></line>
-                </svg>
-            </button>
-        </div>
-        <div class="settings-body">
-            <div class="settings-section">
-                <div class="settings-section-title">Editor</div>
-                <div class="settings-item">
-                    <span class="settings-label">Font Size</span>
-                    <select class="settings-select" id="fontSize">
-                        <option value="12" selected>12px</option>
-                        <option value="14">14px</option>
-                        <option value="16">16px</option>
-                        <option value="18">18px</option>
-                    </select>
-                </div>
-                <div class="settings-item">
-                    <span class="settings-label">Show Minimap</span>
-                    <div class="settings-toggle active" id="toggleMinimap"></div>
-                </div>
-                <div class="settings-item">
-                    <span class="settings-label">Word Wrap</span>
-                    <div class="settings-toggle" id="toggleWordWrap"></div>
-                </div>
-            </div>
-
-            <div class="settings-section">
-                <div class="settings-section-title">Execution</div>
-                <div class="settings-item">
-                    <span class="settings-label">Execution Mode</span>
-                    <select class="settings-select" id="executionMode">
-                        <option value="browser" selected>Browser Execution</option>
-                        <option value="local">Local Execution</option>
-                    </select>
-                </div>
-                <div class="settings-item">
-                    <span class="settings-label">Run as Project</span>
-                    <div class="settings-toggle" id="toggleRunAsProject"></div>
-                </div>
-            </div>
-
-            <div class="settings-section">
-                <div class="settings-section-title">Window</div>
-                <div class="settings-item">
-                    <span class="settings-label">Always On Top</span>
-                    <div class="settings-toggle active" id="toggleAlwaysOnTop"></div>
+                    <div id="consoleWrap">
+                        <div id="consoleTop">
+                            <span>Console</span>
+                            <button id="clearConsole" class="icon-btn">Clear</button>
+                        </div>
+                        <div id="console"></div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -3304,6 +3335,9 @@ console.log('Dark mode applied!');`
                 const editorContainer = document.getElementById('editorContainer');
                 const editorWrap = document.getElementById('editorWrap');
                 const consoleWrap = document.getElementById('consoleWrap');
+                const leftSidebar = document.getElementById('leftSidebar');
+                const explorerPane = document.getElementById('explorerPane');
+                const explorerResizeHandle = document.getElementById('explorerResizeHandle');
                 let editorLayoutRaf = null;
 
                 const scheduleEditorLayout = () => {
@@ -3322,18 +3356,41 @@ console.log('Dark mode applied!');`
                 };
 
                 scheduleEditorLayout();
-                window.addEventListener('resize', scheduleEditorLayout);
+                refreshSidebarWidthCache();
+                updatePreviewConsoleGeometry();
+                window.addEventListener('resize', () => {
+                    scheduleEditorLayout();
+                    refreshSidebarWidthCache();
+                    updatePreviewConsoleGeometry();
+                });
 
                 if (typeof ResizeObserver === 'function') {
-                    const layoutObserver = new ResizeObserver(scheduleEditorLayout);
+                    const layoutObserver = new ResizeObserver(() => {
+                        if (explorerResizeActive) return;
+                        refreshSidebarWidthCache();
+                        updatePreviewConsoleGeometry();
+                        if (!isDragging) {
+                            scheduleEditorLayout();
+                        }
+                    });
                     layoutObserver.observe(editorElement);
                     layoutObserver.observe(editorContainer);
                     layoutObserver.observe(editorWrap);
-                    layoutObserver.observe(consoleWrap);
+                    if (leftSidebar) layoutObserver.observe(leftSidebar);
+                    if (explorerPane) layoutObserver.observe(explorerPane);
+                    if (explorerResizeHandle) layoutObserver.observe(explorerResizeHandle);
                 }
 
                 // Console resize handlers
                 const consoleHandle = document.getElementById("consoleHandle");
+                const syncConsoleHandlePosition = () => {
+                    const currentHeight = Math.max(
+                        100,
+                        Math.round(consoleWrap.offsetHeight || parseFloat(consoleWrap.style.height) || 140)
+                    );
+                    consoleHandle.style.bottom = currentHeight + "px";
+                    document.documentElement.style.setProperty('--preview-console-height', `${currentHeight}px`);
+                };
 
                 let isDragging = false;
                 let startY = 0;
@@ -3341,6 +3398,7 @@ console.log('Dark mode applied!');`
 
                 consoleHandle.addEventListener("mousedown", (e) => {
                     isDragging = true;
+                    document.body.classList.add('console-resizing');
                     startY = e.clientY;
                     startHeight = consoleWrap.offsetHeight;
                     document.getElementById('htmlOutput').style.pointerEvents = 'none';
@@ -3355,16 +3413,20 @@ console.log('Dark mode applied!');`
                     const maxHeight = window.innerHeight * 0.6;
                     const clampedHeight = Math.max(minHeight, Math.min(maxHeight, newHeight));
                     consoleWrap.style.height = clampedHeight + "px";
-                    scheduleEditorLayout();
+                    syncConsoleHandlePosition();
                 });
 
                 document.addEventListener("mouseup", () => {
                     if (isDragging) {
                         isDragging = false;
+                        document.body.classList.remove('console-resizing');
                         document.getElementById('htmlOutput').style.pointerEvents = 'auto';
+                        syncConsoleHandlePosition();
                         scheduleEditorLayout();
                     }
                 });
+
+                syncConsoleHandlePosition();
 
                 // Restore previous tab session when possible; otherwise start fresh.
                 if (!restoreTabSession()) {
@@ -3452,11 +3514,16 @@ console.log('Dark mode applied!');`
         const collapsedExplorerDirs = new Set();
         const EXPLORER_MIN_WIDTH = 250;
         const EXPLORER_MAX_WIDTH = 560;
+        const EXPLORER_RESIZE_HANDLE_WIDTH = 6;
         const EXPLORER_WIDTH_STORAGE_KEY = 'voltus.explorer.width';
+        const EXPLORER_SESSION_STORAGE_KEY = 'voltus.explorer.session.v1';
+        const EXPLORER_SESSION_VERSION = 1;
         let explorerContextTargetPath = '';
         let explorerContextTargetType = '';
         let explorerResizeActive = false;
         let explorerLayoutRaf = null;
+        let cachedLeftSidebarWidth = 0;
+        let lastConsoleOffsetPx = -1;
         let explorerContextCloseTimer = null;
         const EXPLORER_CONTEXT_MENU_TRANSITION_MS = 150;
         const TAB_SESSION_STORAGE_KEY = 'voltus.tab-session.v1';
@@ -3570,6 +3637,81 @@ console.log('Dark mode applied!');`
             }
 
             return true;
+        }
+
+        function persistExplorerSession() {
+            try {
+                const explorerPaneEl = document.getElementById('explorerPane');
+                const paneOpen = explorerPaneEl ? !explorerPaneEl.classList.contains('collapsed') : false;
+                const rootPath = String(explorerRootPath || '');
+                if (!rootPath) {
+                    localStorage.removeItem(EXPLORER_SESSION_STORAGE_KEY);
+                    return;
+                }
+                const payload = {
+                    version: EXPLORER_SESSION_VERSION,
+                    rootPath,
+                    paneOpen,
+                    collapsedDirs: Array.from(collapsedExplorerDirs)
+                };
+                localStorage.setItem(EXPLORER_SESSION_STORAGE_KEY, JSON.stringify(payload));
+            } catch { }
+        }
+
+        async function restoreExplorerSession() {
+            let parsedSession = null;
+            try {
+                const rawSession = localStorage.getItem(EXPLORER_SESSION_STORAGE_KEY);
+                if (!rawSession) return false;
+                parsedSession = JSON.parse(rawSession);
+            } catch {
+                try {
+                    localStorage.removeItem(EXPLORER_SESSION_STORAGE_KEY);
+                } catch { }
+                return false;
+            }
+
+            if (!parsedSession || parsedSession.version !== EXPLORER_SESSION_VERSION) {
+                return false;
+            }
+
+            const paneOpen = Boolean(parsedSession.paneOpen);
+            setExplorerPaneOpen(paneOpen);
+
+            const rootPath = String(parsedSession.rootPath || '').trim();
+            if (!rootPath) return false;
+
+            if (!window.fileExplorer || typeof window.fileExplorer.restoreFolder !== 'function') {
+                return false;
+            }
+
+            try {
+                const restoredRootPath = await window.fileExplorer.restoreFolder(rootPath);
+                if (!restoredRootPath) return false;
+
+                explorerRootPath = restoredRootPath;
+                collapsedExplorerDirs.clear();
+                if (Array.isArray(parsedSession.collapsedDirs)) {
+                    parsedSession.collapsedDirs.forEach((pathValue) => {
+                        if (typeof pathValue !== 'string' || !pathValue) return;
+                        if (isSameOrChildPath(pathValue, explorerRootPath)) {
+                            collapsedExplorerDirs.add(pathValue);
+                        }
+                    });
+                }
+
+                await refreshExplorerTree();
+                return true;
+            } catch {
+                explorerRootPath = '';
+                explorerTreeData = [];
+                collapsedExplorerDirs.clear();
+                renderExplorerTree();
+                try {
+                    localStorage.removeItem(EXPLORER_SESSION_STORAGE_KEY);
+                } catch { }
+                return false;
+            }
         }
 
         function finishTabDrag() {
@@ -3830,6 +3972,35 @@ console.log('Dark mode applied!');`
             });
         }
 
+        function refreshSidebarWidthCache() {
+            const leftSidebar = document.getElementById('leftSidebar');
+            cachedLeftSidebarWidth = leftSidebar ? Math.round(leftSidebar.getBoundingClientRect().width) : 0;
+        }
+
+        function updatePreviewConsoleGeometry(explorerWidthOverride = null) {
+            const editorWrap = document.getElementById('editorWrap');
+            if (!editorWrap) return;
+
+            const explorerPane = document.getElementById('explorerPane');
+            const explorerResizeHandle = document.getElementById('explorerResizeHandle');
+
+            const sidebarWidth = cachedLeftSidebarWidth;
+            const paneOpen = Boolean(explorerPane && !explorerPane.classList.contains('collapsed'));
+            const paneWidth = paneOpen
+                ? (Number.isFinite(Number(explorerWidthOverride))
+                    ? Number(explorerWidthOverride)
+                    : explorerPane.getBoundingClientRect().width)
+                : 0;
+            const resizeHandleWidth = paneOpen && explorerResizeHandle && !explorerResizeHandle.classList.contains('hidden')
+                ? EXPLORER_RESIZE_HANDLE_WIDTH
+                : 0;
+
+            const offset = Math.max(0, Math.round(sidebarWidth + paneWidth + resizeHandleWidth));
+            if (offset === lastConsoleOffsetPx) return;
+            lastConsoleOffsetPx = offset;
+            editorWrap.style.setProperty('--console-left-offset', `${offset}px`);
+        }
+
         function setExplorerWidth(widthPx, persist = true) {
             const parsed = Number(widthPx);
             if (!Number.isFinite(parsed)) return;
@@ -3840,7 +4011,10 @@ console.log('Dark mode applied!');`
                     localStorage.setItem(EXPLORER_WIDTH_STORAGE_KEY, String(clamped));
                 } catch { }
             }
-            scheduleExplorerEditorLayout();
+            if (!explorerResizeActive) {
+                scheduleExplorerEditorLayout();
+            }
+            updatePreviewConsoleGeometry(clamped);
         }
 
         function loadExplorerWidth() {
@@ -4088,6 +4262,9 @@ console.log('Dark mode applied!');`
                 hideExplorerContextMenu();
             }
 
+            refreshSidebarWidthCache();
+            updatePreviewConsoleGeometry();
+
             if (editor) {
                 requestAnimationFrame(() => {
                     requestAnimationFrame(() => editor.layout());
@@ -4247,6 +4424,7 @@ console.log('Dark mode applied!');`
                 collapsedExplorerDirs.clear();
                 hideExplorerContextMenu();
                 await refreshExplorerTree();
+                persistExplorerSession();
             } catch (error) {
                 pushConsole('error', error && error.message ? error.message : String(error));
                 showToast('Could not open folder');
@@ -4276,6 +4454,7 @@ console.log('Dark mode applied!');`
             renderExplorerTree();
             updateExplorerActiveFile();
             showToast('Folder closed');
+            persistExplorerSession();
         }
 
         async function openFileFromExplorer(filePath, fileName) {
@@ -5256,24 +5435,28 @@ console.log('Dark mode applied!');`
             document.body.classList.toggle('dashboard-open', view === 'home');
 
             const dashboardEl = document.getElementById('dashboard');
+            const settingsViewEl = document.getElementById('settingsView');
             const editorEl = document.getElementById('editor');
             const htmlOutputEl = document.getElementById('htmlOutput');
             const htmlOutputLabelEl = document.getElementById('htmlOutputLabel');
             const consoleWrapEl = document.getElementById('consoleWrap');
             const consoleHandleEl = document.getElementById('consoleHandle');
+            const mainContentEl = document.getElementById('mainContent');
 
             htmlOutputLabelEl.classList.remove('active');
             consoleWrapEl.classList.remove('active');
             consoleHandleEl.classList.remove('active');
+            mainContentEl.classList.remove('console-open');
 
             const viewMap = {
                 home: dashboardEl,
+                settings: settingsViewEl,
                 editor: editorEl,
                 html: htmlOutputEl
             };
             const nextEl = viewMap[view] || editorEl;
             const prevEl = viewMap[currentPrimaryView] || null;
-            const viewEls = [dashboardEl, editorEl, htmlOutputEl];
+            const viewEls = [dashboardEl, settingsViewEl, editorEl, htmlOutputEl];
 
             viewEls.forEach(el => {
                 if (el !== prevEl) {
@@ -5299,12 +5482,21 @@ console.log('Dark mode applied!');`
             if (view === 'home') {
                 document.getElementById('homeTab').classList.add('active');
                 updateDashboardMetrics();
+            } else if (view === 'settings') {
+                document.getElementById('client').classList.add('active');
             } else if (view === 'editor') {
                 document.getElementById('editorTab').classList.add('active');
             } else if (view === 'html') {
                 document.getElementById('htmlOutputTab').classList.add('active');
                 consoleWrapEl.classList.add('active');
                 consoleHandleEl.classList.add('active');
+                mainContentEl.classList.add('console-open');
+                const consoleHeight = Math.max(
+                    100,
+                    Math.round(consoleWrapEl.offsetHeight || parseFloat(consoleWrapEl.style.height) || 140)
+                );
+                consoleHandleEl.style.bottom = consoleHeight + 'px';
+                document.documentElement.style.setProperty('--preview-console-height', `${consoleHeight}px`);
                 bindHtmlOutputProximityTracking();
 
                 if (htmlOutputLabelEl.textContent) {
@@ -5342,6 +5534,7 @@ console.log('Dark mode applied!');`
         document.getElementById('htmlOutput').addEventListener('load', bindHtmlOutputProximityTracking);
         window.addEventListener('beforeunload', () => {
             persistTabSession();
+            persistExplorerSession();
         });
 
         const explorerToggle = document.getElementById('explorerToggle');
@@ -5353,10 +5546,13 @@ console.log('Dark mode applied!');`
         const explorerContextMenu = document.getElementById('explorerContextMenu');
         let explorerResizeStartX = 0;
         let explorerResizeStartWidth = 0;
+        let explorerResizeFrame = null;
+        let explorerResizePendingWidth = null;
 
         explorerToggle.onclick = () => {
             const shouldOpen = explorerPane.classList.contains('collapsed');
             setExplorerPaneOpen(shouldOpen);
+            persistExplorerSession();
         };
 
         explorerOpenFolderBtn.onclick = () => {
@@ -5393,6 +5589,8 @@ console.log('Dark mode applied!');`
 
         window.addEventListener('resize', () => {
             hideExplorerContextMenu();
+            refreshSidebarWidthCache();
+            updatePreviewConsoleGeometry();
         });
 
         explorerResizeHandle.addEventListener('mousedown', (event) => {
@@ -5408,12 +5606,27 @@ console.log('Dark mode applied!');`
         document.addEventListener('mousemove', (event) => {
             if (!explorerResizeActive) return;
             const delta = event.clientX - explorerResizeStartX;
-            setExplorerWidth(explorerResizeStartWidth + delta, false);
+            explorerResizePendingWidth = explorerResizeStartWidth + delta;
+            if (explorerResizeFrame !== null) return;
+            explorerResizeFrame = requestAnimationFrame(() => {
+                explorerResizeFrame = null;
+                if (!explorerResizeActive || explorerResizePendingWidth === null) return;
+                setExplorerWidth(explorerResizePendingWidth, false);
+                explorerResizePendingWidth = null;
+            });
         });
 
         document.addEventListener('mouseup', () => {
             if (!explorerResizeActive) return;
             explorerResizeActive = false;
+            if (explorerResizeFrame !== null) {
+                cancelAnimationFrame(explorerResizeFrame);
+                explorerResizeFrame = null;
+            }
+            if (explorerResizePendingWidth !== null) {
+                setExplorerWidth(explorerResizePendingWidth, false);
+                explorerResizePendingWidth = null;
+            }
             explorerResizeHandle.classList.remove('dragging');
             document.body.classList.remove('explorer-resizing');
             const computedWidth = parseFloat(getComputedStyle(explorerPane).width);
@@ -5424,51 +5637,18 @@ console.log('Dark mode applied!');`
         setExplorerPaneOpen(false);
         renderExplorerTree();
         setPrimaryView('home');
+        (async () => {
+            await restoreExplorerSession();
+        })();
 
         document.getElementById("scriptHub").onclick = () => {
             showScriptHub();
         };
 
-        const settingsMenu = document.getElementById('settingsMenu');
         const settingsBtn = document.getElementById('client');
-        const closeSettingsBtn = document.getElementById('closeSettings');
-
         settingsBtn.onclick = () => {
-            if (settingsMenu.classList.contains('show')) {
-                settingsMenu.classList.remove('show');
-                settingsMenu.classList.add('hide');
-                setTimeout(() => {
-                    settingsMenu.classList.remove('hide');
-                    app.classList.remove('ui-blur');
-                }, MENU_TRANSITION_MS);
-            } else {
-                settingsMenu.classList.remove('hide');
-                settingsMenu.classList.add('show');
-                app.classList.add('ui-blur');
-            }
+            setPrimaryView('settings');
         };
-
-        closeSettingsBtn.onclick = () => {
-            settingsMenu.classList.remove('show');
-            settingsMenu.classList.add('hide');
-            setTimeout(() => {
-                settingsMenu.classList.remove('hide');
-                app.classList.remove('ui-blur');
-            }, MENU_TRANSITION_MS);
-        };
-
-        document.addEventListener('click', (e) => {
-            if (settingsMenu.classList.contains('show') &&
-                !settingsMenu.contains(e.target) &&
-                !settingsBtn.contains(e.target)) {
-                settingsMenu.classList.remove('show');
-                settingsMenu.classList.add('hide');
-                setTimeout(() => {
-                    settingsMenu.classList.remove('hide');
-                    app.classList.remove('ui-blur');
-                }, MENU_TRANSITION_MS);
-            }
-        });
 
         document.getElementById('fontSize').onchange = (e) => {
             if (editor) {
