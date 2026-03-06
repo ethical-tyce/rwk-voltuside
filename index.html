@@ -1027,10 +1027,25 @@
 
         .explorer-name {
             overflow: hidden;
-            text-overflow: ellipsis;
             white-space: nowrap;
             min-width: 0;
             flex: 1;
+            display: flex;
+            align-items: center;
+        }
+
+        .explorer-name-base {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            min-width: 0;
+            flex: 1 1 auto;
+        }
+
+        .explorer-name-ext {
+            flex-shrink: 0;
+            white-space: nowrap;
+            color: #c8c8c8;
         }
 
         #explorerContextMenu {
@@ -1333,6 +1348,72 @@
             min-height: 0;
             min-width: 0;
             background: #000;
+        }
+
+        #editorImageOverlay {
+            position: absolute;
+            inset: 0;
+            z-index: 25;
+            display: none;
+            pointer-events: none;
+            background-color: #131313;
+            background-image:
+                linear-gradient(45deg, #1f1f1f 25%, transparent 25%),
+                linear-gradient(-45deg, #1f1f1f 25%, transparent 25%),
+                linear-gradient(45deg, transparent 75%, #1f1f1f 75%),
+                linear-gradient(-45deg, transparent 75%, #1f1f1f 75%);
+            background-size: 24px 24px;
+            background-position: 0 0, 0 12px, 12px -12px, -12px 0;
+        }
+
+        #editorImageOverlay.active {
+            display: block;
+            pointer-events: auto;
+        }
+
+        #editorImageOverlayStage {
+            position: absolute;
+            inset: 0;
+            overflow: hidden;
+            cursor: grab;
+        }
+
+        #editorImageOverlayStage.dragging {
+            cursor: grabbing;
+        }
+
+        #editorImageOverlayCanvas {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform-origin: center center;
+            will-change: transform;
+        }
+
+        #editorImageOverlayCanvas img {
+            display: block;
+            max-width: none;
+            max-height: none;
+            box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45);
+            user-select: none;
+            -webkit-user-drag: none;
+            pointer-events: none;
+        }
+
+        #editorImageOverlayMeta {
+            position: absolute;
+            right: 12px;
+            top: 12px;
+            padding: 6px 10px;
+            border-radius: 999px;
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            background: rgba(8, 8, 8, 0.72);
+            color: #d0d0d0;
+            font-size: 11px;
+            letter-spacing: 0.02em;
+            backdrop-filter: blur(2px);
+            pointer-events: none;
+            white-space: nowrap;
         }
 
         #htmlOutput {
@@ -2802,6 +2883,14 @@
                         </div>
                     </div>
                     <div id="editor" class="primary-view"></div>
+                    <div id="editorImageOverlay" aria-hidden="true">
+                        <div id="editorImageOverlayStage">
+                            <div id="editorImageOverlayCanvas">
+                                <img id="editorImageOverlayImg" alt="Image preview">
+                            </div>
+                        </div>
+                        <div id="editorImageOverlayMeta"></div>
+                    </div>
                     <iframe id="htmlOutput" class="primary-view"></iframe>
                     <div id="htmlOutputLabel"></div>
                     <div id="consoleHandle"></div>
@@ -3765,6 +3854,27 @@ console.log('Dark mode applied!');`
             return !/[\\/:*?"<>|]/.test(candidate);
         }
 
+        function splitFileNameParts(fileName) {
+            const rawName = String(fileName || '');
+            const dotIndex = rawName.lastIndexOf('.');
+            if (dotIndex <= 0) {
+                return { base: rawName, extension: '' };
+            }
+            return {
+                base: rawName.slice(0, dotIndex),
+                extension: rawName.slice(dotIndex)
+            };
+        }
+
+        function applyPreferredFileExtension(currentName, requestedName, targetType) {
+            const trimmed = String(requestedName || '').trim();
+            if (targetType !== 'file') return trimmed;
+            if (/\.[^./\\]+$/i.test(trimmed)) return trimmed;
+            const { extension } = splitFileNameParts(currentName);
+            if (!extension) return trimmed;
+            return `${trimmed}${extension}`;
+        }
+
         function isImageLikePath(pathValue) {
             const source = String(pathValue || '').toLowerCase();
             return /\.(img|png|jpg|jpeg|gif|svg|webp|ico|bmp|avif|tif|tiff)$/i.test(source);
@@ -3908,6 +4018,45 @@ console.log('Dark mode applied!');`
                 setTabTitle(tabState, getFileNameFromPath(nextPath) || tabState.name);
             });
             updateDashboardMetrics();
+        }
+
+        async function renameExplorerPathAndSyncTabs(targetPath, targetType, requestedName) {
+            if (!targetPath || targetType === 'root') return { renamed: false };
+            if (!window.fileExplorer || typeof window.fileExplorer.renamePath !== 'function') {
+                throw new Error('File rename API unavailable');
+            }
+
+            const currentName = getFileNameFromPath(targetPath);
+            const finalName = applyPreferredFileExtension(currentName, requestedName, targetType);
+            if (!isValidExplorerName(finalName)) {
+                throw new Error('Invalid name');
+            }
+            if (finalName === currentName) {
+                return { renamed: false, path: targetPath, name: currentName };
+            }
+
+            const parentPath = getParentPath(targetPath);
+            const renamedPath = joinExplorerPath(parentPath, finalName);
+            await window.fileExplorer.renamePath(targetPath, renamedPath);
+            applyPathRenameToOpenTabs(targetPath, renamedPath, targetType === 'directory');
+
+            if (targetType === 'directory') {
+                const updates = [];
+                collapsedExplorerDirs.forEach((pathValue) => {
+                    if (isSameOrChildPath(pathValue, targetPath)) {
+                        const suffix = pathValue.slice(targetPath.length);
+                        updates.push([pathValue, renamedPath + suffix]);
+                    }
+                });
+                updates.forEach(([oldPath, nextPath]) => {
+                    collapsedExplorerDirs.delete(oldPath);
+                    collapsedExplorerDirs.add(nextPath);
+                });
+            }
+
+            await refreshExplorerTree();
+            updateExplorerActiveFile();
+            return { renamed: true, path: renamedPath, name: finalName };
         }
 
         function removeDeletedPathFromTabs(targetPath, isDirectory) {
@@ -4183,34 +4332,7 @@ console.log('Dark mode applied!');`
                     const currentName = getFileNameFromPath(targetPath);
                     const nextName = prompt('Rename to:', currentName);
                     if (nextName === null) return;
-                    const trimmed = nextName.trim();
-                    if (!isValidExplorerName(trimmed)) {
-                        showToast('Invalid name');
-                        return;
-                    }
-                    if (trimmed === currentName) return;
-
-                    const parentPath = getParentPath(targetPath);
-                    const renamedPath = joinExplorerPath(parentPath, trimmed);
-                    await window.fileExplorer.renamePath(targetPath, renamedPath);
-                    applyPathRenameToOpenTabs(targetPath, renamedPath, targetType === 'directory');
-
-                    if (targetType === 'directory') {
-                        const updates = [];
-                        collapsedExplorerDirs.forEach((pathValue) => {
-                            if (isSameOrChildPath(pathValue, targetPath)) {
-                                const suffix = pathValue.slice(targetPath.length);
-                                updates.push([pathValue, renamedPath + suffix]);
-                            }
-                        });
-                        updates.forEach(([oldPath, nextPath]) => {
-                            collapsedExplorerDirs.delete(oldPath);
-                            collapsedExplorerDirs.add(nextPath);
-                        });
-                    }
-
-                    await refreshExplorerTree();
-                    updateExplorerActiveFile();
+                    await renameExplorerPathAndSyncTabs(targetPath, targetType, nextName);
                     return;
                 }
 
@@ -4245,8 +4367,9 @@ console.log('Dark mode applied!');`
                     await closeExplorerFolder();
                 }
             } catch (error) {
-                pushConsole('error', error && error.message ? error.message : String(error));
-                showToast('Explorer action failed');
+                const message = error && error.message ? error.message : String(error);
+                pushConsole('error', message);
+                showToast(`Explorer action failed: ${message}`);
             }
         }
 
@@ -4302,7 +4425,23 @@ console.log('Dark mode applied!');`
 
                 const name = document.createElement('span');
                 name.className = 'explorer-name';
-                name.textContent = node && node.name ? node.name : 'Untitled';
+                const nodeName = node && node.name ? node.name : 'Untitled';
+                if (!isDirectory) {
+                    const { base, extension } = splitFileNameParts(nodeName);
+                    if (extension) {
+                        const baseEl = document.createElement('span');
+                        baseEl.className = 'explorer-name-base';
+                        baseEl.textContent = base;
+                        const extEl = document.createElement('span');
+                        extEl.className = 'explorer-name-ext';
+                        extEl.textContent = extension;
+                        name.append(baseEl, extEl);
+                    } else {
+                        name.textContent = nodeName;
+                    }
+                } else {
+                    name.textContent = nodeName;
+                }
 
                 row.oncontextmenu = (event) => {
                     event.preventDefault();
@@ -4490,7 +4629,7 @@ console.log('Dark mode applied!');`
                         tabs[newTabId].imageDataUrl = String(imageDataUrl || '');
                     }
 
-                    setPrimaryView('html');
+                    setPrimaryView('editor');
                     updateExplorerActiveFile();
                     pushConsole('log', `Opened ${filePath}`);
                     return;
@@ -4535,20 +4674,43 @@ console.log('Dark mode applied!');`
             input.focus();
             input.select();
 
-            const finish = save => {
-                if (save && input.value.trim()) {
-                    setTabTitle(tabs[id], input.value.trim());
-                    renderTabBrowserList();
-                    updateDashboardMetrics();
-                }
+            let finished = false;
+            const finish = async (save) => {
+                if (finished) return;
+                finished = true;
+                const requestedName = input.value.trim();
                 titleEl.style.display = '';
                 input.remove();
+
+                if (!save || !requestedName) return;
+                const tabState = tabs[id];
+                if (!tabState) return;
+
+                if (tabState.filePath) {
+                    try {
+                        await renameExplorerPathAndSyncTabs(tabState.filePath, 'file', requestedName);
+                    } catch (error) {
+                        const message = error && error.message ? error.message : String(error);
+                        pushConsole('error', message);
+                        showToast(`Rename failed: ${message}`);
+                    }
+                    return;
+                }
+
+                if (!isValidExplorerName(requestedName)) {
+                    showToast('Invalid name');
+                    return;
+                }
+
+                setTabTitle(tabState, requestedName);
+                renderTabBrowserList();
+                updateDashboardMetrics();
             };
 
-            input.onblur = () => finish(true);
+            input.onblur = () => { void finish(true); };
             input.onkeydown = e => {
-                if (e.key === "Enter") finish(true);
-                if (e.key === "Escape") finish(false);
+                if (e.key === "Enter") { e.preventDefault(); void finish(true); }
+                if (e.key === "Escape") { e.preventDefault(); void finish(false); }
             };
         }
 
@@ -4634,8 +4796,9 @@ console.log('Dark mode applied!');`
 
                 if (isImageLikePath(tabs[id].filePath || tabs[id].name)) {
                     renderImagePreview(tabs[id]);
-                    setPrimaryView('html');
+                    setPrimaryView('editor');
                 } else {
+                    hideImagePreview();
                     setHtmlOutputLabel('');
                     if (document.getElementById('htmlOutput').classList.contains('active')) {
                         document.getElementById('editorTab').click();
@@ -5284,128 +5447,159 @@ console.log('Dark mode applied!');`
             htmlOutputTrackedDoc = nextDoc;
         }
 
+        function hideImagePreview() {
+            const overlay = document.getElementById('editorImageOverlay');
+            const stage = document.getElementById('editorImageOverlayStage');
+            if (!overlay) return;
+            overlay.classList.remove('active');
+            if (stage) {
+                stage.classList.remove('dragging');
+            }
+            if (overlay._imagePreviewState && overlay._imagePreviewState.state) {
+                overlay._imagePreviewState.state.dragging = false;
+            }
+        }
+
+        function ensureImagePreviewOverlay() {
+            const overlay = document.getElementById('editorImageOverlay');
+            const stage = document.getElementById('editorImageOverlayStage');
+            const canvas = document.getElementById('editorImageOverlayCanvas');
+            const image = document.getElementById('editorImageOverlayImg');
+            const meta = document.getElementById('editorImageOverlayMeta');
+            if (!overlay || !stage || !canvas || !image || !meta) return null;
+
+            if (!overlay._imagePreviewState) {
+                const state = {
+                    scale: 1,
+                    fitScale: 1,
+                    minScale: 0.05,
+                    maxScale: 24,
+                    offsetX: 0,
+                    offsetY: 0,
+                    dragging: false,
+                    dragX: 0,
+                    dragY: 0
+                };
+
+                const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
+
+                const render = () => {
+                    canvas.style.transform = `translate(${state.offsetX}px, ${state.offsetY}px) scale(${state.scale})`;
+                    const width = Number(image.naturalWidth || 0);
+                    const height = Number(image.naturalHeight || 0);
+                    const zoom = Math.round(state.scale * 100);
+                    meta.textContent = width > 0 && height > 0
+                        ? `${width} x ${height} - ${zoom}%`
+                        : `${zoom}%`;
+                };
+
+                const fitToView = () => {
+                    const stageRect = stage.getBoundingClientRect();
+                    const width = Number(image.naturalWidth || 0);
+                    const height = Number(image.naturalHeight || 0);
+                    if (!stageRect.width || !stageRect.height || !width || !height) return;
+
+                    const padding = 32;
+                    const fitX = Math.max(0.01, (stageRect.width - padding) / width);
+                    const fitY = Math.max(0.01, (stageRect.height - padding) / height);
+                    state.fitScale = Math.min(fitX, fitY, 1);
+                    state.scale = state.fitScale;
+                    state.offsetX = 0;
+                    state.offsetY = 0;
+                    render();
+                };
+
+                const zoomAt = (clientX, clientY, nextScale) => {
+                    const rect = stage.getBoundingClientRect();
+                    const px = clientX - rect.left - (rect.width / 2);
+                    const py = clientY - rect.top - (rect.height / 2);
+
+                    const prevScale = state.scale;
+                    const scale = clamp(nextScale, state.minScale, state.maxScale);
+                    if (!isFinite(scale) || scale <= 0 || scale === prevScale) return;
+
+                    const imageX = (px - state.offsetX) / prevScale;
+                    const imageY = (py - state.offsetY) / prevScale;
+                    state.scale = scale;
+                    state.offsetX = px - (imageX * scale);
+                    state.offsetY = py - (imageY * scale);
+                    render();
+                };
+
+                stage.addEventListener('mousedown', (event) => {
+                    if (!overlay.classList.contains('active')) return;
+                    if (event.button !== 0) return;
+                    event.preventDefault();
+                    state.dragging = true;
+                    stage.classList.add('dragging');
+                    state.dragX = event.clientX;
+                    state.dragY = event.clientY;
+                });
+
+                window.addEventListener('mousemove', (event) => {
+                    if (!state.dragging) return;
+                    const deltaX = event.clientX - state.dragX;
+                    const deltaY = event.clientY - state.dragY;
+                    state.dragX = event.clientX;
+                    state.dragY = event.clientY;
+                    state.offsetX += deltaX;
+                    state.offsetY += deltaY;
+                    render();
+                });
+
+                window.addEventListener('mouseup', () => {
+                    if (!state.dragging) return;
+                    state.dragging = false;
+                    stage.classList.remove('dragging');
+                });
+
+                stage.addEventListener('wheel', (event) => {
+                    if (!overlay.classList.contains('active')) return;
+                    event.preventDefault();
+                    const factor = event.deltaY < 0 ? 1.12 : 0.88;
+                    zoomAt(event.clientX, event.clientY, state.scale * factor);
+                }, { passive: false });
+
+                stage.addEventListener('dblclick', () => {
+                    if (!overlay.classList.contains('active')) return;
+                    fitToView();
+                });
+
+                image.addEventListener('load', fitToView);
+                window.addEventListener('resize', () => {
+                    if (!overlay.classList.contains('active')) return;
+                    fitToView();
+                });
+
+                overlay._imagePreviewState = {
+                    image,
+                    fitToView,
+                    state
+                };
+            }
+
+            return overlay;
+        }
+
         function renderImagePreview(tabState) {
-            const htmlOutput = document.getElementById('htmlOutput');
-            if (!htmlOutput) return;
-
-            const htmlDoc = htmlOutput.contentDocument || htmlOutput.contentWindow.document;
             const imageSrc = tabState && typeof tabState.imageDataUrl === 'string' ? tabState.imageDataUrl : '';
-            const serializedSrc = JSON.stringify(imageSrc).replace(/<\//g, '<\\/');
+            const overlay = ensureImagePreviewOverlay();
+            if (!overlay) return;
 
-            htmlDoc.open();
-            htmlDoc.write(`
-                <!DOCTYPE html>
-                <html>
-                <head>
-                    <meta charset="UTF-8">
-                    <style>
-                        html, body {
-                            width: 100%;
-                            height: 100%;
-                            margin: 0;
-                            overflow: hidden;
-                        }
+            if (!imageSrc) {
+                hideImagePreview();
+                showToast('No image preview available');
+                return;
+            }
 
-                        body {
-                            display: flex;
-                            align-items: center;
-                            justify-content: center;
-                            background-color: #131313;
-                            background-image:
-                                linear-gradient(45deg, #1f1f1f 25%, transparent 25%),
-                                linear-gradient(-45deg, #1f1f1f 25%, transparent 25%),
-                                linear-gradient(45deg, transparent 75%, #1f1f1f 75%),
-                                linear-gradient(-45deg, transparent 75%, #1f1f1f 75%);
-                            background-size: 24px 24px;
-                            background-position: 0 0, 0 12px, 12px -12px, -12px 0;
-                            color: #a8a8a8;
-                            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-                            position: relative;
-                        }
-
-                        .preview-wrap {
-                            width: 100%;
-                            height: 100%;
-                            display: flex;
-                            align-items: center;
-                            justify-content: center;
-                            padding: 18px;
-                        }
-
-                        .preview-wrap img {
-                            max-width: 100%;
-                            max-height: 100%;
-                            object-fit: contain;
-                            box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45);
-                        }
-
-                        .preview-empty {
-                            padding: 12px 14px;
-                            border-radius: 8px;
-                            background: rgba(0, 0, 0, 0.45);
-                            border: 1px solid rgba(255, 255, 255, 0.08);
-                            font-size: 12px;
-                            letter-spacing: 0.02em;
-                        }
-
-                        .preview-dimensions {
-                            position: absolute;
-                            right: 12px;
-                            bottom: 12px;
-                            padding: 5px 9px;
-                            border-radius: 999px;
-                            border: 1px solid rgba(255, 255, 255, 0.14);
-                            background: rgba(8, 8, 8, 0.72);
-                            color: #d0d0d0;
-                            font-size: 11px;
-                            letter-spacing: 0.02em;
-                            backdrop-filter: blur(2px);
-                            display: none;
-                        }
-
-                        .preview-dimensions.visible {
-                            display: inline-flex;
-                        }
-                    </style>
-                </head>
-                <body>
-                    <div class="preview-wrap">
-                        ${imageSrc
-                            ? `<img id="previewImage" src=${serializedSrc} alt="Image preview">`
-                            : '<div class="preview-empty">No image preview available.</div>'}
-                    </div>
-                    ${imageSrc ? '<div id="previewDimensions" class="preview-dimensions"></div>' : ''}
-                    <script>
-                        (function () {
-                            const imageEl = document.getElementById('previewImage');
-                            const dimensionsEl = document.getElementById('previewDimensions');
-                            if (!imageEl || !dimensionsEl) return;
-
-                            const applyDimensions = () => {
-                                const width = Number(imageEl.naturalWidth || 0);
-                                const height = Number(imageEl.naturalHeight || 0);
-                                if (width > 0 && height > 0) {
-                                    dimensionsEl.textContent = width + ' x ' + height;
-                                    dimensionsEl.classList.add('visible');
-                                }
-                            };
-
-                            if (imageEl.complete) {
-                                applyDimensions();
-                            }
-
-                            imageEl.addEventListener('load', applyDimensions);
-                            imageEl.addEventListener('error', () => {
-                                dimensionsEl.classList.remove('visible');
-                                dimensionsEl.textContent = '';
-                            });
-                        })();
-                    <\/script>
-                </body>
-                </html>
-            `);
-            htmlDoc.close();
-            setHtmlOutputLabel('Image Preview');
+            const state = overlay._imagePreviewState;
+            if (!state || !state.image) return;
+            state.image.src = imageSrc;
+            overlay.classList.add('active');
+            if (state.image.complete) {
+                state.fitToView();
+            }
+            setHtmlOutputLabel('');
         }
 
         function updateDashboardMetrics() {
@@ -5480,6 +5674,9 @@ console.log('Dark mode applied!');`
 
             nextEl.classList.remove('is-leaving');
             nextEl.classList.add('active');
+            if (view !== 'editor') {
+                hideImagePreview();
+            }
 
             if (view === 'home') {
                 document.getElementById('homeTab').classList.add('active');
@@ -5488,7 +5685,14 @@ console.log('Dark mode applied!');`
                 document.getElementById('client').classList.add('active');
             } else if (view === 'editor') {
                 document.getElementById('editorTab').classList.add('active');
+                const activeTab = activeTabId && tabs[activeTabId] ? tabs[activeTabId] : null;
+                if (activeTab && isImageLikePath(activeTab.filePath || activeTab.name)) {
+                    renderImagePreview(activeTab);
+                } else {
+                    hideImagePreview();
+                }
             } else if (view === 'html') {
+                hideImagePreview();
                 document.getElementById('htmlOutputTab').classList.add('active');
                 consoleWrapEl.classList.add('active');
                 consoleHandleEl.classList.add('active');
@@ -5504,6 +5708,8 @@ console.log('Dark mode applied!');`
                 if (htmlOutputLabelEl.textContent) {
                     htmlOutputLabelEl.classList.add('active');
                 }
+            } else {
+                hideImagePreview();
             }
 
             currentPrimaryView = view;
@@ -6420,7 +6626,7 @@ console.log('Dark mode applied!');`
             if (execType.kind === 'image') {
                 if (activeTab && activeTab.imageDataUrl) {
                     renderImagePreview(activeTab);
-                    document.getElementById('htmlOutputTab').click();
+                    setPrimaryView('editor');
                 } else {
                     showToast('No image preview available');
                 }
