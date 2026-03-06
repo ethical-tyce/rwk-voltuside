@@ -404,6 +404,9 @@
             white-space: nowrap;
             flex-shrink: 0;
             position: relative;
+            opacity: 0.68;
+            filter: saturate(0.86);
+            transition: opacity 170ms ease, filter 170ms ease, background 170ms ease;
         }
 
             .tab.tab-enter {
@@ -456,6 +459,8 @@
 
             .tab:hover {
                 background: linear-gradient(to right, #252525 0%, #2b2b2b 100%);
+                opacity: 0.9;
+                filter: saturate(1);
             }
 
             .tab.dragging {
@@ -474,6 +479,8 @@
                 background: linear-gradient(to right, #3a3a3a 0%, #4f4f4f 100%);
                 border-radius: 8px 8px 0 0;
                 z-index: 2;
+                opacity: 1;
+                filter: none;
             }
 
             .tab.active::after {
@@ -499,6 +506,7 @@
                 text-overflow: ellipsis;
                 font-size: 13px;
                 color: #909090;
+                transition: color 170ms ease;
             }
 
             .tab.active .tab-title {
@@ -571,6 +579,36 @@
                 background: rgba(255, 255, 255, 0.05);
             }
 
+            .tab .tab-file-icon[data-kind="py"] {
+                color: #ffd26f;
+                border-color: rgba(255, 210, 111, 0.34);
+                background: rgba(255, 210, 111, 0.09);
+            }
+
+            .tab .tab-file-icon[data-kind="sql"] {
+                color: #86f0de;
+                border-color: rgba(134, 240, 222, 0.34);
+                background: rgba(134, 240, 222, 0.09);
+            }
+
+            .tab .tab-file-icon[data-kind="xml"] {
+                color: #ffb88a;
+                border-color: rgba(255, 184, 138, 0.34);
+                background: rgba(255, 184, 138, 0.09);
+            }
+
+            .tab .tab-file-icon[data-kind="yml"] {
+                color: #c2a7ff;
+                border-color: rgba(194, 167, 255, 0.34);
+                background: rgba(194, 167, 255, 0.09);
+            }
+
+            .tab .tab-file-icon[data-kind="sh"] {
+                color: #a7e3a9;
+                border-color: rgba(167, 227, 169, 0.34);
+                background: rgba(167, 227, 169, 0.09);
+            }
+
             .tab .tab-file-icon[data-kind="deleted"] {
                 color: #ff9b9b;
                 border-color: rgba(255, 155, 155, 0.35);
@@ -604,10 +642,17 @@
             font-size: 16px;
             position: relative;
             z-index: 2;
+            opacity: 0.68;
+            transition: opacity 170ms ease, color 170ms ease;
         }
 
             #addTab:hover {
                 color: #ffffff;
+                opacity: 0.9;
+            }
+
+            #addTab:active {
+                opacity: 1;
             }
 
         /* ---------- BUTTONS ---------- */
@@ -645,7 +690,6 @@
                 0 6px 20px rgba(0, 0, 0, 0.4),
                 inset 0 0 0 1px rgba(255, 255, 255, 0.25),
                 inset 0 2px 12px rgba(255, 255, 255, 0.15) !important;
-            transform: translateY(-1px);
         }
 
         /* Active/Click effect */
@@ -885,11 +929,18 @@
             padding: 4px 8px;
             font-size: 11px;
             cursor: pointer;
+            opacity: 0.68;
+            transition: opacity 170ms ease, background-color 170ms ease, color 170ms ease;
         }
 
         .explorer-btn:hover {
             background: rgba(255, 255, 255, 0.12);
             color: #ffffff;
+            opacity: 0.9;
+        }
+
+        .explorer-btn:active {
+            opacity: 1;
         }
 
         #explorerPath {
@@ -3937,12 +3988,17 @@ console.log('Dark mode applied!');`
             const source = String(tabState && tabState.filePath ? tabState.filePath : tabName).toLowerCase();
 
             if (/^\[deleted\]/i.test(tabName)) return 'deleted';
-            if (/\.(js|mjs|cjs)$/i.test(source)) return 'js';
+            if (/\.(js|mjs|cjs|jsx)$/i.test(source)) return 'js';
             if (/\.(ts|tsx)$/i.test(source)) return 'ts';
             if (/\.(json)$/i.test(source)) return 'json';
             if (/\.(html|htm)$/i.test(source)) return 'html';
             if (/\.(css|scss|less)$/i.test(source)) return 'css';
             if (/\.(md|markdown)$/i.test(source)) return 'md';
+            if (/\.(py)$/i.test(source)) return 'py';
+            if (/\.(sql)$/i.test(source)) return 'sql';
+            if (/\.(xml)$/i.test(source)) return 'xml';
+            if (/\.(yml|yaml)$/i.test(source)) return 'yml';
+            if (/\.(sh|bash)$/i.test(source)) return 'sh';
             if (isImageLikePath(source)) return 'img';
             if (/\.(txt|log|ini|cfg|conf)$/i.test(source)) return 'txt';
             if (!/\.[a-z0-9]+$/i.test(source)) return 'js';
@@ -3957,6 +4013,11 @@ console.log('Dark mode applied!');`
                 case 'html': return 'HT';
                 case 'css': return 'CS';
                 case 'md': return 'MD';
+                case 'py': return 'PY';
+                case 'sql': return 'SQL';
+                case 'xml': return 'XML';
+                case 'yml': return 'YML';
+                case 'sh': return 'SH';
                 case 'img': return 'IMG';
                 case 'txt': return 'TXT';
                 case 'deleted': return 'DEL';
@@ -6262,6 +6323,7 @@ console.log('Dark mode applied!');`
             const languageId = getTabLanguageId(activeTab);
             if (languageId === 'html') return { kind: 'html', label: 'HTML' };
             if (languageId === 'css' || languageId === 'scss' || languageId === 'less') return { kind: 'css', label: 'CSS' };
+            if (languageId === 'python') return { kind: 'python', label: 'Python' };
             if (languageId === 'javascript') return { kind: 'javascript', label: 'JavaScript' };
             if (languageId === 'typescript') return { kind: 'javascript', label: 'TypeScript' };
             return { kind: 'text', label: languageId || 'Text' };
@@ -6618,6 +6680,70 @@ console.log('Dark mode applied!');`
             document.getElementById('htmlOutputTab').click();
         }
 
+        async function runPythonLocally(code, activeTab) {
+            if (!window.runtime || typeof window.runtime.runPython !== 'function') {
+                showToast('Python runtime API unavailable in this build');
+                return;
+            }
+
+            const htmlOutput = document.getElementById('htmlOutput');
+            if (htmlOutput) {
+                const htmlDoc = htmlOutput.contentDocument || htmlOutput.contentWindow.document;
+                htmlDoc.open();
+                htmlDoc.write(`
+                    <!DOCTYPE html>
+                    <html>
+                    <body style="margin:0;padding:20px;background:#0d0d0d;color:#b8b8b8;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;">
+                        <pre style="margin:0;">Python output is shown in the console panel.</pre>
+                    </body>
+                    </html>
+                `);
+                htmlDoc.close();
+            }
+            setHtmlOutputLabel('Python Output');
+            document.getElementById('htmlOutputTab').click();
+
+            const cwd = activeTab && activeTab.filePath
+                ? getParentPath(activeTab.filePath)
+                : (explorerRootPath || '');
+
+            try {
+                const result = await window.runtime.runPython(code, { cwd });
+                const stdout = String(result && result.stdout ? result.stdout : '');
+                const stderr = String(result && result.stderr ? result.stderr : '');
+                const exitCode = Number.isFinite(Number(result && result.exitCode))
+                    ? Number(result.exitCode)
+                    : 0;
+
+                const emitLines = (type, text) => {
+                    String(text || '')
+                        .replace(/\r\n/g, '\n')
+                        .split('\n')
+                        .forEach((line) => {
+                            if (!line.trim()) return;
+                            pushConsole(type, line);
+                        });
+                };
+
+                emitLines('log', stdout);
+                emitLines('error', stderr);
+
+                if (!stdout.trim() && !stderr.trim() && exitCode === 0) {
+                    pushConsole('log', 'Python finished with no output');
+                }
+
+                if (exitCode === 0) {
+                    showToast('Python executed');
+                } else {
+                    showToast(`Python exited with code ${exitCode}`);
+                }
+            } catch (error) {
+                const message = error && error.message ? error.message : String(error);
+                pushConsole('error', message);
+                showToast(`Python execution failed: ${message}`);
+            }
+        }
+
         async function runCodeLocally(code) {
             const activeTab = activeTabId && tabs[activeTabId] ? tabs[activeTabId] : null;
             const execType = getLocalExecutionKindForActiveTab();
@@ -6649,6 +6775,11 @@ console.log('Dark mode applied!');`
                     showToast('TypeScript runs as JavaScript in local mode');
                 }
                 runJavaScriptLocally(code);
+                return;
+            }
+
+            if (execType.kind === 'python') {
+                await runPythonLocally(code, activeTab);
                 return;
             }
 
@@ -6757,6 +6888,51 @@ console.log('Dark mode applied!');`
             document.getElementById('htmlOutputTab').click();
         }
 
+        function createBrowserPythonExecutionScript(code) {
+            const serializedCode = JSON.stringify(String(code || '')).replace(/<\//g, '<\\/');
+            return `
+                (async () => {
+                    try {
+                        const pythonCode = ${serializedCode};
+                        const ensurePyodide = async () => {
+                            if (!window.__voltusPyodidePromise) {
+                                if (typeof window.loadPyodide !== 'function') {
+                                    await new Promise((resolve, reject) => {
+                                        const existing = document.querySelector('script[data-voltus-pyodide="1"]');
+                                        if (existing) {
+                                            existing.addEventListener('load', () => resolve(), { once: true });
+                                            existing.addEventListener('error', () => reject(new Error('Failed to load Pyodide script')), { once: true });
+                                            return;
+                                        }
+                                        const script = document.createElement('script');
+                                        script.src = 'https://cdn.jsdelivr.net/pyodide/v0.27.2/full/pyodide.js';
+                                        script.async = true;
+                                        script.dataset.voltusPyodide = '1';
+                                        script.onload = () => resolve();
+                                        script.onerror = () => reject(new Error('Failed to load Pyodide script'));
+                                        document.head.appendChild(script);
+                                    });
+                                }
+
+                                window.__voltusPyodidePromise = window.loadPyodide({
+                                    stdout: (text) => console.log(text),
+                                    stderr: (text) => console.error(text)
+                                });
+                            }
+                            return window.__voltusPyodidePromise;
+                        };
+
+                        const pyodide = await ensurePyodide();
+                        await pyodide.runPythonAsync(pythonCode);
+                        console.log('Voltus: Python execution finished');
+                    } catch (error) {
+                        const detail = error && error.stack ? error.stack : String(error);
+                        console.error('Voltus Python execution failed:', detail);
+                    }
+                })();
+            `.trim();
+        }
+
         function createBrowserProjectInjectionScript(htmlContent) {
             const serializedHtml = JSON.stringify(String(htmlContent || '')).replace(/<\//g, '<\\/');
             return `
@@ -6826,12 +7002,21 @@ console.log('Dark mode applied!');`
                 isProjectRun: false
             };
 
+            const execType = getLocalExecutionKindForActiveTab();
+            if (execType.kind === 'python') {
+                payload.code = createBrowserPythonExecutionScript(code);
+                if (runAsProject) {
+                    pushConsole('warn', 'Run as Project is ignored for Python in browser mode');
+                }
+                pushConsole('log', 'Browser Python uses Pyodide and may be blocked by site CSP');
+                return payload;
+            }
+
             if (!runAsProject) {
                 return payload;
             }
 
             const activeTab = activeTabId && tabs[activeTabId] ? tabs[activeTabId] : null;
-            const execType = getLocalExecutionKindForActiveTab();
             if (execType.kind !== 'html') {
                 if (execType.kind === 'javascript' && execType.label === 'TypeScript') {
                     showToast('Run as Project does not transpile TypeScript');

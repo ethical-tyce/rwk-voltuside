@@ -58,3 +58,7 @@ contextBridge.exposeInMainWorld('appInfo', {
     getVersion: () => ipcRenderer.invoke('app:get-version'),
     openExternal: (url) => ipcRenderer.invoke('app:open-external', url)
 });
+
+contextBridge.exposeInMainWorld('runtime', {
+    runPython: (code, options = {}) => ipcRenderer.invoke('runtime:run-python', code, options)
+});

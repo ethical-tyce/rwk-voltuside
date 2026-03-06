@@ -1,6 +1,8 @@
 const { app, BrowserWindow, Menu, ipcMain, shell, dialog } = require('electron');
 const path = require('path');
 const fs = require('fs/promises');
+const os = require('os');
+const { spawn } = require('child_process');
 
 let win;
 let extensionWss = null;
@@ -532,6 +534,105 @@ ipcMain.handle('explorer:delete-path', async (_event, targetPath) => {
 
     await fs.rm(resolvedPath, { recursive: true, force: false });
     return true;
+});
+
+ipcMain.handle('runtime:run-python', async (_event, code, options = {}) => {
+    const scriptSource = typeof code === 'string' ? code : String(code ?? '');
+    if (!scriptSource.trim()) {
+        return { stdout: '', stderr: '', exitCode: 0, command: '' };
+    }
+
+    const requestedCwd = options && typeof options.cwd === 'string' ? options.cwd.trim() : '';
+    let cwd = process.cwd();
+    if (requestedCwd) {
+        const resolvedCwd = path.resolve(requestedCwd);
+        const cwdStat = await fs.stat(resolvedCwd).catch(() => null);
+        if (cwdStat && cwdStat.isDirectory()) {
+            cwd = resolvedCwd;
+        }
+    }
+
+    const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'voltus-python-'));
+    const scriptPath = path.join(tempDir, 'run.py');
+    await fs.writeFile(scriptPath, scriptSource, 'utf8');
+
+    const attempts = process.platform === 'win32'
+        ? [
+            { command: 'py', args: ['-3', scriptPath] },
+            { command: 'python', args: [scriptPath] },
+            { command: 'python3', args: [scriptPath] }
+        ]
+        : [
+            { command: 'python3', args: [scriptPath] },
+            { command: 'python', args: [scriptPath] }
+        ];
+
+    const timeoutMs = 25000;
+
+    try {
+        for (const attempt of attempts) {
+            try {
+                const result = await new Promise((resolve, reject) => {
+                    const child = spawn(attempt.command, attempt.args, {
+                        cwd,
+                        windowsHide: true
+                    });
+
+                    let stdout = '';
+                    let stderr = '';
+                    let finished = false;
+
+                    const timeout = setTimeout(() => {
+                        if (finished) return;
+                        finished = true;
+                        child.kill();
+                        reject(new Error(`Python execution timed out after ${Math.floor(timeoutMs / 1000)}s`));
+                    }, timeoutMs);
+
+                    child.stdout.on('data', (chunk) => {
+                        stdout += String(chunk || '');
+                    });
+                    child.stderr.on('data', (chunk) => {
+                        stderr += String(chunk || '');
+                    });
+
+                    child.on('error', (error) => {
+                        if (finished) return;
+                        finished = true;
+                        clearTimeout(timeout);
+                        reject(error);
+                    });
+
+                    child.on('close', (exitCode) => {
+                        if (finished) return;
+                        finished = true;
+                        clearTimeout(timeout);
+                        resolve({
+                            stdout,
+                            stderr,
+                            exitCode: typeof exitCode === 'number' ? exitCode : 1,
+                            command: attempt.command
+                        });
+                    });
+                });
+
+                return result;
+            } catch (error) {
+                const message = String(error && error.message ? error.message : error || '');
+                const isNotFound = (error && error.code === 'ENOENT')
+                    || /not recognized as an internal or external command/i.test(message)
+                    || /No such file or directory/i.test(message)
+                    || /not found/i.test(message);
+                if (!isNotFound) {
+                    throw error;
+                }
+            }
+        }
+
+        throw new Error('Python runtime not found. Install Python 3 (python3 / python / py).');
+    } finally {
+        await fs.rm(tempDir, { recursive: true, force: true }).catch(() => { });
+    }
 });
 
 app.on('window-all-closed', () => {
