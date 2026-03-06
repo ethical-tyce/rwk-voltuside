@@ -6139,6 +6139,21 @@ console.log('Dark mode applied!');`
             return null;
         }
 
+        async function readProjectAssetText(filePath) {
+            const normalizedPath = String(filePath || '').trim();
+            if (!normalizedPath) return null;
+            if (!window.fileExplorer || typeof window.fileExplorer.readFile !== 'function') return null;
+
+            try {
+                const fileContent = await window.fileExplorer.readFile(normalizedPath);
+                if (typeof fileContent === 'string') return fileContent;
+                if (fileContent === null || fileContent === undefined) return null;
+                return String(fileContent);
+            } catch {
+                return null;
+            }
+        }
+
         async function transformHtmlForProjectRun(htmlSource, baseFilePath) {
             const fallbackResult = { html: htmlSource, didInline: false, resolvedCount: 0, failedAssets: 0 };
             if (!runAsProject) return fallbackResult;
@@ -6198,6 +6213,18 @@ console.log('Dark mode applied!');`
                 }
 
                 const resolvedPath = baseDirectory ? resolveProjectAssetPath(baseDirectory, sourceRef) : '';
+                const diskSource = await readProjectAssetText(resolvedPath);
+                if (typeof diskSource === 'string') {
+                    const inlineScript = parsedDoc.createElement('script');
+                    const sourceType = scriptNode.getAttribute('type');
+                    if (sourceType) inlineScript.setAttribute('type', sourceType);
+                    inlineScript.textContent = `${diskSource}\n//# sourceURL=${resolvedPath || sourceRef}`;
+                    scriptNode.replaceWith(inlineScript);
+                    didInline = true;
+                    resolvedCount += 1;
+                    continue;
+                }
+
                 const scriptUrl = resolvedPath ? toFileUrl(resolvedPath) : '';
                 if (scriptUrl) {
                     scriptNode.setAttribute('src', scriptUrl);
@@ -6228,6 +6255,16 @@ console.log('Dark mode applied!');`
                 }
 
                 const resolvedPath = baseDirectory ? resolveProjectAssetPath(baseDirectory, hrefRef) : '';
+                const diskCss = await readProjectAssetText(resolvedPath);
+                if (typeof diskCss === 'string') {
+                    const styleNode = parsedDoc.createElement('style');
+                    styleNode.textContent = String(diskCss || '');
+                    linkNode.replaceWith(styleNode);
+                    didInline = true;
+                    resolvedCount += 1;
+                    continue;
+                }
+
                 const cssUrl = resolvedPath ? toFileUrl(resolvedPath) : '';
                 if (cssUrl) {
                     linkNode.setAttribute('href', cssUrl);
