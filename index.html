@@ -341,10 +341,10 @@
             #topbar::after {
                 content: '';
                 position: absolute;
-                right: 380px;
+                right: 343px;
                 top: 0;
                 bottom: 0;
-                width: 60px;
+                width: 10px;
                 background: linear-gradient(to right, transparent, #000);
                 pointer-events: none;
                 z-index: 10;
@@ -380,7 +380,9 @@
             }
 
             #tabs::-webkit-scrollbar {
-                display: none;
+                width: 0 !important;
+                height: 0 !important;
+                display: none !important;
             }
 
         #tabs {
