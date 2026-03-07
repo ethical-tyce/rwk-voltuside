@@ -1936,24 +1936,48 @@
             display: flex;
             align-items: center;
             gap: 6px;
+            position: relative;
+            padding-bottom: 4px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.14);
         }
 
-        .console-tab-btn {
-            border: 1px solid rgba(255, 255, 255, 0.13);
-            background: #090909;
-            color: #8f8f8f;
-            border-radius: 4px;
-            padding: 4px 8px;
-            font-size: 10px;
+        #consoleTop .console-tab-btn {
+            border: none !important;
+            background: transparent !important;
+            box-shadow: none !important;
+            text-shadow: none !important;
+            color: #8f8f8f !important;
+            border-radius: 0 !important;
+            padding: 2px 6px 6px !important;
+            min-height: 0 !important;
+            font-size: 10px !important;
+            font-weight: 500 !important;
             text-transform: uppercase;
             letter-spacing: 0.04em;
             cursor: pointer;
+            transition: color 180ms ease !important;
+            transform: none !important;
         }
 
-        .console-tab-btn.active {
-            color: #d0d0d0;
-            border-color: rgba(255, 255, 255, 0.35);
-            background: #121212;
+        #consoleTop .console-tab-btn:hover {
+            color: #c0c0c0 !important;
+        }
+
+        #consoleTop .console-tab-btn.active {
+            color: #e1e1e1 !important;
+        }
+
+        #consoleTabIndicator {
+            position: absolute;
+            bottom: -1px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            border-radius: 999px;
+            background: rgba(235, 235, 235, 0.92);
+            transform: translateX(0);
+            transition: transform 240ms cubic-bezier(0.22, 1, 0.36, 1), width 240ms cubic-bezier(0.22, 1, 0.36, 1);
+            pointer-events: none;
         }
 
         #consolePanels {
@@ -3283,9 +3307,8 @@
                         </svg>
                     </div>
                     <div class="sidebar-tab" id="explorerToggle" title="Explorer">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                            <path d="M3 6h7l2 2h9v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
-                            <path d="M3 9h18"></path>
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960" width="24" height="24" fill="currentColor">
+                            <path d="M140-220v-520 550-30Zm0 60q-24 0-42-18.5T80-220v-520q0-23 18-41.5t42-18.5h281l60 60h339q23 0 41.5 18.5T880-680v301h-60v-301H456l-60-60H140v520h295v60H140Zm485 99L495-190l130-129 42 42-87 87 87 87-42 42Zm164 0-42-42 87-87-87-87 42-42 130 129L789-61Z"/>
                         </svg>
                     </div>
                     <div class="sidebar-tab" id="client" data-view="settings" title="Settings">
@@ -3295,17 +3318,13 @@
                         </svg>
                     </div>
                     <div class="sidebar-tab" id="sourceControlTab" data-view="source-control" title="Source Control">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                            <circle cx="6" cy="6" r="2"></circle>
-                            <circle cx="18" cy="6" r="2"></circle>
-                            <circle cx="12" cy="18" r="2"></circle>
-                            <path d="M8 6h8M7.4 7.5l3.2 8M16.6 7.5l-3.2 8"></path>
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960" width="24" height="24" fill="currentColor">
+                            <path d="M194-80q-47.5 0-80.75-32.96T80-193q0-38 22.5-67.32Q125-289.65 160-301v-97q0-46 33-79t79-33h178v-148q-36-10-59.5-40T367-767q0-47.08 33.15-80.04Q433.29-880 480.65-880q47.35 0 79.85 32.96Q593-814.08 593-767q0 39-23.5 69T510-658v148h178q46 0 79 33t33 79v97q35 11.35 57.5 40.68Q880-231 880-193q0 47.08-32.67 80.04Q814.67-80 768-80q-47.5 0-80.75-32.96T654-193q0-40 24.5-70.5T740-303v-95q0-21-15.5-36.5T688-450H510v148q36 10 59.5 40t23.5 69q0 47.08-32.67 80.04Q527.67-80 481-80q-47.5 0-80.75-32.96T367-193q0-39 23.5-69t59.5-40v-148H272q-21 0-36.5 15.5T220-398v95q37 9 61.5 39.5T306-193q0 47.08-32.67 80.04Q240.67-80 194-80Zm.07-60q22.07 0 37-15.5T246-193q0-22-14.93-37.5t-37-15.5Q172-246 156-230.5T140-193q0 22 16 37.5t38.07 15.5Zm287 0q22.07 0 37-15.5T533-193q0-22-14.93-37.5t-37-15.5Q459-246 443-230.5T427-193q0 22 16 37.5t38.07 15.5Zm287 0q22.07 0 37-15.5T820-193q0-22-14.93-37.5t-37-15.5Q746-246 730-230.5T714-193q0 22 16 37.5t38.07 15.5Zm-287-574q22.07 0 37-15.5T533-767q0-22-14.93-37.5t-37-15.5Q459-820 443-804.5T427-767q0 22 16 37.5t38.07 15.5Z"/>
                         </svg>
                     </div>
                     <div class="sidebar-tab" id="debugSidebarTab" data-view="debug" title="Debug">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                            <polygon points="6 4 20 12 6 20 6 4"></polygon>
-                            <circle cx="6" cy="12" r="1.2"></circle>
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960" width="24" height="24" fill="currentColor">
+                            <path d="M180-820v293-3 390-680 186-186Zm0 740q-24 0-42-18t-18-42v-680q0-24 18-42t42-18h361l219 219v154q-14-7-29-12t-31-8v-107H511v-186H180v680h315q20 21 44.5 36T593-80H180Zm558.5-141.5Q770-253 770-300t-31.5-78.5Q707-410 660-410t-78.5 31.5Q550-347 550-300t31.5 78.5Q613-190 660-190t78.5-31.5ZM864-54 756.84-161Q736-147 711.5-138.5 687-130 660-130q-70.83 0-120.42-49.62Q490-229.24 490-300.12t49.62-120.38q49.62-49.5 120.5-49.5t120.38 49.58Q830-370.83 830-300q0 27-8.5 51.5T799-203.16L906-96l-42 42Z"/>
                         </svg>
                     </div>
                     <div class="sidebar-tab" id="editorTab" data-view="editor" title="Editor">
@@ -3558,6 +3577,7 @@
                             <div id="consoleTabBar">
                                 <button id="consoleOutputTabBtn" class="console-tab-btn active" type="button">Output</button>
                                 <button id="consoleTerminalTabBtn" class="console-tab-btn" type="button">Terminal</button>
+                                <span id="consoleTabIndicator" aria-hidden="true"></span>
                             </div>
                             <button id="clearConsole" class="icon-btn">Clear</button>
                         </div>
@@ -3741,6 +3761,7 @@
         const consoleEl = document.getElementById("console");
         const consoleOutputTabBtn = document.getElementById("consoleOutputTabBtn");
         const consoleTerminalTabBtn = document.getElementById("consoleTerminalTabBtn");
+        const consoleTabIndicator = document.getElementById("consoleTabIndicator");
         const consoleOutputPanel = document.getElementById("console");
         const consoleTerminalPanel = document.getElementById("consoleTerminalPanel");
         const consoleTerminalOutputEl = document.getElementById("consoleTerminalOutput");
@@ -3948,6 +3969,16 @@ console.log('Dark mode applied!');`
             if (consoleTerminalTabBtn) consoleTerminalTabBtn.classList.toggle('active', nextTab === 'terminal');
             if (consoleOutputPanel) consoleOutputPanel.classList.toggle('active', nextTab === 'output');
             if (consoleTerminalPanel) consoleTerminalPanel.classList.toggle('active', nextTab === 'terminal');
+            updateConsoleTabIndicator();
+        }
+
+        function updateConsoleTabIndicator() {
+            if (!consoleTabIndicator || !consoleOutputTabBtn || !consoleTerminalTabBtn) return;
+            const activeBtn = activeConsoleTab === 'terminal' ? consoleTerminalTabBtn : consoleOutputTabBtn;
+            const offsetLeft = activeBtn.offsetLeft || 0;
+            const width = activeBtn.offsetWidth || 0;
+            consoleTabIndicator.style.transform = `translateX(${offsetLeft}px)`;
+            consoleTabIndicator.style.width = `${width}px`;
         }
 
         async function runConsoleTerminalCommand() {
@@ -4087,6 +4118,7 @@ console.log('Dark mode applied!');`
                 }
             });
         }
+        window.addEventListener('resize', updateConsoleTabIndicator);
         setConsoleTab('output');
 
         let editor;
@@ -4638,7 +4670,8 @@ console.log('Dark mode applied!');`
                 registerInlineCompletionProviders(monaco);
 
                 // Auto-save content on change
-                editor.onDidChangeModelContent(() => {
+                editor.onDidChangeModelContent((event) => {
+                    remapBreakpointsAfterEditorChange(event);
                     if (activeTabId && tabs[activeTabId]) {
                         tabs[activeTabId].content = editor.getValue();
                     }
@@ -6051,6 +6084,65 @@ console.log('Dark mode applied!');`
             if (key === activeTabId) {
                 refreshBreakpointDecorations();
             }
+            if (currentPrimaryView === 'debug') {
+                renderDebugView();
+            }
+        }
+
+        function remapBreakpointsAfterEditorChange(event) {
+            if (!activeTabId || !tabs[activeTabId] || !event || !Array.isArray(event.changes) || !event.changes.length) {
+                return;
+            }
+
+            const current = getBreakpointsForTab(activeTabId);
+            if (!current.length) return;
+
+            const orderedChanges = [...event.changes].sort((a, b) => {
+                const aOffset = Number(a && a.rangeOffset) || 0;
+                const bOffset = Number(b && b.rangeOffset) || 0;
+                return bOffset - aOffset;
+            });
+
+            const remapped = current.map((originalLine) => {
+                let line = Math.max(1, Number(originalLine) || 1);
+
+                orderedChanges.forEach((change) => {
+                    if (!change || !change.range) return;
+                    const startLine = Math.max(1, Number(change.range.startLineNumber) || 1);
+                    const endLine = Math.max(startLine, Number(change.range.endLineNumber) || startLine);
+                    const startColumn = Math.max(1, Number(change.range.startColumn) || 1);
+                    const endColumn = Math.max(1, Number(change.range.endColumn) || 1);
+                    const insertedLineCount = Math.max(0, String(change.text || '').split('\n').length - 1);
+                    const removedLineCount = Math.max(0, endLine - startLine);
+                    const delta = insertedLineCount - removedLineCount;
+
+                    if (line < startLine) return;
+                    if (line > endLine) {
+                        line = Math.max(1, line + delta);
+                        return;
+                    }
+
+                    // Keep breakpoint attached to the moved code line when pressing Enter at column 1.
+                    const isLineStartInsert = removedLineCount === 0
+                        && insertedLineCount > 0
+                        && startLine === endLine
+                        && startColumn === 1
+                        && endColumn === 1;
+
+                    if (isLineStartInsert) {
+                        line = Math.max(1, line + insertedLineCount);
+                        return;
+                    }
+
+                    if (delta === 0) return;
+                    line = Math.max(1, startLine + insertedLineCount);
+                });
+
+                return line;
+            });
+
+            setBreakpointsForTab(activeTabId, remapped);
+            refreshBreakpointDecorations();
             if (currentPrimaryView === 'debug') {
                 renderDebugView();
             }
