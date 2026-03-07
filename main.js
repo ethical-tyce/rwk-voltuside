@@ -60,6 +60,125 @@ function getImageMimeType(filePath) {
     return IMAGE_MIME_TYPES[ext] || 'application/octet-stream';
 }
 
+function normalizeTimeout(inputValue, fallbackMs = 20000) {
+    const parsed = Number(inputValue);
+    if (!Number.isFinite(parsed) || parsed <= 0) return fallbackMs;
+    return Math.max(500, Math.min(180000, Math.floor(parsed)));
+}
+
+async function resolveRuntimeCwd(inputValue) {
+    const requested = typeof inputValue === 'string' ? inputValue.trim() : '';
+    if (!requested) return process.cwd();
+
+    const resolved = path.resolve(requested);
+    const stat = await fs.stat(resolved).catch(() => null);
+    if (stat && stat.isDirectory()) {
+        return resolved;
+    }
+    return process.cwd();
+}
+
+function runProcess(command, args = [], options = {}) {
+    const timeoutMs = normalizeTimeout(options.timeoutMs, 20000);
+    const cwd = options.cwd || process.cwd();
+
+    return new Promise((resolve, reject) => {
+        const child = spawn(command, args, {
+            cwd,
+            windowsHide: true,
+            env: process.env
+        });
+
+        let stdout = '';
+        let stderr = '';
+        let finished = false;
+
+        const timeout = setTimeout(() => {
+            if (finished) return;
+            finished = true;
+            child.kill();
+            reject(new Error(`Command timed out after ${Math.floor(timeoutMs / 1000)}s`));
+        }, timeoutMs);
+
+        child.stdout.on('data', (chunk) => {
+            stdout += String(chunk || '');
+        });
+
+        child.stderr.on('data', (chunk) => {
+            stderr += String(chunk || '');
+        });
+
+        child.on('error', (error) => {
+            if (finished) return;
+            finished = true;
+            clearTimeout(timeout);
+            reject(error);
+        });
+
+        child.on('close', (exitCode) => {
+            if (finished) return;
+            finished = true;
+            clearTimeout(timeout);
+            resolve({
+                command,
+                args,
+                cwd,
+                stdout,
+                stderr,
+                exitCode: typeof exitCode === 'number' ? exitCode : 1
+            });
+        });
+    });
+}
+
+function parseGitStatusOutput(rawValue) {
+    const lines = String(rawValue || '').replace(/\r\n/g, '\n').split('\n').filter(Boolean);
+    let branchLine = '';
+    const files = [];
+
+    lines.forEach((line) => {
+        if (line.startsWith('## ')) {
+            branchLine = line.slice(3).trim();
+            return;
+        }
+        if (line.length < 3) return;
+        const indexStatus = line[0] || ' ';
+        const worktreeStatus = line[1] || ' ';
+        const remainder = line.slice(3).trim();
+        if (!remainder) return;
+
+        let pathValue = remainder;
+        let originalPath = '';
+        const renameMatch = remainder.match(/^(.+?)\s+->\s+(.+)$/);
+        if (renameMatch) {
+            originalPath = renameMatch[1].trim();
+            pathValue = renameMatch[2].trim();
+        }
+
+        files.push({
+            indexStatus,
+            worktreeStatus,
+            path: pathValue,
+            originalPath
+        });
+    });
+
+    const branchName = branchLine ? branchLine.split('...')[0].trim() : '';
+    return {
+        branchLine,
+        branchName,
+        files
+    };
+}
+
+async function runGit(args = [], options = {}) {
+    const cwd = await resolveRuntimeCwd(options.cwd);
+    return runProcess('git', args, {
+        cwd,
+        timeoutMs: normalizeTimeout(options.timeoutMs, 20000)
+    });
+}
+
 async function buildExplorerTree(currentPath, depth = 0, state = { visited: 0, truncated: false }) {
     if (state.visited >= EXPLORER_MAX_ENTRIES) {
         state.truncated = true;
@@ -633,6 +752,212 @@ ipcMain.handle('runtime:run-python', async (_event, code, options = {}) => {
     } finally {
         await fs.rm(tempDir, { recursive: true, force: true }).catch(() => { });
     }
+});
+
+ipcMain.handle('runtime:run-shell', async (_event, command, options = {}) => {
+    const script = typeof command === 'string' ? command.trim() : '';
+    if (!script) {
+        return {
+            command: '',
+            args: [],
+            cwd: await resolveRuntimeCwd(options && options.cwd),
+            stdout: '',
+            stderr: '',
+            exitCode: 0
+        };
+    }
+
+    const cwd = await resolveRuntimeCwd(options && options.cwd);
+    const timeoutMs = normalizeTimeout(options && options.timeoutMs, 45000);
+    const attempts = process.platform === 'win32'
+        ? [
+            { command: 'powershell', args: ['-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-Command', script] },
+            { command: 'pwsh', args: ['-NoProfile', '-NonInteractive', '-Command', script] },
+            { command: 'cmd', args: ['/d', '/s', '/c', script] }
+        ]
+        : [
+            { command: 'bash', args: ['-lc', script] },
+            { command: 'sh', args: ['-lc', script] }
+        ];
+
+    for (const attempt of attempts) {
+        try {
+            return await runProcess(attempt.command, attempt.args, { cwd, timeoutMs });
+        } catch (error) {
+            const message = String(error && error.message ? error.message : error || '');
+            const isNotFound = (error && error.code === 'ENOENT')
+                || /not recognized as an internal or external command/i.test(message)
+                || /No such file or directory/i.test(message)
+                || /not found/i.test(message);
+            if (!isNotFound) {
+                throw error;
+            }
+        }
+    }
+
+    throw new Error('No supported shell found on this system.');
+});
+
+ipcMain.handle('runtime:open-devtools', () => {
+    if (!win || win.isDestroyed() || !win.webContents) return false;
+    if (!win.webContents.isDevToolsOpened()) {
+        win.webContents.openDevTools({ mode: 'detach' });
+    } else {
+        win.webContents.focus();
+    }
+    return true;
+});
+
+ipcMain.handle('runtime:git-status', async (_event, options = {}) => {
+    const cwdInput = typeof options === 'string' ? options : (options && options.cwd);
+    try {
+        const result = await runGit(['status', '--porcelain=1', '-b'], { cwd: cwdInput, timeoutMs: options && options.timeoutMs });
+        const parsed = parseGitStatusOutput(result.stdout);
+        return {
+            ok: true,
+            cwd: result.cwd,
+            branchLine: parsed.branchLine,
+            branchName: parsed.branchName,
+            files: parsed.files,
+            stdout: result.stdout,
+            stderr: result.stderr,
+            exitCode: result.exitCode
+        };
+    } catch (error) {
+        return {
+            ok: false,
+            cwd: await resolveRuntimeCwd(cwdInput),
+            branchLine: '',
+            branchName: '',
+            files: [],
+            stdout: '',
+            stderr: '',
+            exitCode: 1,
+            error: error && error.message ? error.message : String(error)
+        };
+    }
+});
+
+ipcMain.handle('runtime:git-diff', async (_event, options = {}) => {
+    const cwdInput = typeof options === 'string' ? options : (options && options.cwd);
+    const filePath = options && typeof options.filePath === 'string' ? options.filePath.trim() : '';
+    const staged = Boolean(options && options.staged);
+    const args = ['diff'];
+    if (staged) args.push('--staged');
+    if (filePath) args.push('--', filePath);
+
+    const result = await runGit(args, { cwd: cwdInput, timeoutMs: options && options.timeoutMs });
+    return {
+        ok: true,
+        cwd: result.cwd,
+        diff: result.stdout,
+        stderr: result.stderr,
+        exitCode: result.exitCode
+    };
+});
+
+ipcMain.handle('runtime:git-stage', async (_event, options = {}) => {
+    const cwdInput = typeof options === 'string' ? options : (options && options.cwd);
+    const paths = Array.isArray(options && options.paths)
+        ? options.paths.map((value) => String(value || '').trim()).filter(Boolean)
+        : [];
+    const args = paths.length > 0 ? ['add', '--', ...paths] : ['add', '-A'];
+    const result = await runGit(args, { cwd: cwdInput, timeoutMs: options && options.timeoutMs });
+    return {
+        ok: result.exitCode === 0,
+        cwd: result.cwd,
+        stdout: result.stdout,
+        stderr: result.stderr,
+        exitCode: result.exitCode
+    };
+});
+
+ipcMain.handle('runtime:git-unstage', async (_event, options = {}) => {
+    const cwdInput = typeof options === 'string' ? options : (options && options.cwd);
+    const paths = Array.isArray(options && options.paths)
+        ? options.paths.map((value) => String(value || '').trim()).filter(Boolean)
+        : [];
+
+    const runRestore = async () => {
+        const args = paths.length > 0
+            ? ['restore', '--staged', '--', ...paths]
+            : ['restore', '--staged', '.'];
+        return runGit(args, { cwd: cwdInput, timeoutMs: options && options.timeoutMs });
+    };
+
+    try {
+        const result = await runRestore();
+        return {
+            ok: result.exitCode === 0,
+            cwd: result.cwd,
+            stdout: result.stdout,
+            stderr: result.stderr,
+            exitCode: result.exitCode
+        };
+    } catch (error) {
+        const fallbackArgs = paths.length > 0
+            ? ['reset', 'HEAD', '--', ...paths]
+            : ['reset', 'HEAD'];
+        const result = await runGit(fallbackArgs, { cwd: cwdInput, timeoutMs: options && options.timeoutMs });
+        return {
+            ok: result.exitCode === 0,
+            cwd: result.cwd,
+            stdout: result.stdout,
+            stderr: result.stderr,
+            exitCode: result.exitCode,
+            note: error && error.message ? error.message : String(error)
+        };
+    }
+});
+
+ipcMain.handle('runtime:git-commit', async (_event, options = {}) => {
+    const cwdInput = typeof options === 'string' ? options : (options && options.cwd);
+    const message = options && typeof options.message === 'string' ? options.message.trim() : '';
+    if (!message) {
+        throw new Error('Commit message is required.');
+    }
+
+    const result = await runGit(['commit', '-m', message], { cwd: cwdInput, timeoutMs: options && options.timeoutMs });
+    return {
+        ok: result.exitCode === 0,
+        cwd: result.cwd,
+        stdout: result.stdout,
+        stderr: result.stderr,
+        exitCode: result.exitCode
+    };
+});
+
+ipcMain.handle('runtime:git-log', async (_event, options = {}) => {
+    const cwdInput = typeof options === 'string' ? options : (options && options.cwd);
+    const limitRaw = Number(options && options.limit);
+    const limit = Number.isFinite(limitRaw) && limitRaw > 0 ? Math.min(100, Math.floor(limitRaw)) : 20;
+    const result = await runGit(
+        ['log', '--pretty=format:%h%x09%an%x09%ar%x09%s', '-n', String(limit)],
+        { cwd: cwdInput, timeoutMs: options && options.timeoutMs }
+    );
+
+    const entries = String(result.stdout || '')
+        .replace(/\r\n/g, '\n')
+        .split('\n')
+        .filter(Boolean)
+        .map((line) => {
+            const [hash = '', author = '', relativeTime = '', ...subjectParts] = line.split('\t');
+            return {
+                hash: hash.trim(),
+                author: author.trim(),
+                relativeTime: relativeTime.trim(),
+                subject: subjectParts.join('\t').trim()
+            };
+        });
+
+    return {
+        ok: true,
+        cwd: result.cwd,
+        entries,
+        stdout: result.stdout,
+        stderr: result.stderr,
+        exitCode: result.exitCode
+    };
 });
 
 app.on('window-all-closed', () => {

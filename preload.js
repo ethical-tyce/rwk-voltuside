@@ -60,5 +60,13 @@ contextBridge.exposeInMainWorld('appInfo', {
 });
 
 contextBridge.exposeInMainWorld('runtime', {
-    runPython: (code, options = {}) => ipcRenderer.invoke('runtime:run-python', code, options)
+    runPython: (code, options = {}) => ipcRenderer.invoke('runtime:run-python', code, options),
+    runShell: (command, options = {}) => ipcRenderer.invoke('runtime:run-shell', command, options),
+    gitStatus: (options = {}) => ipcRenderer.invoke('runtime:git-status', options),
+    gitDiff: (options = {}) => ipcRenderer.invoke('runtime:git-diff', options),
+    gitStage: (options = {}) => ipcRenderer.invoke('runtime:git-stage', options),
+    gitUnstage: (options = {}) => ipcRenderer.invoke('runtime:git-unstage', options),
+    gitCommit: (options = {}) => ipcRenderer.invoke('runtime:git-commit', options),
+    gitLog: (options = {}) => ipcRenderer.invoke('runtime:git-log', options),
+    openDevTools: () => ipcRenderer.invoke('runtime:open-devtools')
 });

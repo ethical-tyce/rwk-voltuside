@@ -25,7 +25,7 @@
             --bug-icon-size: 13px; /* bug icon size inside button */
             --explorer-width: 260px;
             --console-left-offset: 0px;
-            --preview-console-height: 140px;
+            --preview-console-height: 96px;
             --menu-glass-bg: rgba(0, 0, 0, 0.1);
             --menu-glass-blur: 5px;
             --menu-glass-saturate: 210%;
@@ -732,6 +732,136 @@
             height: 100%;
         }
 
+        #statusBar {
+            height: 26px;
+            min-height: 26px;
+            background: #060606;
+            border-top: 1px solid #1e1e1e;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 10px;
+            font-size: 11px;
+            letter-spacing: 0.01em;
+            color: #8f8f8f;
+            user-select: none;
+        }
+
+        #statusBarLeft,
+        #statusBarRight {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-width: 0;
+        }
+
+        .status-pill {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 340px;
+        }
+
+        .status-pill.active {
+            color: #c9c9c9;
+        }
+
+        #statusDiagnostics.has-errors {
+            color: #f2a0a0;
+        }
+
+        #statusDiagnostics.has-warnings:not(.has-errors) {
+            color: #e7d08d;
+        }
+
+        .monaco-editor .voltus-breakpoint-glyph {
+            width: 12px !important;
+            height: 12px !important;
+            margin-left: 5px;
+            border-radius: 50%;
+            background: #c75454;
+            box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.25), 0 0 7px rgba(199, 84, 84, 0.45);
+        }
+
+        .monaco-editor .voltus-breakpoint-line {
+            background: rgba(199, 84, 84, 0.09);
+        }
+
+        .ide-picker-list {
+            margin-top: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.09);
+            border-radius: 8px;
+            background: rgba(0, 0, 0, 0.24);
+            max-height: 56vh;
+            overflow: auto;
+        }
+
+        .ide-picker-item {
+            width: 100%;
+            border: none;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            background: transparent;
+            color: #c8c8c8;
+            text-align: left;
+            padding: 9px 10px;
+            cursor: pointer;
+            font: inherit;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+        }
+
+        .ide-picker-item:last-child {
+            border-bottom: none;
+        }
+
+        .ide-picker-item:hover,
+        .ide-picker-item.active {
+            background: rgba(255, 255, 255, 0.08);
+            color: #f3f3f3;
+        }
+
+        .ide-picker-main {
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+
+        .ide-picker-title {
+            font-size: 12px;
+            color: inherit;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .ide-picker-detail {
+            font-size: 11px;
+            color: #909090;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .ide-picker-meta {
+            font-size: 10px;
+            color: #8a8a8a;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 999px;
+            padding: 2px 7px;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            flex-shrink: 0;
+        }
+
+        .ide-picker-empty {
+            padding: 14px;
+            color: #8a8a8a;
+            font-size: 12px;
+        }
+
         /* ---------- LEFT SIDEBAR ---------- */
         #leftSidebar {
             width: 48px;
@@ -1199,18 +1329,292 @@
         }
 
         #dashboard,
-        #settingsView {
+        #settingsView,
+        #sourceControlView,
+        #debugView {
             padding: 22px;
             color: #d2d2d2;
             overflow-y: auto;
         }
 
         #dashboard h2,
-        #settingsView h2 {
+        #settingsView h2,
+        #sourceControlView h2,
+        #debugView h2 {
             margin: 0 0 10px 0;
             font-size: 20px;
             font-weight: 600;
             color: #f0f0f0;
+        }
+
+        .ide-workbench-grid {
+            display: grid;
+            gap: 10px;
+            grid-template-columns: minmax(260px, 0.95fr) minmax(280px, 1.05fr) minmax(230px, 0.8fr);
+            min-height: calc(100% - 40px);
+        }
+
+        .ide-workbench-column {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            min-height: 0;
+        }
+
+        .ide-workbench-row {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .ide-workbench-label {
+            font-size: 11px;
+            color: #9a9a9a;
+            letter-spacing: 0.02em;
+            text-transform: uppercase;
+        }
+
+        .ide-workbench-meta {
+            font-size: 12px;
+            color: #b8b8b8;
+        }
+
+        .ide-workbench-input {
+            width: 100%;
+            background: #070707;
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            color: #d7d7d7;
+            border-radius: 6px;
+            padding: 8px 9px;
+            font-size: 12px;
+            outline: none;
+        }
+
+        .ide-workbench-surface {
+            flex: 1;
+            overflow: auto;
+            background: #050505;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 8px;
+        }
+
+        .ide-workbench-pre {
+            margin: 0;
+            font-family: Consolas, monospace;
+            font-size: 11px;
+            line-height: 1.4;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        #sourceControlView {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        #sourceControlView h2 {
+            margin-bottom: 0;
+        }
+
+        #sourceControlView .ide-workbench-grid {
+            min-height: 0;
+            flex: 1;
+            grid-template-columns: minmax(280px, 0.95fr) minmax(300px, 1.05fr) minmax(250px, 0.85fr);
+        }
+
+        #sourceControlView .ide-workbench-column {
+            gap: 10px;
+        }
+
+        #sourceControlView .ide-workbench-label {
+            font-size: 12px;
+            letter-spacing: 0.04em;
+        }
+
+        #sourceControlView .ide-workbench-input,
+        #sourceControlView .ide-workbench-meta,
+        #sourceControlView .ide-workbench-pre {
+            font-size: 12px;
+        }
+
+        #sourceControlView .modal-btn {
+            min-height: 32px;
+            padding: 0 12px !important;
+            font-size: 12px !important;
+        }
+
+        .source-control-priority {
+            flex: 0 0 auto;
+            padding: 12px;
+            border-color: rgba(159, 211, 255, 0.25);
+            background: linear-gradient(160deg, rgba(24, 38, 56, 0.42), rgba(8, 10, 14, 0.88));
+        }
+
+        .source-control-priority-top {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 10px;
+        }
+
+        .source-control-branch {
+            font-size: 14px;
+            font-weight: 600;
+            color: #e8f3ff;
+        }
+
+        .source-control-summary {
+            border-radius: 999px;
+            border: 1px solid rgba(159, 211, 255, 0.32);
+            background: rgba(159, 211, 255, 0.15);
+            color: #b6deff;
+            padding: 4px 10px;
+            font-size: 12px;
+            line-height: 1.2;
+        }
+
+        .source-control-repo-row {
+            align-items: stretch;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .source-control-repo-row .ide-workbench-input {
+            min-width: 240px;
+            flex: 1 1 320px;
+        }
+
+        .source-control-controls {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .source-control-grid .ide-workbench-surface {
+            padding: 0;
+        }
+
+        #sourceControlDiffPreview {
+            padding: 10px;
+        }
+
+        .source-control-recent-label {
+            margin-top: 4px;
+        }
+
+        .source-control-log-row {
+            padding: 8px 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            font-size: 12px;
+            line-height: 1.35;
+            color: #d0d0d0;
+        }
+
+        .source-control-log-row:last-child {
+            border-bottom: none;
+        }
+
+        .source-control-status-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            padding: 8px 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .source-control-status-row:last-child {
+            border-bottom: none;
+        }
+
+        .source-control-status-info {
+            border: none;
+            background: none;
+            color: #d7d7d7;
+            cursor: pointer;
+            text-align: left;
+            padding: 0;
+            min-width: 0;
+            flex: 1;
+        }
+
+        .source-control-status-main {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            min-width: 0;
+        }
+
+        .source-control-status-tag {
+            flex: 0 0 auto;
+            border-radius: 999px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 3px 7px;
+            font-size: 10px;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            line-height: 1;
+            color: #d2d2d2;
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .source-control-status-tag[data-kind="untracked"] {
+            color: #ffe2a8;
+            border-color: rgba(255, 204, 122, 0.5);
+            background: rgba(255, 204, 122, 0.16);
+        }
+
+        .source-control-status-tag[data-kind="staged-modified"],
+        .source-control-status-tag[data-kind="staged"] {
+            color: #a6ebc1;
+            border-color: rgba(121, 224, 164, 0.55);
+            background: rgba(121, 224, 164, 0.16);
+        }
+
+        .source-control-status-tag[data-kind="modified"] {
+            color: #ffc4cc;
+            border-color: rgba(255, 130, 150, 0.52);
+            background: rgba(255, 130, 150, 0.16);
+        }
+
+        .source-control-status-path {
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            font-size: 12px;
+            color: #c7c7c7;
+        }
+
+        .source-control-status-actions {
+            display: flex;
+            gap: 6px;
+            flex: 0 0 auto;
+        }
+
+        .source-control-action-btn {
+            min-width: 76px;
+        }
+
+        @media (max-width: 1260px) {
+            #sourceControlView .ide-workbench-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .source-control-commit-column {
+                grid-column: 1 / -1;
+                min-height: 220px;
+            }
+        }
+
+        @media (max-width: 860px) {
+            #sourceControlView .ide-workbench-grid {
+                grid-template-columns: 1fr;
+            }
         }
 
         .dashboard-grid {
@@ -1497,7 +1901,7 @@
 
         /* ---------- CONSOLE ---------- */
         #consoleWrap {
-            height: 140px;
+            height: 96px;
             overflow: auto;
             border-top: none;
             display: none;
@@ -1518,23 +1922,99 @@
             }
 
         #consoleTop {
-            padding: 8px 16px;
+            padding: 5px 10px;
             display: flex;
             justify-content: space-between;
             align-items: center;
             color: #808080;
-            font-size: 12px;
+            font-size: 11px;
             text-transform: uppercase;
             border-bottom: none;
         }
 
+        #consoleTabBar {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .console-tab-btn {
+            border: 1px solid rgba(255, 255, 255, 0.13);
+            background: #090909;
+            color: #8f8f8f;
+            border-radius: 4px;
+            padding: 4px 8px;
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            cursor: pointer;
+        }
+
+        .console-tab-btn.active {
+            color: #d0d0d0;
+            border-color: rgba(255, 255, 255, 0.35);
+            background: #121212;
+        }
+
+        #consolePanels {
+            flex: 1;
+            min-height: 0;
+            display: flex;
+            position: relative;
+        }
+
+        .console-panel {
+            position: absolute;
+            inset: 0;
+            display: none;
+            min-height: 0;
+        }
+
+        .console-panel.active {
+            display: flex;
+        }
+
         #console {
             flex: 1;
-            padding: 10px 16px;
+            padding: 6px 10px;
             overflow-y: auto;
             font-family: 'Consolas', monospace;
-            font-size: 13px;
-            line-height: 1.6;
+            font-size: 12px;
+            line-height: 1.35;
+        }
+
+        #consoleTerminalPanel {
+            flex-direction: column;
+            gap: 6px;
+            padding: 6px 10px;
+        }
+
+        #consoleTerminalOutput {
+            flex: 1;
+            min-height: 0;
+            overflow-y: auto;
+            font-family: 'Consolas', monospace;
+            font-size: 12px;
+            line-height: 1.35;
+            color: #b8b8b8;
+        }
+
+        #consoleTerminalInputRow {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        #consoleTerminalInput {
+            flex: 1;
+            min-width: 0;
+            background: #070707;
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            color: #d7d7d7;
+            border-radius: 6px;
+            padding: 7px 9px;
+            font-size: 12px;
+            outline: none;
         }
 
         .log {
@@ -1550,7 +2030,7 @@
         }
 
         .entry {
-            margin-bottom: 6px;
+            margin-bottom: 3px;
         }
 
         ::-webkit-scrollbar {
@@ -1961,7 +2441,7 @@
             position: absolute;
             left: 0;
             right: 0;
-            bottom: 140px;
+            bottom: 96px;
             z-index: 6;
             transition:
                 left var(--primary-view-transition) var(--primary-view-ease),
@@ -2292,55 +2772,12 @@
             letter-spacing: 0.5px;
         }
 
-        /* --- Floating Status Capsule --- */
-        #statusCapsule {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            background: #0a0a0a;
-            border: 1px solid #1a1a1a;
-            padding: 6px 14px;
-            border-radius: 30px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            z-index: 1999;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.6);
-            transition: all 0.3s ease;
-            pointer-events: none;
-        }
-        #statusCapsule.is-nearby {
-            opacity: 0.7;
+        #statusBridge {
+            color: #7f7f7f;
         }
 
-        #statusDot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: #444; /* Grey when offline */
-            transition: all 0.3s ease;
-        }
-
-        #statusDot.online {
-            background: #00ff88; /* Green when online */
-            box-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
-        }
-
-        #statusText {
-            font-size: 10px;
-            font-weight: normal;
-            letter-spacing: 1px;
-            color: #666; /* Grey when offline */
-            text-transform: uppercase;
-            transition: all 0.3s ease;
-        }
-
-        #statusText.online {
-            color: #00ff88;
-        }
-
-        #statusCapsule.online {
-            border-color: rgba(0, 255, 136, 0.3);
+        #statusBridge.online {
+            color: #6ed7a0;
         }
         
         /* --- TAB BROWSER MATERIAL OVERRIDES (EXACT SETTINGS MATCH) --- */
@@ -2499,6 +2936,113 @@
             border-color: rgba(255, 255, 255, 0.3) !important;
             color: #ffffff !important;
             box-shadow: 0 0 15px rgba(255, 255, 255, 0.05);
+        }
+
+        /* ---------- STANDARDIZED BUTTONS (MATCH EXECUTE) ---------- */
+        .icon-btn,
+        .run-btn,
+        .modal-btn,
+        .explorer-btn,
+        .toolbar-button.run,
+        .console-tab-btn,
+        .mode-btn,
+        .settings-close {
+            background: rgba(255, 255, 255, 0.03) !important;
+            backdrop-filter: blur(var(--menu-glass-blur)) saturate(var(--menu-glass-saturate));
+            -webkit-backdrop-filter: blur(var(--menu-glass-blur)) saturate(var(--menu-glass-saturate));
+            box-shadow:
+                0 4px 15px rgba(0, 0, 0, 0.3),
+                inset 0 0 0 1px rgba(255, 255, 255, 0.15),
+                inset 0 2px 10px rgba(255, 255, 255, 0.1) !important;
+            border: 1px solid rgba(255, 255, 255, 0.05) !important;
+            color: #ffffff !important;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+            border-radius: 8px !important;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            min-height: 34px;
+            padding: 9px 16px !important;
+            font-size: 13px !important;
+            font-weight: 500;
+            line-height: 1;
+            text-decoration: none;
+        }
+
+        .icon-btn,
+        .settings-close {
+            width: 34px;
+            min-width: 34px;
+            height: 34px;
+            min-height: 34px;
+            padding: 8px !important;
+        }
+
+        .console-tab-btn,
+        .mode-btn {
+            min-height: 30px;
+            padding: 7px 12px !important;
+            font-size: 11px !important;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+        }
+
+        .console-tab-btn.active,
+        .mode-btn.active,
+        .modal-btn.confirm {
+            background: rgba(255, 255, 255, 0.13) !important;
+            border-color: rgba(255, 255, 255, 0.24) !important;
+        }
+
+        .icon-btn:hover,
+        .run-btn:hover,
+        .modal-btn:hover,
+        .explorer-btn:hover,
+        .toolbar-button.run:hover,
+        .console-tab-btn:hover,
+        .mode-btn:hover,
+        .settings-close:hover {
+            background: rgba(255, 255, 255, 0.08) !important;
+            box-shadow:
+                0 6px 20px rgba(0, 0, 0, 0.4),
+                inset 0 0 0 1px rgba(255, 255, 255, 0.25),
+                inset 0 2px 12px rgba(255, 255, 255, 0.15) !important;
+            transform: translateY(-1px);
+        }
+
+        .icon-btn:active,
+        .run-btn:active,
+        .modal-btn:active,
+        .explorer-btn:active,
+        .toolbar-button.run:active,
+        .console-tab-btn:active,
+        .mode-btn:active,
+        .settings-close:active {
+            transform: translateY(0);
+            background: rgba(255, 255, 255, 0.05) !important;
+        }
+
+        .icon-btn:disabled,
+        .run-btn:disabled,
+        .modal-btn:disabled,
+        .explorer-btn:disabled,
+        .toolbar-button.run:disabled,
+        .console-tab-btn:disabled,
+        .mode-btn:disabled,
+        .settings-close:disabled {
+            opacity: 0.55;
+            cursor: not-allowed;
+        }
+
+        .icon-btn svg,
+        .settings-close svg,
+        .toolbar-button.run svg {
+            width: 16px;
+            height: 16px;
+            stroke-width: 2;
+            filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.2));
         }
 
         /* --- SICK STARTUP ANIMATIONS --- */
@@ -2683,13 +3227,9 @@
             </button>
         </div>
     </div>
-    <div id="app">
-        <div id="windowTitlebarBg"></div>
+        <div id="app">
+            <div id="windowTitlebarBg"></div>
         <div id="topbar">
-            <div id="statusCapsule">
-                <div id="statusDot"></div>
-                <span id="statusText">Offline</span>
-            </div>
             <div id="tabs">
                 <button id="addTab">+</button>
             </div>
@@ -2754,13 +3294,27 @@
                             <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
                         </svg>
                     </div>
+                    <div class="sidebar-tab" id="sourceControlTab" data-view="source-control" title="Source Control">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <circle cx="6" cy="6" r="2"></circle>
+                            <circle cx="18" cy="6" r="2"></circle>
+                            <circle cx="12" cy="18" r="2"></circle>
+                            <path d="M8 6h8M7.4 7.5l3.2 8M16.6 7.5l-3.2 8"></path>
+                        </svg>
+                    </div>
+                    <div class="sidebar-tab" id="debugSidebarTab" data-view="debug" title="Debug">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <polygon points="6 4 20 12 6 20 6 4"></polygon>
+                            <circle cx="6" cy="12" r="1.2"></circle>
+                        </svg>
+                    </div>
                     <div class="sidebar-tab" id="editorTab" data-view="editor" title="Editor">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
                             <polyline points="16 18 22 12 16 6"></polyline>
                             <polyline points="8 6 2 12 8 18"></polyline>
                         </svg>
                     </div>
-                    <div class="sidebar-tab" id="htmlOutputTab" data-view="html" title="HTML Output">
+                    <div class="sidebar-tab" id="htmlOutputTab" data-view="html" title="Project Preview">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
                             <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
                             <line x1="8" y1="21" x2="16" y2="21"></line>
@@ -2933,6 +3487,59 @@
                             </div>
                         </div>
                     </div>
+                    <div id="sourceControlView" class="primary-view">
+                        <h2>Source Control</h2>
+                        <div class="source-control-priority ide-workbench-surface">
+                            <div class="source-control-priority-top">
+                                <div>
+                                    <div class="ide-workbench-label">Repository</div>
+                                    <div id="sourceControlBranchMeta" class="source-control-branch">Branch: -</div>
+                                </div>
+                                <div id="sourceControlSummaryMeta" class="source-control-summary">No changes</div>
+                            </div>
+                            <div class="ide-workbench-row source-control-repo-row">
+                                <input id="sourceControlCwdInput" class="ide-workbench-input" type="text" spellcheck="false" />
+                                <div class="source-control-controls">
+                                    <button id="sourceControlUseWorkspaceBtn" class="modal-btn cancel">Use Workspace</button>
+                                    <button id="sourceControlRefreshBtn" class="modal-btn confirm">Refresh</button>
+                                    <button id="sourceControlStageAllBtn" class="modal-btn cancel">Stage All</button>
+                                    <button id="sourceControlUnstageAllBtn" class="modal-btn cancel">Unstage All</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="ide-workbench-grid source-control-grid">
+                            <div class="ide-workbench-column">
+                                <div class="ide-workbench-label">Changes</div>
+                                <div id="sourceControlStatusList" class="ide-workbench-surface"></div>
+                            </div>
+                            <div class="ide-workbench-column">
+                                <div class="ide-workbench-label">Diff</div>
+                                <pre id="sourceControlDiffPreview" class="ide-workbench-surface ide-workbench-pre"></pre>
+                            </div>
+                            <div class="ide-workbench-column source-control-commit-column">
+                                <div class="ide-workbench-label">Commit</div>
+                                <input id="sourceControlCommitMessageInput" class="ide-workbench-input" type="text" spellcheck="false" placeholder="Commit message" />
+                                <button id="sourceControlCommitBtn" class="modal-btn confirm">Commit</button>
+                                <div class="ide-workbench-label source-control-recent-label">Recent</div>
+                                <div id="sourceControlLogList" class="ide-workbench-surface ide-workbench-pre"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="debugView" class="primary-view">
+                        <h2>Debug</h2>
+                        <div class="ide-workbench-column" style="gap:10px;">
+                            <div class="ide-workbench-meta">Toggle breakpoints in the gutter or with F9, then start debug with F7.</div>
+                            <div id="debugViewBreakpointList" class="ide-workbench-surface"></div>
+                            <div class="ide-workbench-row" style="justify-content:space-between;flex-wrap:wrap;">
+                                <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                                    <button id="debugViewStartBtn" class="modal-btn confirm">Start Debug</button>
+                                    <button id="debugViewToggleBtn" class="modal-btn cancel">Toggle Cursor Breakpoint</button>
+                                    <button id="debugViewClearBtn" class="modal-btn cancel">Clear Breakpoints</button>
+                                </div>
+                                <button id="debugViewDevtoolsBtn" class="modal-btn cancel">Open DevTools</button>
+                            </div>
+                        </div>
+                    </div>
                     <div id="editor" class="primary-view"></div>
                     <div id="editorImageOverlay" aria-hidden="true">
                         <div id="editorImageOverlayStage">
@@ -2948,11 +3555,35 @@
 
                     <div id="consoleWrap">
                         <div id="consoleTop">
-                            <span>Console</span>
+                            <div id="consoleTabBar">
+                                <button id="consoleOutputTabBtn" class="console-tab-btn active" type="button">Output</button>
+                                <button id="consoleTerminalTabBtn" class="console-tab-btn" type="button">Terminal</button>
+                            </div>
                             <button id="clearConsole" class="icon-btn">Clear</button>
                         </div>
-                        <div id="console"></div>
+                        <div id="consolePanels">
+                            <div id="console" class="console-panel active"></div>
+                            <div id="consoleTerminalPanel" class="console-panel">
+                                <div id="consoleTerminalOutput"></div>
+                                <div id="consoleTerminalInputRow">
+                                    <input id="consoleTerminalInput" type="text" spellcheck="false" autocomplete="off" placeholder="Run command" />
+                                    <button id="consoleTerminalRunBtn" class="modal-btn confirm" type="button">Run</button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
+                </div>
+            </div>
+            <div id="statusBar">
+                <div id="statusBarLeft">
+                    <span id="statusFile" class="status-pill">Untitled</span>
+                    <span id="statusLanguage" class="status-pill">javascript</span>
+                </div>
+                <div id="statusBarRight">
+                    <span id="statusBridge" class="status-pill">Bridge: Offline</span>
+                    <span id="statusDiagnostics" class="status-pill">Problems: 0</span>
+                    <span id="statusIndent" class="status-pill">Spaces: 4</span>
+                    <span id="statusCursor" class="status-pill">Ln 1, Col 1</span>
                 </div>
             </div>
         </div>
@@ -2978,39 +3609,8 @@
             const splash = document.getElementById('startup-splash');
             const appContainer = document.getElementById('app');
             const body = document.body;
-            const statusCapsule = document.getElementById('statusCapsule');
             const windowChrome = document.getElementById('windowChrome');
             const titleIcon = document.getElementById('windowTitleIcon');
-            if (statusCapsule && statusCapsule.parentElement !== document.body) {
-                document.body.appendChild(statusCapsule);
-            }
-            const STATUS_CAPSULE_PROXIMITY_PX = 130;
-            let capsuleNearby = false;
-
-            const updateCapsuleProximity = (mouseX, mouseY) => {
-                if (!statusCapsule) return;
-
-                const rect = statusCapsule.getBoundingClientRect();
-                const nearestX = Math.max(rect.left, Math.min(mouseX, rect.right));
-                const nearestY = Math.max(rect.top, Math.min(mouseY, rect.bottom));
-                const dx = mouseX - nearestX;
-                const dy = mouseY - nearestY;
-                const isNearby = (dx * dx + dy * dy) <= (STATUS_CAPSULE_PROXIMITY_PX * STATUS_CAPSULE_PROXIMITY_PX);
-
-                if (isNearby === capsuleNearby) return;
-                capsuleNearby = isNearby;
-                statusCapsule.classList.toggle('is-nearby', isNearby);
-            };
-
-            document.addEventListener('mousemove', (event) => {
-                updateCapsuleProximity(event.clientX, event.clientY);
-            });
-
-            document.addEventListener('mouseleave', () => {
-                if (!statusCapsule || !capsuleNearby) return;
-                capsuleNearby = false;
-                statusCapsule.classList.remove('is-nearby');
-            });
 
             const bugButton = document.getElementById('bugButton');
             if (bugButton) {
@@ -3139,6 +3739,16 @@
         });
 
         const consoleEl = document.getElementById("console");
+        const consoleOutputTabBtn = document.getElementById("consoleOutputTabBtn");
+        const consoleTerminalTabBtn = document.getElementById("consoleTerminalTabBtn");
+        const consoleOutputPanel = document.getElementById("console");
+        const consoleTerminalPanel = document.getElementById("consoleTerminalPanel");
+        const consoleTerminalOutputEl = document.getElementById("consoleTerminalOutput");
+        const consoleTerminalInputEl = document.getElementById("consoleTerminalInput");
+        const consoleTerminalRunBtn = document.getElementById("consoleTerminalRunBtn");
+        let activeConsoleTab = 'output';
+        let consoleTerminalRunning = false;
+        let consoleTerminalHistoryIndex = 0;
         const windowMinimizeBtn = document.getElementById("windowMinimize");
         const windowMaximizeBtn = document.getElementById("windowMaximize");
         const windowCloseBtn = document.getElementById("windowClose");
@@ -3321,6 +3931,77 @@ console.log('Dark mode applied!');`
             consoleEl.scrollTop = consoleEl.scrollHeight;
         }
 
+        function pushTerminalLine(type, text) {
+            if (!consoleTerminalOutputEl) return;
+            const row = document.createElement('div');
+            row.className = `entry ${type}`;
+            row.textContent = `[${new Date().toLocaleTimeString()}] ${String(text || '')}`;
+            consoleTerminalOutputEl.appendChild(row);
+            consoleTerminalOutputEl.scrollTop = consoleTerminalOutputEl.scrollHeight;
+        }
+
+        function setConsoleTab(tabName) {
+            const nextTab = tabName === 'terminal' ? 'terminal' : 'output';
+            activeConsoleTab = nextTab;
+
+            if (consoleOutputTabBtn) consoleOutputTabBtn.classList.toggle('active', nextTab === 'output');
+            if (consoleTerminalTabBtn) consoleTerminalTabBtn.classList.toggle('active', nextTab === 'terminal');
+            if (consoleOutputPanel) consoleOutputPanel.classList.toggle('active', nextTab === 'output');
+            if (consoleTerminalPanel) consoleTerminalPanel.classList.toggle('active', nextTab === 'terminal');
+        }
+
+        async function runConsoleTerminalCommand() {
+            if (!consoleTerminalInputEl || consoleTerminalRunning) return;
+            const command = String(consoleTerminalInputEl.value || '').trim();
+            if (!command) return;
+
+            if (!window.runtime || typeof window.runtime.runShell !== 'function') {
+                showToast('Terminal API unavailable');
+                return;
+            }
+
+            const cwd = String(terminalLastCwd || getPreferredRuntimeCwd() || '');
+            terminalHistory.push(command);
+            if (terminalHistory.length > 120) {
+                terminalHistory.shift();
+            }
+            consoleTerminalHistoryIndex = terminalHistory.length;
+            consoleTerminalInputEl.value = '';
+            consoleTerminalRunning = true;
+            if (consoleTerminalRunBtn) consoleTerminalRunBtn.disabled = true;
+
+            pushTerminalLine('log', `> ${command}`);
+
+            try {
+                const result = await window.runtime.runShell(command, { cwd, timeoutMs: 60000 });
+                if (result && result.cwd) {
+                    terminalLastCwd = String(result.cwd);
+                }
+
+                const stdout = String(result && result.stdout ? result.stdout : '');
+                const stderr = String(result && result.stderr ? result.stderr : '');
+                const exitCode = Number.isFinite(Number(result && result.exitCode))
+                    ? Number(result.exitCode)
+                    : 0;
+
+                stdout.replace(/\r\n/g, '\n').split('\n').forEach((line) => {
+                    if (!line) return;
+                    pushTerminalLine('log', line);
+                });
+                stderr.replace(/\r\n/g, '\n').split('\n').forEach((line) => {
+                    if (!line) return;
+                    pushTerminalLine('error', line);
+                });
+                pushTerminalLine(exitCode === 0 ? 'log' : 'warn', `(exit ${exitCode})`);
+            } catch (error) {
+                pushTerminalLine('error', error && error.message ? error.message : String(error));
+            } finally {
+                consoleTerminalRunning = false;
+                if (consoleTerminalRunBtn) consoleTerminalRunBtn.disabled = false;
+                consoleTerminalInputEl.focus();
+            }
+        }
+
         function showToast(message) {
             const toastContainer = document.getElementById('toastContainer');
             const toast = document.createElement('div');
@@ -3360,10 +4041,476 @@ console.log('Dark mode applied!');`
         });
 
         document.getElementById("clearConsole").onclick = () => {
+            if (activeConsoleTab === 'terminal') {
+                if (consoleTerminalOutputEl) {
+                    consoleTerminalOutputEl.innerHTML = '';
+                }
+                return;
+            }
             consoleEl.innerHTML = "";
         };
 
+        if (consoleOutputTabBtn) {
+            consoleOutputTabBtn.onclick = () => setConsoleTab('output');
+        }
+        if (consoleTerminalTabBtn) {
+            consoleTerminalTabBtn.onclick = () => setConsoleTab('terminal');
+        }
+        if (consoleTerminalRunBtn) {
+            consoleTerminalRunBtn.onclick = () => {
+                void runConsoleTerminalCommand();
+            };
+        }
+        if (consoleTerminalInputEl) {
+            consoleTerminalInputEl.addEventListener('keydown', (event) => {
+                if (event.key === 'Enter') {
+                    event.preventDefault();
+                    void runConsoleTerminalCommand();
+                    return;
+                }
+                if (event.key === 'ArrowUp') {
+                    event.preventDefault();
+                    if (!terminalHistory.length) return;
+                    consoleTerminalHistoryIndex = Math.max(0, (consoleTerminalHistoryIndex || terminalHistory.length) - 1);
+                    consoleTerminalInputEl.value = terminalHistory[consoleTerminalHistoryIndex] || '';
+                    consoleTerminalInputEl.setSelectionRange(consoleTerminalInputEl.value.length, consoleTerminalInputEl.value.length);
+                    return;
+                }
+                if (event.key === 'ArrowDown') {
+                    event.preventDefault();
+                    if (!terminalHistory.length) return;
+                    consoleTerminalHistoryIndex = Math.min(terminalHistory.length, (consoleTerminalHistoryIndex || terminalHistory.length) + 1);
+                    consoleTerminalInputEl.value = consoleTerminalHistoryIndex < terminalHistory.length
+                        ? terminalHistory[consoleTerminalHistoryIndex]
+                        : '';
+                    consoleTerminalInputEl.setSelectionRange(consoleTerminalInputEl.value.length, consoleTerminalInputEl.value.length);
+                }
+            });
+        }
+        setConsoleTab('output');
+
         let editor;
+        const inlineCompletionDisposables = [];
+        let inlineSuggestDebounceTimer = null;
+        const INLINE_SUGGEST_DEBOUNCE_MS = 120;
+        const BRACE_STYLE_LANGUAGES = new Set([
+            'javascript',
+            'typescript',
+            'java',
+            'c',
+            'cpp',
+            'csharp',
+            'go',
+            'rust',
+            'kotlin',
+            'swift',
+            'php',
+            'dart',
+            'scala',
+            'groovy',
+            'objective-c',
+            'objective-cpp',
+            'perl'
+        ]);
+
+        function getLeadingWhitespace(value) {
+            const match = String(value || '').match(/^\s*/);
+            return match ? match[0] : '';
+        }
+
+        function getIndentUnitFromModel(model) {
+            if (!model || typeof model.getOptions !== 'function') return '    ';
+            const options = model.getOptions() || {};
+            if (options.insertSpaces === false) return '\t';
+            const tabSize = Number(options.tabSize);
+            const width = Number.isFinite(tabSize) && tabSize > 0 ? tabSize : 4;
+            return ' '.repeat(width);
+        }
+
+        function isBraceStyleLanguage(languageId) {
+            return BRACE_STYLE_LANGUAGES.has(languageId);
+        }
+
+        function buildInlineCompletionSnippet(languageId, linePrefix, model) {
+            const prefix = String(linePrefix || '');
+            const trimmed = prefix.trim();
+            if (!trimmed) return '';
+
+            const indent = getLeadingWhitespace(prefix);
+            const unit = getIndentUnitFromModel(model);
+            const inner = indent + unit;
+            const normalizedLanguage = String(languageId || '').toLowerCase();
+
+            const trailingWordMatch = prefix.match(/([a-zA-Z_][a-zA-Z0-9_]*)$/);
+            const typedWord = trailingWordMatch ? trailingWordMatch[1] : '';
+            const lowerWord = typedWord.toLowerCase();
+
+            const completeWord = (targetWord, suffix = '') => {
+                if (!typedWord) return '';
+                const target = String(targetWord || '');
+                const lowerTarget = target.toLowerCase();
+                if (!lowerTarget.startsWith(lowerWord)) return '';
+                if (lowerTarget === lowerWord && !suffix) return '';
+                return `${target.slice(typedWord.length)}${suffix}`;
+            };
+
+            const completeFromCandidates = (candidates) => {
+                if (!Array.isArray(candidates)) return '';
+                for (const candidate of candidates) {
+                    if (!candidate) continue;
+                    if (typeof candidate === 'string') {
+                        const completion = completeWord(candidate);
+                        if (completion) return completion;
+                        continue;
+                    }
+                    const completion = completeWord(candidate.word, candidate.suffix || '');
+                    if (completion) return completion;
+                }
+                return '';
+            };
+
+            if (normalizedLanguage === 'javascript' || normalizedLanguage === 'typescript') {
+                const jsPrefixSnippet = completeFromCandidates([
+                    { word: 'console.log', suffix: '()' },
+                    { word: 'const', suffix: ' ' },
+                    { word: 'let', suffix: ' ' },
+                    { word: 'return', suffix: ' ' },
+                    { word: 'function', suffix: ` name(params) {\n${inner}\n${indent}}` },
+                    { word: 'class', suffix: ` Name {\n${inner}constructor() {\n${inner}${unit}\n${inner}}\n${indent}}` },
+                    { word: 'if', suffix: ` (condition) {\n${inner}\n${indent}}` },
+                    { word: 'for', suffix: ` (let i = 0; i < items.length; i++) {\n${inner}\n${indent}}` },
+                    { word: 'while', suffix: ` (condition) {\n${inner}\n${indent}}` },
+                    { word: 'try', suffix: ` {\n${inner}\n${indent}} catch (error) {\n${inner}\n${indent}}` },
+                    { word: 'switch', suffix: ` (value) {\n${inner}case 'value':\n${inner}${unit}break;\n${indent}default:\n${inner}${unit}break;\n${indent}}` },
+                    { word: 'import', suffix: ' ' },
+                    { word: 'export', suffix: ' ' }
+                ]);
+                if (jsPrefixSnippet) return jsPrefixSnippet;
+                const consoleSnippet = completeWord('console.log', '()');
+                if (consoleSnippet) return consoleSnippet;
+                const functionSnippet = completeWord('function', ` name(params) {\n${inner}\n${indent}}`);
+                if (functionSnippet) return functionSnippet;
+                const classSnippet = completeWord('class', ` Name {\n${inner}constructor() {\n${inner}${unit}\n${inner}}\n${indent}}`);
+                if (classSnippet) return classSnippet;
+                const ifSnippet = completeWord('if', ` (condition) {\n${inner}\n${indent}}`);
+                if (ifSnippet) return ifSnippet;
+                const forSnippet = completeWord('for', ` (let i = 0; i < items.length; i++) {\n${inner}\n${indent}}`);
+                if (forSnippet) return forSnippet;
+                const whileSnippet = completeWord('while', ` (condition) {\n${inner}\n${indent}}`);
+                if (whileSnippet) return whileSnippet;
+                const trySnippet = completeWord('try', ` {\n${inner}\n${indent}} catch (error) {\n${inner}\n${indent}}`);
+                if (trySnippet) return trySnippet;
+                const switchSnippet = completeWord('switch', ` (value) {\n${inner}case 'value':\n${inner}${unit}break;\n${indent}default:\n${inner}${unit}break;\n${indent}}`);
+                if (switchSnippet) return switchSnippet;
+                if (normalizedLanguage === 'typescript') {
+                    const interfaceSnippet = completeWord('interface', ` Name {\n${inner}\n${indent}}`);
+                    if (interfaceSnippet) return interfaceSnippet;
+                }
+                return '';
+            }
+
+            if (normalizedLanguage === 'python') {
+                const pyPrefixSnippet = completeFromCandidates([
+                    { word: 'print', suffix: '()' },
+                    { word: 'input', suffix: '()' },
+                    { word: 'len', suffix: '()' },
+                    { word: 'range', suffix: '()' },
+                    { word: 'str', suffix: '()' },
+                    { word: 'int', suffix: '()' },
+                    { word: 'float', suffix: '()' },
+                    { word: 'list', suffix: '()' },
+                    { word: 'dict', suffix: '()' },
+                    { word: 'return', suffix: ' ' },
+                    { word: 'def', suffix: ` function_name():\n${inner}pass` },
+                    { word: 'class', suffix: ` ClassName:\n${inner}def __init__(self):\n${inner}${unit}pass` },
+                    { word: 'if', suffix: ` condition:\n${inner}pass` },
+                    { word: 'for', suffix: ` item in items:\n${inner}pass` },
+                    { word: 'while', suffix: ` condition:\n${inner}pass` },
+                    { word: 'try', suffix: `:\n${inner}pass\n${indent}except Exception as error:\n${inner}pass` },
+                    { word: 'import', suffix: ' module' },
+                    { word: 'from', suffix: ' module import name' }
+                ]);
+                if (pyPrefixSnippet) return pyPrefixSnippet;
+                const printSnippet = completeWord('print', '()');
+                if (printSnippet) return printSnippet;
+                const defSnippet = completeWord('def', ` function_name():\n${inner}pass`);
+                if (defSnippet) return defSnippet;
+                const classSnippet = completeWord('class', ` ClassName:\n${inner}def __init__(self):\n${inner}${unit}pass`);
+                if (classSnippet) return classSnippet;
+                const ifSnippet = completeWord('if', ` condition:\n${inner}pass`);
+                if (ifSnippet) return ifSnippet;
+                const forSnippet = completeWord('for', ` item in items:\n${inner}pass`);
+                if (forSnippet) return forSnippet;
+                const whileSnippet = completeWord('while', ` condition:\n${inner}pass`);
+                if (whileSnippet) return whileSnippet;
+                const trySnippet = completeWord('try', `:\n${inner}pass\n${indent}except Exception as error:\n${inner}pass`);
+                if (trySnippet) return trySnippet;
+                const importSnippet = completeWord('import', ' module');
+                if (importSnippet) return importSnippet;
+                const fromSnippet = completeWord('from', ' module import name');
+                if (fromSnippet) return fromSnippet;
+                return '';
+            }
+
+            if (normalizedLanguage === 'html') {
+                const doctypePrefix = trimmed.toLowerCase();
+                if ('<!doctype html>'.startsWith(doctypePrefix)) {
+                    return `<!doctype html>${trimmed.length < '<!doctype html>'.length ? '' : `\n<html>\n<head>\n${inner}<meta charset="UTF-8">\n${inner}<meta name="viewport" content="width=device-width, initial-scale=1.0">\n${inner}<title>Document</title>\n</head>\n<body>\n${inner}\n</body>\n</html>`}`.slice(trimmed.length);
+                }
+                if (/^<div>?$/i.test(trimmed)) return `${trimmed.endsWith('>') ? '' : '>'}\n${inner}\n${indent}</div>`;
+                if (/^<section>?$/i.test(trimmed)) return `${trimmed.endsWith('>') ? '' : '>'}\n${inner}\n${indent}</section>`;
+                if (/^<ul>?$/i.test(trimmed)) return `${trimmed.endsWith('>') ? '' : '>'}\n${inner}<li></li>\n${indent}</ul>`;
+                if (/^<ol>?$/i.test(trimmed)) return `${trimmed.endsWith('>') ? '' : '>'}\n${inner}<li></li>\n${indent}</ol>`;
+                return '';
+            }
+
+            if (normalizedLanguage === 'css' || normalizedLanguage === 'scss' || normalizedLanguage === 'less') {
+                const cssPrefixSnippet = completeFromCandidates([
+                    { word: 'display', suffix: ': flex;' },
+                    { word: 'position', suffix: ': relative;' },
+                    { word: 'margin', suffix: ': 0;' },
+                    { word: 'padding', suffix: ': 0;' },
+                    { word: 'color', suffix: ': #ffffff;' },
+                    { word: 'background', suffix: ': #000000;' },
+                    { word: 'width', suffix: ': 100%;' },
+                    { word: 'height', suffix: ': 100%;' }
+                ]);
+                if (cssPrefixSnippet) return cssPrefixSnippet;
+                const displaySnippet = completeWord('display', ': flex;');
+                if (displaySnippet) return displaySnippet;
+                const positionSnippet = completeWord('position', ': relative;');
+                if (positionSnippet) return positionSnippet;
+                const marginSnippet = completeWord('margin', ': 0;');
+                if (marginSnippet) return marginSnippet;
+                const paddingSnippet = completeWord('padding', ': 0;');
+                if (paddingSnippet) return paddingSnippet;
+                const colorSnippet = completeWord('color', ': #ffffff;');
+                if (colorSnippet) return colorSnippet;
+                if (/^[.#]?[a-zA-Z][\w-]*$/.test(trimmed)) return ` {\n${inner}\n${indent}}`;
+                if (trimmed.toLowerCase() === '@media') return ` screen and (max-width: 768px) {\n${inner}\n${indent}}`;
+                return '';
+            }
+
+            if (normalizedLanguage === 'json') {
+                if (trimmed === '{') return `\n${inner}"key": "value"\n${indent}}`;
+                if (trimmed === '[') return `\n${inner}"value"\n${indent}]`;
+                return '';
+            }
+
+            if (normalizedLanguage === 'yaml') {
+                const yamlPrefixSnippet = completeFromCandidates([
+                    { word: 'version', suffix: ': "1.0"' },
+                    { word: 'name', suffix: ': app' },
+                    { word: 'services', suffix: ':' },
+                    { word: 'image', suffix: ': repo/image:latest' },
+                    { word: 'ports', suffix: ':' },
+                    { word: 'environment', suffix: ':' }
+                ]);
+                if (yamlPrefixSnippet) return yamlPrefixSnippet;
+                const versionSnippet = completeWord('version', ': "1.0"');
+                if (versionSnippet) return versionSnippet;
+                const nameSnippet = completeWord('name', ': app');
+                if (nameSnippet) return nameSnippet;
+                if (/^[a-zA-Z0-9_-]+:$/.test(trimmed)) return `\n${inner}value`;
+                if (trimmed === '-') return ` item`;
+                return '';
+            }
+
+            if (normalizedLanguage === 'shell') {
+                const shellPrefixSnippet = completeFromCandidates([
+                    { word: 'echo', suffix: ' ""' },
+                    { word: 'if', suffix: ` [[ condition ]]; then\n${inner}\n${indent}fi` },
+                    { word: 'for', suffix: ` item in "$@"; do\n${inner}\n${indent}done` },
+                    { word: 'while', suffix: ` [[ condition ]]; do\n${inner}\n${indent}done` },
+                    { word: 'function', suffix: ` name() {\n${inner}\n${indent}}` },
+                    { word: 'grep', suffix: ' ""' }
+                ]);
+                if (shellPrefixSnippet) return shellPrefixSnippet;
+                const echoSnippet = completeWord('echo', ' ""');
+                if (echoSnippet) return echoSnippet;
+                const ifSnippet = completeWord('if', ` [[ condition ]]; then\n${inner}\n${indent}fi`);
+                if (ifSnippet) return ifSnippet;
+                const forSnippet = completeWord('for', ` item in "$@"; do\n${inner}\n${indent}done`);
+                if (forSnippet) return forSnippet;
+                const whileSnippet = completeWord('while', ` [[ condition ]]; do\n${inner}\n${indent}done`);
+                if (whileSnippet) return whileSnippet;
+                return '';
+            }
+
+            if (normalizedLanguage === 'sql') {
+                const sqlPrefixSnippet = completeFromCandidates([
+                    { word: 'select', suffix: ` *\nFROM table_name\nWHERE condition;` },
+                    { word: 'insert', suffix: ` INTO table_name (column1, column2)\nVALUES (value1, value2);` },
+                    { word: 'update', suffix: ` table_name\nSET column = value\nWHERE condition;` },
+                    { word: 'delete', suffix: ` FROM table_name\nWHERE condition;` },
+                    { word: 'create', suffix: ` TABLE table_name (\n${inner}id INT PRIMARY KEY,\n${inner}name VARCHAR(255)\n${indent});` }
+                ]);
+                if (sqlPrefixSnippet) return sqlPrefixSnippet;
+                const selectSnippet = completeWord('select', ` *\nFROM table_name\nWHERE condition;`);
+                if (selectSnippet) return selectSnippet;
+                const insertSnippet = completeWord('insert', ` INTO table_name (column1, column2)\nVALUES (value1, value2);`);
+                if (insertSnippet) return insertSnippet;
+                const updateSnippet = completeWord('update', ` table_name\nSET column = value\nWHERE condition;`);
+                if (updateSnippet) return updateSnippet;
+                const createSnippet = completeWord('create', ` TABLE table_name (\n${inner}id INT PRIMARY KEY,\n${inner}name VARCHAR(255)\n${indent});`);
+                if (createSnippet) return createSnippet;
+                if (trimmed.toUpperCase() === 'INSERT INTO') return ` table_name (column1, column2)\nVALUES (value1, value2);`;
+                return '';
+            }
+
+            if (normalizedLanguage === 'xml') {
+                if (/^<tag>?$/i.test(trimmed)) return `${trimmed.endsWith('>') ? '' : '>'}\n${inner}\n${indent}</tag>`;
+                if (/^<root>?$/i.test(trimmed)) return `${trimmed.endsWith('>') ? '' : '>'}\n${inner}\n${indent}</root>`;
+                return '';
+            }
+
+            if (normalizedLanguage === 'markdown') {
+                if (trimmed === '```') return `\n${inner}\n${indent}\`\`\``;
+                if (trimmed === '-') return ` item`;
+                return '';
+            }
+
+            if (normalizedLanguage === 'lua') {
+                const functionSnippet = completeWord('function', ` name(args)\n${inner}\n${indent}end`);
+                if (functionSnippet) return functionSnippet;
+                const ifSnippet = completeWord('if', ` condition then\n${inner}\n${indent}end`);
+                if (ifSnippet) return ifSnippet;
+                const forSnippet = completeWord('for', ` i = 1, #items do\n${inner}\n${indent}end`);
+                if (forSnippet) return forSnippet;
+                const whileSnippet = completeWord('while', ` condition do\n${inner}\n${indent}end`);
+                if (whileSnippet) return whileSnippet;
+                return '';
+            }
+
+            if (normalizedLanguage === 'ruby') {
+                const defSnippet = completeWord('def', ` method_name\n${inner}\n${indent}end`);
+                if (defSnippet) return defSnippet;
+                const ifSnippet = completeWord('if', ` condition\n${inner}\n${indent}end`);
+                if (ifSnippet) return ifSnippet;
+                const forSnippet = completeWord('for', ` item in items\n${inner}\n${indent}end`);
+                if (forSnippet) return forSnippet;
+                const whileSnippet = completeWord('while', ` condition\n${inner}\n${indent}end`);
+                if (whileSnippet) return whileSnippet;
+                return '';
+            }
+
+            if (normalizedLanguage === 'powershell') {
+                const psPrefixSnippet = completeFromCandidates([
+                    { word: 'function', suffix: ` Name {\n${inner}\n${indent}}` },
+                    { word: 'if', suffix: ` ($true) {\n${inner}\n${indent}}` },
+                    { word: 'foreach', suffix: ` ($item in $items) {\n${inner}\n${indent}}` },
+                    { word: 'write-host', suffix: ' ""' },
+                    { word: 'get-childitem', suffix: '' }
+                ]);
+                if (psPrefixSnippet) return psPrefixSnippet;
+                const functionSnippet = completeWord('function', ` Name {\n${inner}\n${indent}}`);
+                if (functionSnippet) return functionSnippet;
+                const ifSnippet = completeWord('if', ` ($true) {\n${inner}\n${indent}}`);
+                if (ifSnippet) return ifSnippet;
+                const foreachSnippet = completeWord('foreach', ` ($item in $items) {\n${inner}\n${indent}}`);
+                if (foreachSnippet) return foreachSnippet;
+                return '';
+            }
+
+            if (isBraceStyleLanguage(normalizedLanguage)) {
+                const ifSnippet = completeWord('if', ` (condition) {\n${inner}\n${indent}}`);
+                if (ifSnippet) return ifSnippet;
+                const forSnippet = completeWord('for', ` (int i = 0; i < items.length; i++) {\n${inner}\n${indent}}`);
+                if (forSnippet) return forSnippet;
+                const whileSnippet = completeWord('while', ` (condition) {\n${inner}\n${indent}}`);
+                if (whileSnippet) return whileSnippet;
+                const trySnippet = completeWord('try', ` {\n${inner}\n${indent}} catch (error) {\n${inner}\n${indent}}`);
+                if (trySnippet) return trySnippet;
+                const classSnippet = completeWord('class', ` Name {\n${inner}\n${indent}}`);
+                if (classSnippet) return classSnippet;
+                const functionSnippet = completeWord('function', ` name() {\n${inner}\n${indent}}`);
+                if (functionSnippet) return functionSnippet;
+            }
+
+            const genericIf = completeWord('if', ` condition\n${inner}`);
+            if (genericIf) return genericIf;
+            const genericFor = completeWord('for', ` item in items\n${inner}`);
+            if (genericFor) return genericFor;
+            const genericWhile = completeWord('while', ` condition\n${inner}`);
+            if (genericWhile) return genericWhile;
+            const genericFunction = completeWord('function', ` name\n${inner}`);
+            if (genericFunction) return genericFunction;
+            const genericDef = completeWord('def', ` name\n${inner}`);
+            if (genericDef) return genericDef;
+            const genericReturn = completeWord('return', ' ');
+            if (genericReturn) return genericReturn;
+            const genericImport = completeWord('import', ' ');
+            if (genericImport) return genericImport;
+            const genericClass = completeWord('class', ` Name\n${inner}`);
+            if (genericClass) return genericClass;
+
+            return '';
+        }
+
+        function createInlineCompletionProvider(monacoRef, languageId) {
+            return {
+                provideInlineCompletions(model, position) {
+                    const modelLanguage = String(model && typeof model.getLanguageId === 'function' ? model.getLanguageId() : '').toLowerCase();
+                    if (modelLanguage !== languageId) {
+                        return { items: [] };
+                    }
+
+                    const lineContent = model.getLineContent(position.lineNumber);
+                    const prefix = lineContent.slice(0, Math.max(0, position.column - 1));
+                    const suffix = lineContent.slice(Math.max(0, position.column - 1));
+                    if (suffix.trim()) {
+                        return { items: [] };
+                    }
+
+                    const snippet = buildInlineCompletionSnippet(modelLanguage, prefix, model);
+                    if (!snippet) {
+                        return { items: [] };
+                    }
+
+                    return {
+                        items: [
+                            {
+                                insertText: snippet,
+                                range: new monacoRef.Range(
+                                    position.lineNumber,
+                                    position.column,
+                                    position.lineNumber,
+                                    position.column
+                                )
+                            }
+                        ]
+                    };
+                },
+                freeInlineCompletions() { }
+            };
+        }
+
+        function registerInlineCompletionProviders(monacoRef) {
+            if (!monacoRef || !monacoRef.languages || inlineCompletionDisposables.length > 0) return;
+            const available = Array.from(new Set(
+                monacoRef.languages.getLanguages().map((entry) => String(entry && entry.id ? entry.id : '').toLowerCase()).filter(Boolean)
+            ));
+
+            available.forEach((languageId) => {
+                const disposable = monacoRef.languages.registerInlineCompletionsProvider(
+                    languageId,
+                    createInlineCompletionProvider(monacoRef, languageId)
+                );
+                inlineCompletionDisposables.push(disposable);
+            });
+        }
+
+        function scheduleInlineSuggestTrigger() {
+            if (!editor) return;
+            if (inlineSuggestDebounceTimer !== null) {
+                clearTimeout(inlineSuggestDebounceTimer);
+            }
+            inlineSuggestDebounceTimer = window.setTimeout(() => {
+                inlineSuggestDebounceTimer = null;
+                if (!editor) return;
+                editor.trigger('keyboard', 'editor.action.inlineSuggest.trigger', {});
+            }, INLINE_SUGGEST_DEBOUNCE_MS);
+        }
 
         // 1. Tell the loader where the core files are
         require.config({ paths: { vs: 'node_modules/monaco-editor/min/vs' } });
@@ -3454,7 +4601,7 @@ console.log('Dark mode applied!');`
                     lineNumbers: 'on',
                     renderLineHighlight: 'all',
                     wordWrap: 'off',
-                    glyphMargin: false,
+                    glyphMargin: true,
                     folding: true,
                     lineDecorationsWidth: 0,
                     lineNumbersMinChars: 3,
@@ -3462,15 +4609,58 @@ console.log('Dark mode applied!');`
                     cursorSmoothCaretAnimation: 'on',
                     cursorBlinking: 'smooth',
                     smoothScrolling: true,
-                    semanticHighlighting: { enabled: true }
+                    autoIndent: 'advanced',
+                    formatOnType: true,
+                    formatOnPaste: true,
+                    tabCompletion: 'on',
+                    quickSuggestions: {
+                        comments: true,
+                        strings: true,
+                        other: true
+                    },
+                    parameterHints: { enabled: true },
+                    wordBasedSuggestions: 'allDocuments',
+                    snippetSuggestions: 'inline',
+                    suggestSelection: 'recentlyUsedByPrefix',
+                    bracketPairColorization: { enabled: true },
+                    guides: {
+                        bracketPairs: true,
+                        indentation: true,
+                        highlightActiveIndentation: true
+                    },
+                    inlayHints: { enabled: 'on' },
+                    stickyScroll: { enabled: true },
+                    semanticHighlighting: { enabled: true },
+                    inlineSuggest: { enabled: true },
+                    suggest: { preview: true }
                 });
+
+                registerInlineCompletionProviders(monaco);
 
                 // Auto-save content on change
                 editor.onDidChangeModelContent(() => {
                     if (activeTabId && tabs[activeTabId]) {
                         tabs[activeTabId].content = editor.getValue();
                     }
+                    scheduleInlineSuggestTrigger();
+                    scheduleDiagnosticsRefresh();
+                    updateStatusBar();
                 });
+                editor.onDidChangeCursorPosition(() => {
+                    updateStatusBar();
+                });
+                editor.onDidChangeConfiguration(() => {
+                    updateStatusBar();
+                });
+                editor.onMouseDown((event) => {
+                    if (!event || !event.target || !event.target.position || typeof monaco === 'undefined' || !monaco.editor) return;
+                    if (event.target.type === monaco.editor.MouseTargetType.GUTTER_GLYPH_MARGIN) {
+                        toggleBreakpointAtLine(event.target.position.lineNumber);
+                    }
+                });
+                updateStatusBar();
+                scheduleDiagnosticsRefresh();
+                refreshBreakpointDecorations();
 
                 // Keep Monaco sized correctly across window and panel resizes.
                 const editorElement = document.getElementById('editor');
@@ -3527,8 +4717,8 @@ console.log('Dark mode applied!');`
                 const consoleHandle = document.getElementById("consoleHandle");
                 const syncConsoleHandlePosition = () => {
                     const currentHeight = Math.max(
-                        100,
-                        Math.round(consoleWrap.offsetHeight || parseFloat(consoleWrap.style.height) || 140)
+                        70,
+                        Math.round(consoleWrap.offsetHeight || parseFloat(consoleWrap.style.height) || 96)
                     );
                     consoleHandle.style.bottom = currentHeight + "px";
                     document.documentElement.style.setProperty('--preview-console-height', `${currentHeight}px`);
@@ -3551,7 +4741,7 @@ console.log('Dark mode applied!');`
                     if (!isDragging) return;
                     const deltaY = startY - e.clientY;
                     const newHeight = startHeight + deltaY;
-                    const minHeight = 100;
+                    const minHeight = 70;
                     const maxHeight = window.innerHeight * 0.6;
                     const clampedHeight = Math.max(minHeight, Math.min(maxHeight, newHeight));
                     consoleWrap.style.height = clampedHeight + "px";
@@ -3671,6 +4861,1757 @@ console.log('Dark mode applied!');`
         const TAB_SESSION_STORAGE_KEY = 'voltus.tab-session.v1';
         const TAB_SESSION_VERSION = 1;
         const TAB_SESSION_MAX_TABS = 120;
+        let findInFilesRequestToken = 0;
+        const DIAGNOSTIC_OWNER = 'voltus-static';
+        const DIAGNOSTIC_DEBOUNCE_MS = 220;
+        let diagnosticsDebounceTimer = null;
+        let breakpointDecorationIds = [];
+        const breakpointLinesByTabId = new Map();
+        let terminalLastCwd = '';
+        const terminalHistory = [];
+        let sourceControlViewBound = false;
+        let sourceControlLoading = false;
+        let sourceControlStatusFiles = [];
+        let debugViewBound = false;
+
+        function openTabById(tabId) {
+            if (!tabId || !tabs[tabId] || !tabs[tabId].tabElement) return;
+            tabs[tabId].tabElement.click();
+        }
+
+        function closeActiveTab() {
+            if (!activeTabId || !tabs[activeTabId] || !tabs[activeTabId].tabElement) return;
+            const closeBtn = tabs[activeTabId].tabElement.querySelector('button');
+            if (closeBtn) {
+                closeBtn.click();
+            }
+        }
+
+        function switchToRelativeTab(offset) {
+            const ordered = getTabOrder();
+            if (!ordered.length) return;
+            const currentIndex = Math.max(0, ordered.indexOf(activeTabId));
+            const nextIndex = (currentIndex + offset + ordered.length) % ordered.length;
+            openTabById(ordered[nextIndex]);
+        }
+
+        function isSearchableTextPath(pathValue) {
+            const source = String(pathValue || '').toLowerCase();
+            if (!source) return true;
+            if (isImageLikePath(source)) return false;
+            return !/\.(pdf|zip|rar|7z|exe|dll|so|dylib|woff|woff2|ttf|otf|eot|mp3|wav|mp4|mov|avi|mkv|webm)$/i.test(source);
+        }
+
+        function collectExplorerFileEntries(nodes, collector = []) {
+            if (!Array.isArray(nodes)) return collector;
+            nodes.forEach((node) => {
+                if (!node || typeof node !== 'object') return;
+                if (node.type === 'file') {
+                    collector.push({
+                        name: String(node.name || getFileNameFromPath(node.path) || 'Untitled'),
+                        path: String(node.path || ''),
+                        source: 'workspace'
+                    });
+                    return;
+                }
+                if (node.type === 'directory' && Array.isArray(node.children)) {
+                    collectExplorerFileEntries(node.children, collector);
+                }
+            });
+            return collector;
+        }
+
+        function getOpenTabEntries() {
+            return getTabOrder()
+                .map((tabId) => {
+                    const tabState = tabs[tabId];
+                    if (!tabState) return null;
+                    return {
+                        tabId,
+                        name: String(tabState.name || 'Untitled'),
+                        path: String(tabState.filePath || ''),
+                        source: 'tab'
+                    };
+                })
+                .filter(Boolean);
+        }
+
+        function scoreMatchText(queryLower, nameValue, pathValue) {
+            if (!queryLower) return 1;
+            const name = String(nameValue || '').toLowerCase();
+            const path = String(pathValue || '').toLowerCase();
+            let score = 0;
+            if (name === queryLower) score += 150;
+            if (name.startsWith(queryLower)) score += 110;
+            if (name.includes(queryLower)) score += 70;
+            if (path.includes(queryLower)) score += 30;
+            return score;
+        }
+
+        function createPickerModalShell(modalId, titleText, placeholderText, widthPx = 760) {
+            const app = document.getElementById('app');
+            ['quickOpenModal', 'commandPaletteModal', 'findInFilesModal', 'diagnosticsModal'].forEach((id) => {
+                const existingModal = document.getElementById(id);
+                if (existingModal) existingModal.remove();
+            });
+            if (app) app.classList.remove('ui-blur');
+
+            const existing = document.getElementById(modalId);
+            if (existing) existing.remove();
+
+            const overlay = document.createElement('div');
+            overlay.id = modalId;
+            overlay.className = 'modal-backdrop';
+            overlay.innerHTML = `
+                <div class="modal-content" style="width:92%;max-width:${Math.max(420, Number(widthPx) || 760)}px;max-height:84vh;padding:12px 12px 10px;display:flex;flex-direction:column;">
+                    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
+                        <h3 style="margin:0;font-size:13px;color:#d8d8d8;letter-spacing:0.01em;">${titleText}</h3>
+                        <button type="button" class="settings-close" aria-label="Close picker">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="18" y1="6" x2="6" y2="18"></line>
+                                <line x1="6" y1="6" x2="18" y2="18"></line>
+                            </svg>
+                        </button>
+                    </div>
+                    <input type="text" autocomplete="off" spellcheck="false" placeholder="${placeholderText}" style="margin-top:10px;background:#070707;border:1px solid rgba(255,255,255,0.14);color:#d7d7d7;border-radius:8px;padding:10px 11px;font-size:12px;outline:none;" />
+                    <div class="ide-picker-list"></div>
+                    <div class="ide-picker-detail" style="padding:8px 2px 0 2px;">Enter to select, Esc to close</div>
+                </div>
+            `;
+
+            document.body.appendChild(overlay);
+            if (app) app.classList.add('ui-blur');
+
+            const closeBtn = overlay.querySelector('.settings-close');
+            const input = overlay.querySelector('input');
+            const list = overlay.querySelector('.ide-picker-list');
+            const hint = overlay.querySelector('.ide-picker-detail');
+
+            const close = () => {
+                if (!overlay.isConnected) return;
+                overlay.classList.add('hide');
+                window.setTimeout(() => {
+                    overlay.remove();
+                    if (app) {
+                        const hasOtherBackdrop = Boolean(document.querySelector('.modal-backdrop'));
+                        const modalOverlay = document.getElementById('modalOverlay');
+                        const hasCoreModal = Boolean(modalOverlay && modalOverlay.classList.contains('show'));
+                        if (!hasOtherBackdrop && !hasCoreModal) {
+                            app.classList.remove('ui-blur');
+                        }
+                    }
+                }, typeof MENU_TRANSITION_MS === 'number' ? MENU_TRANSITION_MS : 220);
+            };
+
+            if (closeBtn) closeBtn.onclick = close;
+            overlay.addEventListener('click', (event) => {
+                if (event.target === overlay) close();
+            });
+            overlay.addEventListener('keydown', (event) => {
+                if (event.key === 'Escape') {
+                    event.preventDefault();
+                    close();
+                }
+            });
+
+            window.setTimeout(() => input && input.focus(), 0);
+            return { overlay, input, list, hint, close };
+        }
+
+        function renderPickerListItems(listEl, items, activeIndex, onSelect) {
+            if (!listEl) return;
+            listEl.innerHTML = '';
+
+            if (!Array.isArray(items) || items.length === 0) {
+                const empty = document.createElement('div');
+                empty.className = 'ide-picker-empty';
+                empty.textContent = 'No matches found.';
+                listEl.appendChild(empty);
+                return;
+            }
+
+            items.forEach((item, index) => {
+                const row = document.createElement('button');
+                row.type = 'button';
+                row.className = 'ide-picker-item' + (index === activeIndex ? ' active' : '');
+
+                const main = document.createElement('span');
+                main.className = 'ide-picker-main';
+
+                const title = document.createElement('span');
+                title.className = 'ide-picker-title';
+                title.textContent = String(item.title || '');
+
+                const detail = document.createElement('span');
+                detail.className = 'ide-picker-detail';
+                detail.textContent = String(item.detail || '');
+
+                main.append(title, detail);
+
+                const meta = document.createElement('span');
+                meta.className = 'ide-picker-meta';
+                meta.textContent = String(item.meta || '');
+
+                row.append(main, meta);
+                row.onclick = () => onSelect(item);
+                row.onmousemove = () => {
+                    const siblings = Array.from(listEl.querySelectorAll('.ide-picker-item'));
+                    siblings.forEach((el) => el.classList.remove('active'));
+                    row.classList.add('active');
+                };
+
+                listEl.appendChild(row);
+            });
+        }
+
+        function showQuickOpenModal(initialQuery = '') {
+            const shell = createPickerModalShell('quickOpenModal', 'Quick Open', 'Type file or tab name');
+            if (!shell || !shell.input || !shell.list) return;
+
+            const tabEntries = getOpenTabEntries();
+            const openedPaths = new Set(
+                tabEntries
+                    .map((entry) => normalizePathForCompare(entry.path))
+                    .filter(Boolean)
+            );
+            const workspaceEntries = collectExplorerFileEntries(explorerTreeData, [])
+                .filter((entry) => isSearchableTextPath(entry.path || entry.name))
+                .filter((entry) => {
+                    const normalized = normalizePathForCompare(entry.path);
+                    return !normalized || !openedPaths.has(normalized);
+                });
+
+            const allEntries = [
+                ...tabEntries.map((entry) => ({
+                    ...entry,
+                    title: entry.name,
+                    detail: entry.path || 'Open tab',
+                    meta: 'TAB'
+                })),
+                ...workspaceEntries.map((entry) => ({
+                    ...entry,
+                    title: entry.name,
+                    detail: entry.path || 'Workspace file',
+                    meta: 'FILE'
+                }))
+            ];
+
+            let filtered = [];
+            let selectedIndex = 0;
+
+            const openEntry = async (entry) => {
+                shell.close();
+                if (entry.source === 'tab') {
+                    openTabById(entry.tabId);
+                    setPrimaryView('editor');
+                    return;
+                }
+                if (entry.path) {
+                    await openFileFromExplorer(entry.path, entry.name);
+                    setPrimaryView('editor');
+                }
+            };
+
+            const applyFilter = () => {
+                const query = String(shell.input.value || '').trim().toLowerCase();
+                filtered = allEntries
+                    .map((entry) => ({
+                        entry,
+                        score: scoreMatchText(query, entry.title, entry.detail)
+                    }))
+                    .filter((candidate) => candidate.score > 0)
+                    .sort((a, b) => b.score - a.score || a.entry.title.localeCompare(b.entry.title, undefined, { sensitivity: 'base' }))
+                    .slice(0, 180)
+                    .map((candidate) => candidate.entry);
+
+                if (selectedIndex >= filtered.length) {
+                    selectedIndex = Math.max(0, filtered.length - 1);
+                }
+
+                renderPickerListItems(shell.list, filtered, selectedIndex, (entry) => {
+                    void openEntry(entry);
+                });
+                shell.hint.textContent = `${filtered.length} result(s)`;
+            };
+
+            shell.input.value = String(initialQuery || '');
+            shell.input.addEventListener('input', applyFilter);
+            shell.input.addEventListener('keydown', (event) => {
+                if (event.key === 'ArrowDown') {
+                    event.preventDefault();
+                    if (filtered.length > 0) selectedIndex = (selectedIndex + 1) % filtered.length;
+                    renderPickerListItems(shell.list, filtered, selectedIndex, (entry) => {
+                        void openEntry(entry);
+                    });
+                    return;
+                }
+                if (event.key === 'ArrowUp') {
+                    event.preventDefault();
+                    if (filtered.length > 0) selectedIndex = (selectedIndex - 1 + filtered.length) % filtered.length;
+                    renderPickerListItems(shell.list, filtered, selectedIndex, (entry) => {
+                        void openEntry(entry);
+                    });
+                    return;
+                }
+                if (event.key === 'Enter') {
+                    event.preventDefault();
+                    const picked = filtered[selectedIndex] || null;
+                    if (!picked) return;
+                    void openEntry(picked);
+                }
+            });
+
+            applyFilter();
+        }
+
+        function buildCommandPaletteActions() {
+            return [
+                { title: 'File: Quick Open', detail: 'Jump to tab or workspace file', meta: 'CTRL+P', run: () => showQuickOpenModal() },
+                { title: 'File: Open Local Files', detail: 'Open files from your machine', meta: 'CTRL+O', run: () => document.getElementById('open').click() },
+                { title: 'File: Save', detail: 'Save current tab', meta: 'CTRL+S', run: () => document.getElementById('save').click() },
+                { title: 'File: New Tab', detail: 'Create a new file tab', meta: 'CTRL+N', run: () => showAddTabChoiceModal() },
+                { title: 'File: Close Active Tab', detail: 'Close selected tab', meta: 'CTRL+W', run: () => closeActiveTab() },
+                { title: 'Search: Find In Files', detail: 'Search across open tabs and workspace', meta: 'CTRL+SHIFT+F', run: () => showFindInFilesModal() },
+                { title: 'Problems: Show Diagnostics', detail: 'Review warnings and errors', meta: 'CTRL+SHIFT+M', run: () => showDiagnosticsModal() },
+                { title: 'Run: Execute', detail: 'Run current code', meta: 'CTRL+ENTER', run: () => document.getElementById('execute').click() },
+            { title: 'Run: Terminal', detail: 'Open terminal tab in Output view', meta: 'CTRL+`', run: () => showTerminalPanelModal() },
+            { title: 'Source Control: Open View', detail: 'Inspect status, diff, and commit', meta: 'CTRL+SHIFT+G', run: () => showGitPanelModal() },
+            { title: 'Debug: Open View', detail: 'Manage breakpoints and debug controls', meta: 'CTRL+SHIFT+D', run: () => showDebugPanelModal() },
+                { title: 'Debug: Start', detail: 'Start debug run for JS/TS tab', meta: 'F7', run: () => startDebugRun() },
+                { title: 'Debug: Toggle Breakpoint', detail: 'Toggle breakpoint at current line', meta: 'F9', run: () => toggleBreakpointAtCursor() },
+                { title: 'View: Home', detail: 'Open dashboard', meta: 'ALT+1', run: () => setPrimaryView('home') },
+                { title: 'View: Editor', detail: 'Open editor', meta: 'ALT+2', run: () => setPrimaryView('editor') },
+                { title: 'View: Output', detail: 'Open Project Preview and console', meta: 'ALT+3', run: () => setPrimaryView('html') },
+                { title: 'View: Settings', detail: 'Open settings', meta: 'ALT+4', run: () => setPrimaryView('settings') },
+                { title: 'Explorer: Toggle', detail: 'Show or hide explorer panel', meta: 'CTRL+B', run: () => document.getElementById('explorerToggle').click() },
+                { title: 'Explorer: Open Folder', detail: 'Attach a workspace folder', meta: 'CTRL+SHIFT+E', run: () => chooseExplorerFolder() },
+                { title: 'Explorer: Refresh', detail: 'Refresh file tree', meta: 'F6', run: () => refreshExplorerTree() },
+                { title: 'Editor: Format Document', detail: 'Format current file', meta: 'SHIFT+ALT+F', run: () => editor && editor.getAction('editor.action.formatDocument')?.run() },
+                { title: 'Editor: Toggle Word Wrap', detail: 'Switch wrapping on/off', meta: '', run: () => document.getElementById('toggleWordWrap').click() },
+                { title: 'Editor: Toggle Minimap', detail: 'Switch minimap on/off', meta: '', run: () => document.getElementById('toggleMinimap').click() },
+                { title: 'Tabs: Next Tab', detail: 'Move to next tab', meta: 'CTRL+TAB', run: () => switchToRelativeTab(1) },
+                { title: 'Tabs: Previous Tab', detail: 'Move to previous tab', meta: 'CTRL+SHIFT+TAB', run: () => switchToRelativeTab(-1) },
+                { title: 'Tools: Script Hub', detail: 'Open script templates', meta: '', run: () => showScriptHub() },
+                { title: 'Tools: Browser Tab Manager', detail: 'Manage extension tab targets', meta: '', run: () => showTabBrowser() }
+            ];
+        }
+
+        function showCommandPaletteModal(initialQuery = '') {
+            const actions = buildCommandPaletteActions();
+            const shell = createPickerModalShell('commandPaletteModal', 'Command Palette', 'Type a command');
+            if (!shell || !shell.input || !shell.list) return;
+
+            let filtered = [];
+            let selectedIndex = 0;
+
+            const runAction = (action) => {
+                if (!action || typeof action.run !== 'function') return;
+                shell.close();
+                try {
+                    const result = action.run();
+                    if (result && typeof result.catch === 'function') {
+                        result.catch(() => { });
+                    }
+                } catch { }
+            };
+
+            const applyFilter = () => {
+                const query = String(shell.input.value || '').trim().toLowerCase();
+                filtered = actions
+                    .map((action) => ({
+                        action,
+                        score: scoreMatchText(query, action.title, action.detail)
+                    }))
+                    .filter((candidate) => candidate.score > 0)
+                    .sort((a, b) => b.score - a.score || a.action.title.localeCompare(b.action.title, undefined, { sensitivity: 'base' }))
+                    .slice(0, 80)
+                    .map((candidate) => candidate.action);
+
+                if (selectedIndex >= filtered.length) {
+                    selectedIndex = Math.max(0, filtered.length - 1);
+                }
+
+                renderPickerListItems(shell.list, filtered, selectedIndex, (action) => {
+                    runAction(action);
+                });
+                shell.hint.textContent = `${filtered.length} command(s)`;
+            };
+
+            shell.input.value = String(initialQuery || '');
+            shell.input.addEventListener('input', applyFilter);
+            shell.input.addEventListener('keydown', (event) => {
+                if (event.key === 'ArrowDown') {
+                    event.preventDefault();
+                    if (filtered.length > 0) selectedIndex = (selectedIndex + 1) % filtered.length;
+                    renderPickerListItems(shell.list, filtered, selectedIndex, (action) => {
+                        runAction(action);
+                    });
+                    return;
+                }
+                if (event.key === 'ArrowUp') {
+                    event.preventDefault();
+                    if (filtered.length > 0) selectedIndex = (selectedIndex - 1 + filtered.length) % filtered.length;
+                    renderPickerListItems(shell.list, filtered, selectedIndex, (action) => {
+                        runAction(action);
+                    });
+                    return;
+                }
+                if (event.key === 'Enter') {
+                    event.preventDefault();
+                    const picked = filtered[selectedIndex] || null;
+                    if (!picked) return;
+                    runAction(picked);
+                }
+            });
+
+            applyFilter();
+        }
+
+        function findLineMatches(contentValue, queryLower, maxMatchesPerFile = 7) {
+            const matches = [];
+            const normalized = String(contentValue || '').replace(/\r\n/g, '\n');
+            const lines = normalized.split('\n');
+            for (let i = 0; i < lines.length; i++) {
+                const sourceLine = lines[i];
+                const lower = sourceLine.toLowerCase();
+                const index = lower.indexOf(queryLower);
+                if (index === -1) continue;
+                matches.push({
+                    lineNumber: i + 1,
+                    column: index + 1,
+                    preview: sourceLine.trim() || '(blank)'
+                });
+                if (matches.length >= maxMatchesPerFile) break;
+            }
+            return matches;
+        }
+
+        async function showFindInFilesModal(initialQuery = '') {
+            const shell = createPickerModalShell('findInFilesModal', 'Find In Files', 'Type to search workspace and open tabs', 880);
+            if (!shell || !shell.input || !shell.list) return;
+
+            let flatWorkspaceFiles = [];
+            let latestResults = [];
+            let selectedIndex = 0;
+            const queryLimit = 350;
+            const fileLimit = 220;
+            const maxResults = 260;
+
+            const pushResult = (collector, resultItem) => {
+                collector.push({
+                    title: `${resultItem.name}:${resultItem.lineNumber}`,
+                    detail: `${resultItem.path || resultItem.name}  |  ${resultItem.preview}`,
+                    meta: resultItem.source === 'tab' ? 'TAB' : 'FILE',
+                    raw: resultItem
+                });
+            };
+
+            const openResult = async (wrapped) => {
+                if (!wrapped || !wrapped.raw) return;
+                const result = wrapped.raw;
+                if (result.source === 'tab') {
+                    openTabById(result.tabId);
+                } else if (result.path) {
+                    await openFileFromExplorer(result.path, result.name);
+                }
+                setPrimaryView('editor');
+                if (editor) {
+                    const lineNumber = Math.max(1, Number(result.lineNumber) || 1);
+                    const column = Math.max(1, Number(result.column) || 1);
+                    editor.focus();
+                    editor.setPosition({ lineNumber, column });
+                    editor.revealPositionInCenter({ lineNumber, column });
+                }
+            };
+
+            const searchNow = async () => {
+                const queryRaw = String(shell.input.value || '').slice(0, queryLimit);
+                const query = queryRaw.trim();
+                const queryLower = query.toLowerCase();
+                const requestToken = ++findInFilesRequestToken;
+                selectedIndex = 0;
+
+                if (!query) {
+                    latestResults = [];
+                    renderPickerListItems(shell.list, [], 0, () => { });
+                    shell.hint.textContent = 'Type at least 1 character to search';
+                    return;
+                }
+
+                captureCurrentTabEditorContent();
+                const resultBucket = [];
+                const visitedPaths = new Set();
+
+                const tabEntries = getOpenTabEntries();
+                for (const tabEntry of tabEntries) {
+                    if (requestToken !== findInFilesRequestToken) return;
+                    const tabState = tabEntry.tabId ? tabs[tabEntry.tabId] : null;
+                    if (!tabState) continue;
+                    const tabName = tabEntry.name;
+                    const tabPath = String(tabEntry.path || '');
+                    const normalizedPath = normalizePathForCompare(tabPath);
+                    if (normalizedPath) visitedPaths.add(normalizedPath);
+                    if (!isSearchableTextPath(tabPath || tabName)) continue;
+
+                    const matches = findLineMatches(tabState.content, queryLower, 7);
+                    matches.forEach((match) => {
+                        pushResult(resultBucket, {
+                            source: 'tab',
+                            tabId: tabEntry.tabId,
+                            name: tabName,
+                            path: tabPath,
+                            lineNumber: match.lineNumber,
+                            column: match.column,
+                            preview: match.preview
+                        });
+                    });
+                    if (resultBucket.length >= maxResults) break;
+                }
+
+                if (requestToken !== findInFilesRequestToken) return;
+
+                if (
+                    resultBucket.length < maxResults &&
+                    explorerRootPath &&
+                    window.fileExplorer &&
+                    typeof window.fileExplorer.readFile === 'function'
+                ) {
+                    if (!flatWorkspaceFiles.length) {
+                        flatWorkspaceFiles = collectExplorerFileEntries(explorerTreeData, [])
+                            .filter((entry) => isSearchableTextPath(entry.path || entry.name))
+                            .slice(0, fileLimit);
+                    }
+
+                    for (const fileEntry of flatWorkspaceFiles) {
+                        if (requestToken !== findInFilesRequestToken) return;
+                        if (resultBucket.length >= maxResults) break;
+                        const normalizedPath = normalizePathForCompare(fileEntry.path);
+                        if (normalizedPath && visitedPaths.has(normalizedPath)) continue;
+                        try {
+                            const content = await window.fileExplorer.readFile(fileEntry.path);
+                            if (requestToken !== findInFilesRequestToken) return;
+                            if (typeof content !== 'string' || content.length > 1_500_000) continue;
+                            const matches = findLineMatches(content, queryLower, 4);
+                            matches.forEach((match) => {
+                                pushResult(resultBucket, {
+                                    source: 'workspace',
+                                    tabId: '',
+                                    name: fileEntry.name,
+                                    path: fileEntry.path,
+                                    lineNumber: match.lineNumber,
+                                    column: match.column,
+                                    preview: match.preview
+                                });
+                            });
+                        } catch {
+                            // skip unreadable files
+                        }
+                    }
+                }
+
+                if (requestToken !== findInFilesRequestToken) return;
+
+                latestResults = resultBucket
+                    .sort((a, b) => {
+                        if (a.meta !== b.meta) return a.meta === 'TAB' ? -1 : 1;
+                        return a.title.localeCompare(b.title, undefined, { sensitivity: 'base', numeric: true });
+                    })
+                    .slice(0, maxResults);
+
+                renderPickerListItems(shell.list, latestResults, selectedIndex, (item) => {
+                    shell.close();
+                    void openResult(item);
+                });
+                shell.hint.textContent = `${latestResults.length} match(es)`;
+            };
+
+            let debounceTimer = null;
+            const scheduleSearch = () => {
+                if (debounceTimer !== null) {
+                    clearTimeout(debounceTimer);
+                }
+                debounceTimer = window.setTimeout(() => {
+                    debounceTimer = null;
+                    void searchNow();
+                }, 140);
+            };
+
+            shell.input.value = String(initialQuery || '');
+            shell.input.addEventListener('input', scheduleSearch);
+            shell.input.addEventListener('keydown', (event) => {
+                if (event.key === 'ArrowDown') {
+                    event.preventDefault();
+                    if (latestResults.length > 0) selectedIndex = (selectedIndex + 1) % latestResults.length;
+                    renderPickerListItems(shell.list, latestResults, selectedIndex, (item) => {
+                        shell.close();
+                        void openResult(item);
+                    });
+                    return;
+                }
+                if (event.key === 'ArrowUp') {
+                    event.preventDefault();
+                    if (latestResults.length > 0) selectedIndex = (selectedIndex - 1 + latestResults.length) % latestResults.length;
+                    renderPickerListItems(shell.list, latestResults, selectedIndex, (item) => {
+                        shell.close();
+                        void openResult(item);
+                    });
+                    return;
+                }
+                if (event.key === 'Enter') {
+                    event.preventDefault();
+                    const picked = latestResults[selectedIndex] || null;
+                    if (!picked) return;
+                    shell.close();
+                    void openResult(picked);
+                }
+            });
+
+            scheduleSearch();
+        }
+
+        function getPreferredRuntimeCwd() {
+            const activeTab = activeTabId && tabs[activeTabId] ? tabs[activeTabId] : null;
+            if (activeTab && activeTab.filePath) {
+                const parentPath = getParentPath(activeTab.filePath);
+                if (parentPath) return parentPath;
+            }
+            if (explorerRootPath) return explorerRootPath;
+            return terminalLastCwd || '';
+        }
+
+        function collectLineOffsets(sourceText) {
+            const value = String(sourceText || '');
+            const offsets = [0];
+            for (let i = 0; i < value.length; i++) {
+                if (value.charCodeAt(i) === 10) {
+                    offsets.push(i + 1);
+                }
+            }
+            return offsets;
+        }
+
+        function offsetToLineColumn(offsets, offset, textLength) {
+            const length = Number.isFinite(Number(textLength)) ? Math.max(0, Number(textLength)) : 0;
+            const target = Math.max(0, Math.min(length, Number(offset) || 0));
+            let low = 0;
+            let high = offsets.length - 1;
+            while (low <= high) {
+                const mid = (low + high) >> 1;
+                if (offsets[mid] <= target) {
+                    low = mid + 1;
+                } else {
+                    high = mid - 1;
+                }
+            }
+            const lineIndex = Math.max(0, high);
+            const lineNumber = lineIndex + 1;
+            const column = Math.max(1, target - offsets[lineIndex] + 1);
+            return { lineNumber, column };
+        }
+
+        function safeMarkerSeverity(level) {
+            const markerSeverity = typeof monaco !== 'undefined' && monaco.MarkerSeverity
+                ? monaco.MarkerSeverity
+                : { Error: 8, Warning: 4, Info: 2 };
+            if (level === 'error') return markerSeverity.Error;
+            if (level === 'info') return markerSeverity.Info;
+            return markerSeverity.Warning;
+        }
+
+        function buildSyntaxMarker(message, lineNumber, column, severity = 'error') {
+            const line = Math.max(1, Number(lineNumber) || 1);
+            const col = Math.max(1, Number(column) || 1);
+            return {
+                message: String(message || 'Syntax issue'),
+                severity: safeMarkerSeverity(severity),
+                startLineNumber: line,
+                startColumn: col,
+                endLineNumber: line,
+                endColumn: col + 1
+            };
+        }
+
+        function computeBracketDiagnostics(sourceText) {
+            const text = String(sourceText || '');
+            const markers = [];
+            const openToClose = { '(': ')', '[': ']', '{': '}' };
+            const closeToOpen = { ')': '(', ']': '[', '}': '{' };
+            const stack = [];
+            const offsets = collectLineOffsets(text);
+            let inSingle = false;
+            let inDouble = false;
+            let inTemplate = false;
+            let escaped = false;
+
+            for (let index = 0; index < text.length; index++) {
+                const char = text[index];
+
+                if (escaped) {
+                    escaped = false;
+                    continue;
+                }
+
+                if ((inSingle || inDouble || inTemplate) && char === '\\') {
+                    escaped = true;
+                    continue;
+                }
+                if (inSingle) {
+                    if (char === "'") inSingle = false;
+                    continue;
+                }
+                if (inDouble) {
+                    if (char === '"') inDouble = false;
+                    continue;
+                }
+                if (inTemplate) {
+                    if (char === '`') inTemplate = false;
+                    continue;
+                }
+
+                if (char === "'") {
+                    inSingle = true;
+                    continue;
+                }
+                if (char === '"') {
+                    inDouble = true;
+                    continue;
+                }
+                if (char === '`') {
+                    inTemplate = true;
+                    continue;
+                }
+
+                if (openToClose[char]) {
+                    stack.push({ char, index });
+                    continue;
+                }
+
+                const expectedOpen = closeToOpen[char];
+                if (!expectedOpen) continue;
+
+                const top = stack[stack.length - 1];
+                if (!top || top.char !== expectedOpen) {
+                    const position = offsetToLineColumn(offsets, index, text.length);
+                    markers.push(buildSyntaxMarker(`Unexpected "${char}"`, position.lineNumber, position.column, 'error'));
+                    continue;
+                }
+                stack.pop();
+            }
+
+            stack.forEach((entry) => {
+                const position = offsetToLineColumn(offsets, entry.index, text.length);
+                markers.push(buildSyntaxMarker(`Unclosed "${entry.char}"`, position.lineNumber, position.column, 'warning'));
+            });
+
+            return markers;
+        }
+
+        function computeHtmlTagDiagnostics(sourceText) {
+            const text = String(sourceText || '');
+            const markers = [];
+            const offsets = collectLineOffsets(text);
+            const stack = [];
+            const voidTags = new Set(['area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input', 'link', 'meta', 'param', 'source', 'track', 'wbr']);
+            const tagRegex = /<\/?([a-zA-Z][a-zA-Z0-9:-]*)\b[^>]*?>/g;
+            let match;
+
+            while ((match = tagRegex.exec(text)) !== null) {
+                const raw = String(match[0] || '');
+                const tagName = String(match[1] || '').toLowerCase();
+                if (!tagName) continue;
+
+                const isClosing = raw.startsWith('</');
+                const selfClosing = /\/>$/.test(raw) || voidTags.has(tagName);
+                if (selfClosing) continue;
+
+                if (isClosing) {
+                    const top = stack[stack.length - 1];
+                    if (top && top.tagName === tagName) {
+                        stack.pop();
+                    } else {
+                        const position = offsetToLineColumn(offsets, match.index, text.length);
+                        markers.push(buildSyntaxMarker(`Unexpected closing tag </${tagName}>`, position.lineNumber, position.column, 'warning'));
+                    }
+                    continue;
+                }
+
+                stack.push({ tagName, index: match.index });
+            }
+
+            stack.forEach((entry) => {
+                const position = offsetToLineColumn(offsets, entry.index, text.length);
+                markers.push(buildSyntaxMarker(`Unclosed tag <${entry.tagName}>`, position.lineNumber, position.column, 'warning'));
+            });
+
+            return markers;
+        }
+
+        function computeLanguageDiagnostics(languageId, sourceText) {
+            const normalizedLanguage = String(languageId || '').toLowerCase();
+            const text = String(sourceText || '');
+            const markers = [];
+            const offsets = collectLineOffsets(text);
+
+            if (normalizedLanguage === 'javascript' || normalizedLanguage === 'typescript') {
+                try {
+                    new Function(text);
+                } catch (error) {
+                    const details = String((error && (error.stack || error.message)) || error || '');
+                    const location = details.match(/<anonymous>:(\d+):(\d+)/) || details.match(/:(\d+):(\d+)/);
+                    const line = location ? Number(location[1]) : 1;
+                    const col = location ? Number(location[2]) : 1;
+                    markers.push(buildSyntaxMarker(error && error.message ? error.message : 'JavaScript syntax error', line, col, 'error'));
+                }
+                markers.push(...computeBracketDiagnostics(text));
+                return markers.slice(0, 60);
+            }
+
+            if (normalizedLanguage === 'json') {
+                try {
+                    JSON.parse(text);
+                } catch (error) {
+                    const message = String(error && error.message ? error.message : error || 'JSON syntax error');
+                    const positionMatch = message.match(/position\s+(\d+)/i);
+                    if (positionMatch) {
+                        const rawOffset = Number(positionMatch[1]);
+                        const position = offsetToLineColumn(offsets, rawOffset, text.length);
+                        markers.push(buildSyntaxMarker(message, position.lineNumber, position.column, 'error'));
+                    } else {
+                        markers.push(buildSyntaxMarker(message, 1, 1, 'error'));
+                    }
+                }
+                return markers.slice(0, 60);
+            }
+
+            if (normalizedLanguage === 'python') {
+                const lines = text.replace(/\r\n/g, '\n').split('\n');
+                lines.forEach((line, index) => {
+                    const lineNumber = index + 1;
+                    const trimmed = String(line || '').trim();
+                    if (!trimmed || trimmed.startsWith('#')) return;
+
+                    const leading = (line.match(/^\s*/) || [''])[0];
+                    if (leading.includes(' ') && leading.includes('\t')) {
+                        markers.push(buildSyntaxMarker('Mixed tabs and spaces in indentation', lineNumber, 1, 'warning'));
+                    }
+
+                    if (
+                        /^(if|elif|else|for|while|def|class|try|except|finally|with)\b/.test(trimmed) &&
+                        !/:\s*(#.*)?$/.test(trimmed)
+                    ) {
+                        markers.push(buildSyntaxMarker('Expected ":" at end of block statement', lineNumber, Math.max(1, line.length), 'error'));
+                    }
+                });
+                markers.push(...computeBracketDiagnostics(text));
+                return markers.slice(0, 60);
+            }
+
+            if (normalizedLanguage === 'html') {
+                markers.push(...computeHtmlTagDiagnostics(text));
+                return markers.slice(0, 60);
+            }
+
+            if (normalizedLanguage === 'css' || normalizedLanguage === 'scss' || normalizedLanguage === 'less') {
+                markers.push(...computeBracketDiagnostics(text));
+                return markers.slice(0, 60);
+            }
+
+            return computeBracketDiagnostics(text).slice(0, 60);
+        }
+
+        function clampMarkerForModel(model, marker) {
+            const lineCount = Math.max(1, Number(model && typeof model.getLineCount === 'function' ? model.getLineCount() : 1));
+            const startLineNumber = Math.min(lineCount, Math.max(1, Number(marker.startLineNumber) || 1));
+            const endLineNumber = Math.min(lineCount, Math.max(startLineNumber, Number(marker.endLineNumber) || startLineNumber));
+            const startColumn = Math.max(1, Number(marker.startColumn) || 1);
+            const endColumn = Math.max(startColumn + 1, Number(marker.endColumn) || (startColumn + 1));
+            return {
+                message: String(marker.message || 'Issue'),
+                severity: Number(marker.severity) || safeMarkerSeverity('warning'),
+                startLineNumber,
+                startColumn,
+                endLineNumber,
+                endColumn
+            };
+        }
+
+        function applyDiagnosticsToActiveModel() {
+            if (!editor || typeof monaco === 'undefined' || !monaco.editor || !activeTabId || !tabs[activeTabId]) {
+                updateStatusBar();
+                return;
+            }
+
+            const activeTab = tabs[activeTabId];
+            if (isImageLikePath(activeTab.filePath || activeTab.name)) {
+                const model = editor.getModel();
+                if (model) {
+                    monaco.editor.setModelMarkers(model, DIAGNOSTIC_OWNER, []);
+                }
+                updateStatusBar();
+                return;
+            }
+
+            const model = editor.getModel();
+            if (!model) {
+                updateStatusBar();
+                return;
+            }
+
+            const code = String(editor.getValue() || '');
+            activeTab.content = code;
+            const languageId = resolveMonacoLanguageId(getTabLanguageId(activeTab));
+            const rawMarkers = computeLanguageDiagnostics(languageId, code);
+            const markers = rawMarkers.map((marker) => clampMarkerForModel(model, marker));
+            monaco.editor.setModelMarkers(model, DIAGNOSTIC_OWNER, markers);
+            updateStatusBar();
+        }
+
+        function scheduleDiagnosticsRefresh() {
+            if (diagnosticsDebounceTimer !== null) {
+                clearTimeout(diagnosticsDebounceTimer);
+            }
+            diagnosticsDebounceTimer = window.setTimeout(() => {
+                diagnosticsDebounceTimer = null;
+                applyDiagnosticsToActiveModel();
+            }, DIAGNOSTIC_DEBOUNCE_MS);
+        }
+
+        function getActiveDiagnosticsSummary() {
+            if (!editor || typeof monaco === 'undefined' || !monaco.editor || !monaco.MarkerSeverity) {
+                return { errors: 0, warnings: 0, total: 0 };
+            }
+            const model = editor.getModel();
+            if (!model || !model.uri) {
+                return { errors: 0, warnings: 0, total: 0 };
+            }
+            const markers = monaco.editor.getModelMarkers({ owner: DIAGNOSTIC_OWNER, resource: model.uri });
+            let errors = 0;
+            let warnings = 0;
+            markers.forEach((marker) => {
+                if (marker.severity === monaco.MarkerSeverity.Error) errors += 1;
+                else if (marker.severity === monaco.MarkerSeverity.Warning) warnings += 1;
+            });
+            return {
+                errors,
+                warnings,
+                total: markers.length
+            };
+        }
+
+        function buildDiagnosticsEntries() {
+            captureCurrentTabEditorContent();
+            const entries = [];
+            getTabOrder().forEach((tabId) => {
+                const tabState = tabs[tabId];
+                if (!tabState) return;
+                if (isImageLikePath(tabState.filePath || tabState.name)) return;
+
+                const tabName = String(tabState.name || 'Untitled');
+                const code = String(tabId === activeTabId && editor ? editor.getValue() : tabState.content || '');
+                const languageId = resolveMonacoLanguageId(getTabLanguageId(tabState));
+                const markers = computeLanguageDiagnostics(languageId, code);
+                markers.forEach((marker) => {
+                    const line = Math.max(1, Number(marker.startLineNumber) || 1);
+                    const column = Math.max(1, Number(marker.startColumn) || 1);
+                    const lineText = code.replace(/\r\n/g, '\n').split('\n')[line - 1] || '';
+                    entries.push({
+                        tabId,
+                        fileName: tabName,
+                        filePath: String(tabState.filePath || ''),
+                        message: String(marker.message || 'Issue'),
+                        severity: Number(marker.severity) || safeMarkerSeverity('warning'),
+                        line,
+                        column,
+                        preview: lineText.trim() || '(blank line)'
+                    });
+                });
+            });
+
+            entries.sort((a, b) => {
+                if (a.severity !== b.severity) return b.severity - a.severity;
+                if (a.fileName !== b.fileName) return a.fileName.localeCompare(b.fileName, undefined, { sensitivity: 'base' });
+                if (a.line !== b.line) return a.line - b.line;
+                return a.column - b.column;
+            });
+
+            return entries;
+        }
+
+        function showDiagnosticsModal(initialQuery = '') {
+            const shell = createPickerModalShell('diagnosticsModal', 'Problems', 'Filter issues by file or message', 900);
+            if (!shell || !shell.input || !shell.list) return;
+
+            let allEntries = buildDiagnosticsEntries();
+            let filteredEntries = [];
+            let selectedIndex = 0;
+
+            const openEntry = (entry) => {
+                if (!entry) return;
+                shell.close();
+                if (entry.tabId) {
+                    openTabById(entry.tabId);
+                }
+                setPrimaryView('editor');
+                if (editor) {
+                    editor.focus();
+                    editor.setPosition({ lineNumber: entry.line, column: entry.column });
+                    editor.revealPositionInCenter({ lineNumber: entry.line, column: entry.column });
+                }
+            };
+
+            const renderResults = () => {
+                const query = String(shell.input.value || '').trim().toLowerCase();
+                filteredEntries = allEntries
+                    .filter((entry) => {
+                        if (!query) return true;
+                        const haystack = `${entry.fileName} ${entry.filePath} ${entry.message} ${entry.preview}`.toLowerCase();
+                        return haystack.includes(query);
+                    })
+                    .slice(0, 260);
+
+                if (selectedIndex >= filteredEntries.length) {
+                    selectedIndex = Math.max(0, filteredEntries.length - 1);
+                }
+
+                const items = filteredEntries.map((entry) => {
+                    const isError = entry.severity === safeMarkerSeverity('error');
+                    const tag = isError ? 'ERR' : 'WARN';
+                    return {
+                        title: `${entry.fileName}:${entry.line}:${entry.column} - ${entry.message}`,
+                        detail: `${entry.filePath || entry.fileName} | ${entry.preview}`,
+                        meta: tag,
+                        raw: entry
+                    };
+                });
+
+                renderPickerListItems(shell.list, items, selectedIndex, (item) => {
+                    openEntry(item.raw);
+                });
+                shell.hint.textContent = `${filteredEntries.length} problem(s)`;
+            };
+
+            shell.input.value = String(initialQuery || '');
+            shell.input.addEventListener('input', renderResults);
+            shell.input.addEventListener('keydown', (event) => {
+                if (event.key === 'ArrowDown') {
+                    event.preventDefault();
+                    if (filteredEntries.length > 0) selectedIndex = (selectedIndex + 1) % filteredEntries.length;
+                    renderResults();
+                    return;
+                }
+                if (event.key === 'ArrowUp') {
+                    event.preventDefault();
+                    if (filteredEntries.length > 0) selectedIndex = (selectedIndex - 1 + filteredEntries.length) % filteredEntries.length;
+                    renderResults();
+                    return;
+                }
+                if (event.key === 'Enter') {
+                    event.preventDefault();
+                    const picked = filteredEntries[selectedIndex] || null;
+                    if (!picked) return;
+                    openEntry(picked);
+                    return;
+                }
+                if (event.key === 'F5') {
+                    event.preventDefault();
+                    allEntries = buildDiagnosticsEntries();
+                    selectedIndex = 0;
+                    renderResults();
+                }
+            });
+
+            renderResults();
+        }
+
+        function updateStatusBar() {
+            const fileEl = document.getElementById('statusFile');
+            const languageEl = document.getElementById('statusLanguage');
+            const diagnosticsEl = document.getElementById('statusDiagnostics');
+            const indentEl = document.getElementById('statusIndent');
+            const cursorEl = document.getElementById('statusCursor');
+            if (!fileEl || !languageEl || !diagnosticsEl || !indentEl || !cursorEl) return;
+
+            const activeTab = activeTabId && tabs[activeTabId] ? tabs[activeTabId] : null;
+            const displayName = activeTab ? String(activeTab.name || 'Untitled') : 'Untitled';
+            fileEl.textContent = displayName;
+            fileEl.title = activeTab && activeTab.filePath ? activeTab.filePath : displayName;
+            fileEl.classList.toggle('active', Boolean(activeTab));
+
+            const languageId = activeTab ? resolveMonacoLanguageId(getTabLanguageId(activeTab)) : 'plaintext';
+            languageEl.textContent = languageId;
+            languageEl.classList.toggle('active', Boolean(activeTab));
+
+            const summary = getActiveDiagnosticsSummary();
+            diagnosticsEl.textContent = `Problems: ${summary.total}`;
+            diagnosticsEl.classList.toggle('has-errors', summary.errors > 0);
+            diagnosticsEl.classList.toggle('has-warnings', summary.errors === 0 && summary.warnings > 0);
+
+            if (editor && typeof editor.getModel === 'function') {
+                const model = editor.getModel();
+                const options = model && typeof model.getOptions === 'function' ? model.getOptions() : null;
+                if (options && options.insertSpaces === false) {
+                    indentEl.textContent = 'Indent: Tabs';
+                } else if (options) {
+                    const tabSize = Number(options.tabSize);
+                    indentEl.textContent = `Spaces: ${Number.isFinite(tabSize) && tabSize > 0 ? tabSize : 4}`;
+                } else {
+                    indentEl.textContent = 'Spaces: 4';
+                }
+
+                const pos = typeof editor.getPosition === 'function' ? editor.getPosition() : null;
+                const line = pos && Number.isFinite(pos.lineNumber) ? pos.lineNumber : 1;
+                const col = pos && Number.isFinite(pos.column) ? pos.column : 1;
+                cursorEl.textContent = `Ln ${line}, Col ${col}`;
+            } else {
+                indentEl.textContent = 'Spaces: 4';
+                cursorEl.textContent = 'Ln 1, Col 1';
+            }
+        }
+
+        function normalizeBreakpointLines(lines) {
+            const unique = new Set();
+            const list = Array.isArray(lines) ? lines : [];
+            list.forEach((line) => {
+                const value = Math.floor(Number(line));
+                if (!Number.isFinite(value) || value <= 0) return;
+                unique.add(value);
+            });
+            return Array.from(unique).sort((a, b) => a - b);
+        }
+
+        function getBreakpointsForTab(tabId) {
+            const key = String(tabId || '');
+            if (!key || !breakpointLinesByTabId.has(key)) return [];
+            return normalizeBreakpointLines(breakpointLinesByTabId.get(key));
+        }
+
+        function setBreakpointsForTab(tabId, lines) {
+            const key = String(tabId || '');
+            if (!key) return;
+            const normalized = normalizeBreakpointLines(lines);
+            if (!normalized.length) {
+                breakpointLinesByTabId.delete(key);
+                return;
+            }
+            breakpointLinesByTabId.set(key, normalized);
+        }
+
+        function refreshBreakpointDecorations() {
+            if (!editor || typeof monaco === 'undefined' || !monaco.Range) return;
+            if (!activeTabId || !tabs[activeTabId] || isImageLikePath(tabs[activeTabId].filePath || tabs[activeTabId].name)) {
+                breakpointDecorationIds = editor.deltaDecorations(breakpointDecorationIds, []);
+                return;
+            }
+
+            const model = editor.getModel();
+            if (!model) {
+                breakpointDecorationIds = editor.deltaDecorations(breakpointDecorationIds, []);
+                return;
+            }
+
+            const maxLine = Math.max(1, Number(model.getLineCount()) || 1);
+            const lines = getBreakpointsForTab(activeTabId).filter((line) => line <= maxLine);
+            const decorations = lines.map((line) => ({
+                range: new monaco.Range(line, 1, line, 1),
+                options: {
+                    isWholeLine: true,
+                    className: 'voltus-breakpoint-line',
+                    glyphMarginClassName: 'voltus-breakpoint-glyph'
+                }
+            }));
+            breakpointDecorationIds = editor.deltaDecorations(breakpointDecorationIds, decorations);
+        }
+
+        function toggleBreakpointAtLine(lineNumber) {
+            if (!activeTabId || !tabs[activeTabId]) return;
+            const line = Math.max(1, Math.floor(Number(lineNumber) || 1));
+            const current = getBreakpointsForTab(activeTabId);
+            const next = current.includes(line)
+                ? current.filter((value) => value !== line)
+                : [...current, line];
+            setBreakpointsForTab(activeTabId, next);
+            refreshBreakpointDecorations();
+            updateStatusBar();
+            if (currentPrimaryView === 'debug') {
+                renderDebugView();
+            }
+        }
+
+        function toggleBreakpointAtCursor() {
+            if (!editor) return;
+            const position = editor.getPosition();
+            if (!position) return;
+            toggleBreakpointAtLine(position.lineNumber);
+        }
+
+        function clearBreakpointsForTab(tabId = activeTabId) {
+            const key = String(tabId || '');
+            if (!key) return;
+            breakpointLinesByTabId.delete(key);
+            if (key === activeTabId) {
+                refreshBreakpointDecorations();
+            }
+            if (currentPrimaryView === 'debug') {
+                renderDebugView();
+            }
+        }
+
+        function prepareDebugCodeWithBreakpoints(sourceCode, breakpoints) {
+            const normalizedBreakpoints = normalizeBreakpointLines(breakpoints);
+            const lines = String(sourceCode || '').replace(/\r\n/g, '\n').split('\n');
+            const applied = [];
+            const skipped = [];
+
+            for (let i = normalizedBreakpoints.length - 1; i >= 0; i--) {
+                const lineNumber = normalizedBreakpoints[i];
+                const lineIndex = lineNumber - 1;
+                if (lineIndex < 0 || lineIndex >= lines.length) {
+                    skipped.push(lineNumber);
+                    continue;
+                }
+                const sourceLine = String(lines[lineIndex] || '');
+                if (!sourceLine.trim() || /^\s*[}\])]/.test(sourceLine)) {
+                    skipped.push(lineNumber);
+                    continue;
+                }
+                const indent = getLeadingWhitespace(sourceLine);
+                lines.splice(
+                    lineIndex,
+                    0,
+                    `${indent}window.__voltusDebug && window.__voltusDebug.hit(${lineNumber});`,
+                    `${indent}debugger;`
+                );
+                applied.push(lineNumber);
+            }
+
+            const bootstrap = [
+                'window.__voltusDebug = window.__voltusDebug || {',
+                '    hit: function(line) {',
+                "        try { window.parent.postMessage({ isLocalLog: true, type: 'log', args: ['[debug] breakpoint line ' + line] }, '*'); } catch (_error) {}",
+                '    }',
+                '};'
+            ].join('\n');
+
+            return {
+                code: `${bootstrap}\n${lines.join('\n')}`,
+                appliedBreakpoints: applied.sort((a, b) => a - b),
+                skippedBreakpoints: skipped.sort((a, b) => a - b)
+            };
+        }
+
+        async function startDebugRun() {
+            const activeTab = activeTabId && tabs[activeTabId] ? tabs[activeTabId] : null;
+            if (!activeTab) {
+                showToast('No active tab to debug');
+                return;
+            }
+
+            const execType = getLocalExecutionKindForActiveTab();
+            if (execType.kind !== 'javascript') {
+                showToast('Debug run supports JavaScript and TypeScript tabs');
+                return;
+            }
+
+            const code = getCurrentEditorCode();
+            if (!String(code || '').trim()) {
+                showToast('No code to debug');
+                return;
+            }
+
+            if (window.runtime && typeof window.runtime.openDevTools === 'function') {
+                try {
+                    await window.runtime.openDevTools();
+                } catch { }
+            }
+
+            const breakpoints = getBreakpointsForTab(activeTabId);
+            let debugCode = `debugger;\n${code}`;
+            let appliedBreakpoints = [];
+            let skippedBreakpoints = [];
+
+            if (breakpoints.length > 0) {
+                const prepared = prepareDebugCodeWithBreakpoints(code, breakpoints);
+                debugCode = prepared.code;
+                appliedBreakpoints = prepared.appliedBreakpoints;
+                skippedBreakpoints = prepared.skippedBreakpoints;
+            }
+
+            runJavaScriptLocally(debugCode);
+            setHtmlOutputLabel('Debug Session');
+            document.getElementById('htmlOutputTab').click();
+
+            if (appliedBreakpoints.length > 0) {
+                pushConsole('log', `Debug run with breakpoints on line(s): ${appliedBreakpoints.join(', ')}`);
+            } else {
+                pushConsole('log', 'Debug run started with entry breakpoint');
+            }
+            if (skippedBreakpoints.length > 0) {
+                pushConsole('warn', `Skipped unsupported breakpoint line(s): ${skippedBreakpoints.join(', ')}`);
+            }
+            showToast('Debug run started');
+        }
+
+        function ensureDebugViewBound() {
+            if (debugViewBound) return;
+
+            const startBtn = document.getElementById('debugViewStartBtn');
+            const toggleBtn = document.getElementById('debugViewToggleBtn');
+            const clearBtn = document.getElementById('debugViewClearBtn');
+            const devtoolsBtn = document.getElementById('debugViewDevtoolsBtn');
+
+            if (startBtn) {
+                startBtn.onclick = () => {
+                    void startDebugRun();
+                };
+            }
+            if (toggleBtn) {
+                toggleBtn.onclick = () => {
+                    toggleBreakpointAtCursor();
+                    renderDebugView();
+                };
+            }
+            if (clearBtn) {
+                clearBtn.onclick = () => {
+                    clearBreakpointsForTab(activeTabId);
+                    renderDebugView();
+                };
+            }
+            if (devtoolsBtn) {
+                devtoolsBtn.onclick = async () => {
+                    if (window.runtime && typeof window.runtime.openDevTools === 'function') {
+                        try {
+                            await window.runtime.openDevTools();
+                        } catch {
+                            showToast('Could not open DevTools');
+                        }
+                    } else {
+                        showToast('DevTools API unavailable');
+                    }
+                };
+            }
+
+            debugViewBound = true;
+        }
+
+        function renderDebugView() {
+            const listEl = document.getElementById('debugViewBreakpointList');
+            if (!listEl) return;
+            listEl.innerHTML = '';
+
+            const activeTab = activeTabId && tabs[activeTabId] ? tabs[activeTabId] : null;
+            const lines = getBreakpointsForTab(activeTabId);
+            if (!activeTab) {
+                const empty = document.createElement('div');
+                empty.className = 'ide-workbench-meta';
+                empty.textContent = 'No active tab.';
+                listEl.appendChild(empty);
+                return;
+            }
+            if (!lines.length) {
+                const empty = document.createElement('div');
+                empty.className = 'ide-workbench-meta';
+                empty.textContent = `No breakpoints in ${activeTab.name}.`;
+                listEl.appendChild(empty);
+                return;
+            }
+
+            const sourceLines = String(activeTabId && editor ? editor.getValue() : activeTab.content || '')
+                .replace(/\r\n/g, '\n')
+                .split('\n');
+
+            lines.forEach((lineNumber) => {
+                const row = document.createElement('div');
+                row.style.cssText = 'display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 8px;border-bottom:1px solid rgba(255,255,255,0.06);';
+
+                const info = document.createElement('button');
+                info.type = 'button';
+                info.style.cssText = 'border:none;background:none;color:#c8c8c8;cursor:pointer;text-align:left;padding:0;flex:1;min-width:0;';
+                const preview = (sourceLines[lineNumber - 1] || '').trim() || '(blank line)';
+                info.textContent = `Line ${lineNumber}: ${preview}`;
+                info.onclick = () => {
+                    openTabById(activeTabId);
+                    setPrimaryView('editor');
+                    if (editor) {
+                        editor.focus();
+                        editor.setPosition({ lineNumber, column: 1 });
+                        editor.revealLineInCenter(lineNumber);
+                    }
+                };
+
+                const removeBtn = document.createElement('button');
+                removeBtn.type = 'button';
+                removeBtn.className = 'modal-btn cancel';
+                removeBtn.style.padding = '5px 10px';
+                removeBtn.textContent = 'Remove';
+                removeBtn.onclick = () => {
+                    toggleBreakpointAtLine(lineNumber);
+                    renderDebugView();
+                };
+
+                row.append(info, removeBtn);
+                listEl.appendChild(row);
+            });
+        }
+
+        function renderSourceControlLog(entries) {
+            const logList = document.getElementById('sourceControlLogList');
+            if (!logList) return;
+            logList.innerHTML = '';
+            const list = Array.isArray(entries) ? entries : [];
+            if (!list.length) {
+                const empty = document.createElement('div');
+                empty.className = 'ide-workbench-meta';
+                empty.textContent = 'No commits found.';
+                logList.appendChild(empty);
+                return;
+            }
+
+            list.forEach((entry) => {
+                const row = document.createElement('div');
+                row.className = 'source-control-log-row';
+                row.textContent = `${entry.hash || '-'}  ${entry.relativeTime || ''}  ${entry.subject || ''}`;
+                row.title = `${entry.author || ''}`;
+                logList.appendChild(row);
+            });
+        }
+
+        async function loadSourceControlDiff(file, staged) {
+            const diffPreview = document.getElementById('sourceControlDiffPreview');
+            const cwdInput = document.getElementById('sourceControlCwdInput');
+            if (!diffPreview || !cwdInput) return;
+
+            if (!window.runtime || typeof window.runtime.gitDiff !== 'function') {
+                diffPreview.textContent = 'Git diff API unavailable.';
+                return;
+            }
+
+            const cwd = String(cwdInput.value || '').trim();
+            try {
+                diffPreview.textContent = 'Loading diff...';
+                const result = await window.runtime.gitDiff({
+                    cwd,
+                    filePath: file ? file.path : '',
+                    staged: Boolean(staged),
+                    timeoutMs: 30000
+                });
+                const diff = String(result && result.diff ? result.diff : '');
+                diffPreview.textContent = diff || '(no diff)';
+            } catch (error) {
+                diffPreview.textContent = error && error.message ? error.message : String(error);
+            }
+        }
+
+        function renderSourceControlStatusFiles() {
+            const statusList = document.getElementById('sourceControlStatusList');
+            const cwdInput = document.getElementById('sourceControlCwdInput');
+            if (!statusList || !cwdInput) return;
+
+            statusList.innerHTML = '';
+            if (!sourceControlStatusFiles.length) {
+                const empty = document.createElement('div');
+                empty.className = 'ide-workbench-meta';
+                empty.textContent = 'No file changes.';
+                statusList.appendChild(empty);
+                return;
+            }
+
+            sourceControlStatusFiles.forEach((file) => {
+                const statusKind = getGitStatusKind(file);
+                const statusTag = formatGitStatusTag(file);
+                const row = document.createElement('div');
+                row.className = 'source-control-status-row';
+
+                const info = document.createElement('button');
+                info.type = 'button';
+                info.className = 'source-control-status-info';
+                info.title = `${file.indexStatus || ' '}${file.worktreeStatus || ' '}  ${file.path || ''}`;
+                info.onclick = () => {
+                    const stagedOnly = String(file.indexStatus || ' ') !== ' ' && String(file.worktreeStatus || ' ') === ' ';
+                    void loadSourceControlDiff(file, stagedOnly);
+                };
+
+                const main = document.createElement('span');
+                main.className = 'source-control-status-main';
+
+                const tag = document.createElement('span');
+                tag.className = 'source-control-status-tag';
+                tag.dataset.kind = statusKind;
+                tag.textContent = statusTag;
+
+                const pathText = document.createElement('span');
+                pathText.className = 'source-control-status-path';
+                pathText.textContent = file.path || '';
+
+                main.append(tag, pathText);
+                info.appendChild(main);
+
+                const actionWrap = document.createElement('div');
+                actionWrap.className = 'source-control-status-actions';
+
+                const isStaged = String(file.indexStatus || ' ') !== ' ';
+                const toggleStageBtn = document.createElement('button');
+                toggleStageBtn.type = 'button';
+                toggleStageBtn.className = 'modal-btn cancel source-control-action-btn';
+                toggleStageBtn.textContent = isStaged ? 'Unstage' : 'Stage';
+                toggleStageBtn.onclick = async () => {
+                    if (!window.runtime) return;
+                    const cwd = String(cwdInput.value || '').trim();
+                    try {
+                        if (isStaged && typeof window.runtime.gitUnstage === 'function') {
+                            await window.runtime.gitUnstage({ cwd, paths: [file.path], timeoutMs: 20000 });
+                        } else if (!isStaged && typeof window.runtime.gitStage === 'function') {
+                            await window.runtime.gitStage({ cwd, paths: [file.path], timeoutMs: 20000 });
+                        }
+                        await refreshSourceControlView();
+                    } catch (error) {
+                        showToast(error && error.message ? error.message : String(error));
+                    }
+                };
+
+                const diffBtn = document.createElement('button');
+                diffBtn.type = 'button';
+                diffBtn.className = 'modal-btn cancel source-control-action-btn';
+                diffBtn.textContent = 'Diff';
+                diffBtn.onclick = () => {
+                    const stagedOnly = String(file.indexStatus || ' ') !== ' ' && String(file.worktreeStatus || ' ') === ' ';
+                    void loadSourceControlDiff(file, stagedOnly);
+                };
+
+                actionWrap.append(toggleStageBtn, diffBtn);
+                row.append(info, actionWrap);
+                statusList.appendChild(row);
+            });
+        }
+
+        async function refreshSourceControlView() {
+            if (sourceControlLoading) return;
+            const cwdInput = document.getElementById('sourceControlCwdInput');
+            const statusList = document.getElementById('sourceControlStatusList');
+            const diffPreview = document.getElementById('sourceControlDiffPreview');
+            const branchMeta = document.getElementById('sourceControlBranchMeta');
+            const summaryMeta = document.getElementById('sourceControlSummaryMeta');
+            if (!cwdInput || !statusList || !diffPreview || !branchMeta || !summaryMeta) return;
+
+            sourceControlLoading = true;
+            try {
+                if (!window.runtime || typeof window.runtime.gitStatus !== 'function') {
+                    statusList.innerHTML = '<div class="ide-workbench-meta">Git APIs unavailable in this build.</div>';
+                    summaryMeta.textContent = 'Unavailable';
+                    return;
+                }
+
+                const requestedCwd = String(cwdInput.value || '').trim() || getPreferredRuntimeCwd();
+                const status = await window.runtime.gitStatus({ cwd: requestedCwd, timeoutMs: 30000 });
+                if (status && status.cwd) {
+                    cwdInput.value = status.cwd;
+                }
+
+                if (!status || !status.ok) {
+                    const reason = status && (status.error || status.stderr || status.stdout)
+                        ? String(status.error || status.stderr || status.stdout)
+                        : 'This folder is not a Git repository.';
+                    sourceControlStatusFiles = [];
+                    branchMeta.textContent = 'Branch: -';
+                    summaryMeta.textContent = 'Unavailable';
+                    statusList.innerHTML = `<div class="ide-workbench-meta">${reason}</div>`;
+                    diffPreview.textContent = '';
+                    renderSourceControlLog([]);
+                    return;
+                }
+
+                branchMeta.textContent = `Branch: ${status.branchName || status.branchLine || '(detached)'}`;
+                sourceControlStatusFiles = Array.isArray(status.files) ? status.files : [];
+                summaryMeta.textContent = summarizeSourceControlStatus(sourceControlStatusFiles);
+                renderSourceControlStatusFiles();
+
+                if (window.runtime && typeof window.runtime.gitLog === 'function') {
+                    try {
+                        const logResult = await window.runtime.gitLog({
+                            cwd: String(cwdInput.value || '').trim(),
+                            limit: 14,
+                            timeoutMs: 30000
+                        });
+                        renderSourceControlLog(logResult && Array.isArray(logResult.entries) ? logResult.entries : []);
+                    } catch {
+                        renderSourceControlLog([]);
+                    }
+                } else {
+                    renderSourceControlLog([]);
+                }
+            } catch (error) {
+                sourceControlStatusFiles = [];
+                branchMeta.textContent = 'Branch: -';
+                const summaryMeta = document.getElementById('sourceControlSummaryMeta');
+                if (summaryMeta) summaryMeta.textContent = 'Unavailable';
+                statusList.innerHTML = `<div class="ide-workbench-meta">${error && error.message ? error.message : String(error)}</div>`;
+            } finally {
+                sourceControlLoading = false;
+            }
+        }
+
+        function ensureSourceControlViewBound() {
+            if (sourceControlViewBound) return;
+
+            const cwdInput = document.getElementById('sourceControlCwdInput');
+            const useWorkspaceBtn = document.getElementById('sourceControlUseWorkspaceBtn');
+            const refreshBtn = document.getElementById('sourceControlRefreshBtn');
+            const stageAllBtn = document.getElementById('sourceControlStageAllBtn');
+            const unstageAllBtn = document.getElementById('sourceControlUnstageAllBtn');
+            const commitBtn = document.getElementById('sourceControlCommitBtn');
+            const commitInput = document.getElementById('sourceControlCommitMessageInput');
+
+            if (useWorkspaceBtn) {
+                useWorkspaceBtn.onclick = () => {
+                    if (!cwdInput) return;
+                    cwdInput.value = getPreferredRuntimeCwd();
+                };
+            }
+            if (refreshBtn) {
+                refreshBtn.onclick = () => {
+                    void refreshSourceControlView();
+                };
+            }
+            if (stageAllBtn) {
+                stageAllBtn.onclick = async () => {
+                    if (!window.runtime || typeof window.runtime.gitStage !== 'function' || !cwdInput) return;
+                    try {
+                        await window.runtime.gitStage({ cwd: String(cwdInput.value || '').trim(), timeoutMs: 30000 });
+                        await refreshSourceControlView();
+                    } catch (error) {
+                        showToast(error && error.message ? error.message : String(error));
+                    }
+                };
+            }
+            if (unstageAllBtn) {
+                unstageAllBtn.onclick = async () => {
+                    if (!window.runtime || typeof window.runtime.gitUnstage !== 'function' || !cwdInput) return;
+                    try {
+                        await window.runtime.gitUnstage({ cwd: String(cwdInput.value || '').trim(), timeoutMs: 30000 });
+                        await refreshSourceControlView();
+                    } catch (error) {
+                        showToast(error && error.message ? error.message : String(error));
+                    }
+                };
+            }
+            if (commitBtn) {
+                commitBtn.onclick = async () => {
+                    if (!commitInput || !cwdInput) return;
+                    const message = String(commitInput.value || '').trim();
+                    if (!message) {
+                        showToast('Commit message required');
+                        return;
+                    }
+                    if (!window.runtime || typeof window.runtime.gitCommit !== 'function') {
+                        showToast('Git commit API unavailable');
+                        return;
+                    }
+                    try {
+                        const result = await window.runtime.gitCommit({
+                            cwd: String(cwdInput.value || '').trim(),
+                            message,
+                            timeoutMs: 45000
+                        });
+                        if (result && Number(result.exitCode) === 0) {
+                            commitInput.value = '';
+                            showToast('Commit created');
+                        } else {
+                            const reason = result && (result.stderr || result.stdout)
+                                ? String(result.stderr || result.stdout)
+                                : 'Commit failed';
+                            showToast(reason);
+                        }
+                        await refreshSourceControlView();
+                    } catch (error) {
+                        showToast(error && error.message ? error.message : String(error));
+                    }
+                };
+            }
+            if (commitInput && commitBtn) {
+                commitInput.addEventListener('keydown', (event) => {
+                    if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) {
+                        event.preventDefault();
+                        commitBtn.click();
+                    }
+                });
+            }
+
+            if (cwdInput) {
+                cwdInput.value = getPreferredRuntimeCwd();
+            }
+            sourceControlViewBound = true;
+        }
+
+        function showDebugPanelModal() {
+            setPrimaryView('debug');
+        }
+
+        function showTerminalPanelModal(initialCommand = '') {
+            setPrimaryView('html');
+            setConsoleTab('terminal');
+            if (!terminalLastCwd) {
+                terminalLastCwd = getPreferredRuntimeCwd();
+            }
+            if (!consoleTerminalInputEl) return;
+            if (initialCommand) {
+                consoleTerminalInputEl.value = String(initialCommand);
+                consoleTerminalInputEl.setSelectionRange(consoleTerminalInputEl.value.length, consoleTerminalInputEl.value.length);
+            }
+            requestAnimationFrame(() => {
+                if (consoleTerminalInputEl) {
+                    consoleTerminalInputEl.focus();
+                }
+            });
+        }
+
+        function getGitStatusKind(file) {
+            const index = String(file && file.indexStatus ? file.indexStatus : ' ');
+            const worktree = String(file && file.worktreeStatus ? file.worktreeStatus : ' ');
+            const pair = `${index}${worktree}`;
+            if (pair === '??') return 'untracked';
+            if (index !== ' ' && worktree !== ' ') return 'staged-modified';
+            if (index !== ' ') return 'staged';
+            if (worktree !== ' ') return 'modified';
+            return 'clean';
+        }
+
+        function summarizeSourceControlStatus(files) {
+            const list = Array.isArray(files) ? files : [];
+            if (!list.length) return 'No changes';
+
+            let stagedCount = 0;
+            let modifiedCount = 0;
+            let untrackedCount = 0;
+
+            list.forEach((file) => {
+                const kind = getGitStatusKind(file);
+                if (kind === 'untracked') {
+                    untrackedCount += 1;
+                    return;
+                }
+                if (kind === 'staged' || kind === 'staged-modified') stagedCount += 1;
+                if (kind === 'modified' || kind === 'staged-modified') modifiedCount += 1;
+            });
+
+            const parts = [];
+            if (stagedCount > 0) parts.push(`${stagedCount} staged`);
+            if (modifiedCount > 0) parts.push(`${modifiedCount} modified`);
+            if (untrackedCount > 0) parts.push(`${untrackedCount} untracked`);
+
+            return parts.length ? `${list.length} changed, ${parts.join(', ')}` : `${list.length} changed`;
+        }
+
+        function formatGitStatusTag(file) {
+            const kind = getGitStatusKind(file);
+            if (kind === 'untracked') return 'UNTRACKED';
+            if (kind === 'staged-modified') return 'STAGED+MOD';
+            if (kind === 'staged') return 'STAGED';
+            if (kind === 'modified') return 'MODIFIED';
+            return 'CLEAN';
+        }
+
+        function showGitPanelModal() {
+            setPrimaryView('source-control');
+        }
 
         function clearDragOverState() {
             document.querySelectorAll(".tab.drag-over-left, .tab.drag-over-right").forEach(tab => {
@@ -3981,6 +6922,10 @@ console.log('Dark mode applied!');`
             if (model.getLanguageId() !== desiredLanguage) {
                 monaco.editor.setModelLanguage(model, desiredLanguage);
             }
+            scheduleInlineSuggestTrigger();
+            refreshBreakpointDecorations();
+            scheduleDiagnosticsRefresh();
+            updateStatusBar();
         }
 
         function getTabIconKind(tabState) {
@@ -4047,6 +6992,7 @@ console.log('Dark mode applied!');`
             updateTabIcon(tabState);
             if (activeTabId && tabs[activeTabId] === tabState) {
                 applyEditorLanguageForActiveTab();
+                updateStatusBar();
             }
         }
 
@@ -4825,6 +7771,7 @@ console.log('Dark mode applied!');`
                 setTimeout(() => {
                     tab.remove();
                     delete tabs[id];
+                    clearBreakpointsForTab(id);
 
                     if (wasActive) {
                         const firstTab = document.querySelector(".tab");
@@ -4834,6 +7781,7 @@ console.log('Dark mode applied!');`
                     renderTabBrowserList();
                     updateDashboardMetrics();
                     updateExplorerActiveFile();
+                    updateStatusBar();
                 }, 110);
             };
 
@@ -4867,6 +7815,7 @@ console.log('Dark mode applied!');`
                 }
                 updateDashboardMetrics();
                 updateExplorerActiveFile();
+                updateStatusBar();
             };
 
             tab.addEventListener("dragstart", (e) => {
@@ -5693,6 +8642,8 @@ console.log('Dark mode applied!');`
 
             const dashboardEl = document.getElementById('dashboard');
             const settingsViewEl = document.getElementById('settingsView');
+            const sourceControlViewEl = document.getElementById('sourceControlView');
+            const debugViewEl = document.getElementById('debugView');
             const editorEl = document.getElementById('editor');
             const htmlOutputEl = document.getElementById('htmlOutput');
             const htmlOutputLabelEl = document.getElementById('htmlOutputLabel');
@@ -5708,12 +8659,14 @@ console.log('Dark mode applied!');`
             const viewMap = {
                 home: dashboardEl,
                 settings: settingsViewEl,
+                'source-control': sourceControlViewEl,
+                debug: debugViewEl,
                 editor: editorEl,
                 html: htmlOutputEl
             };
             const nextEl = viewMap[view] || editorEl;
             const prevEl = viewMap[currentPrimaryView] || null;
-            const viewEls = [dashboardEl, settingsViewEl, editorEl, htmlOutputEl];
+            const viewEls = [dashboardEl, settingsViewEl, sourceControlViewEl, debugViewEl, editorEl, htmlOutputEl].filter(Boolean);
 
             viewEls.forEach(el => {
                 if (el !== prevEl) {
@@ -5744,6 +8697,22 @@ console.log('Dark mode applied!');`
                 updateDashboardMetrics();
             } else if (view === 'settings') {
                 document.getElementById('client').classList.add('active');
+            } else if (view === 'source-control') {
+                hideImagePreview();
+                const sourceControlTabEl = document.getElementById('sourceControlTab');
+                if (sourceControlTabEl) {
+                    sourceControlTabEl.classList.add('active');
+                }
+                ensureSourceControlViewBound();
+                void refreshSourceControlView();
+            } else if (view === 'debug') {
+                hideImagePreview();
+                const debugSidebarTabEl = document.getElementById('debugSidebarTab');
+                if (debugSidebarTabEl) {
+                    debugSidebarTabEl.classList.add('active');
+                }
+                ensureDebugViewBound();
+                renderDebugView();
             } else if (view === 'editor') {
                 document.getElementById('editorTab').classList.add('active');
                 const activeTab = activeTabId && tabs[activeTabId] ? tabs[activeTabId] : null;
@@ -5759,8 +8728,8 @@ console.log('Dark mode applied!');`
                 consoleHandleEl.classList.add('active');
                 mainContentEl.classList.add('console-open');
                 const consoleHeight = Math.max(
-                    100,
-                    Math.round(consoleWrapEl.offsetHeight || parseFloat(consoleWrapEl.style.height) || 140)
+                    70,
+                    Math.round(consoleWrapEl.offsetHeight || parseFloat(consoleWrapEl.style.height) || 96)
                 );
                 consoleHandleEl.style.bottom = consoleHeight + 'px';
                 document.documentElement.style.setProperty('--preview-console-height', `${consoleHeight}px`);
@@ -5774,6 +8743,7 @@ console.log('Dark mode applied!');`
             }
 
             currentPrimaryView = view;
+            updateStatusBar();
 
             if (editor) {
                 requestAnimationFrame(() => {
@@ -5853,6 +8823,139 @@ console.log('Dark mode applied!');`
         document.addEventListener('keydown', (event) => {
             if (event.key === 'Escape') {
                 hideExplorerContextMenu();
+                return;
+            }
+
+            const key = String(event.key || '');
+            const keyLower = key.toLowerCase();
+            const withModifier = Boolean(event.ctrlKey || event.metaKey);
+            const target = event.target instanceof Element ? event.target : null;
+            const inMonaco = Boolean(target && target.closest('.monaco-editor'));
+            const inEditableField = Boolean(target && target.closest('input, textarea, select, [contenteditable="true"]'));
+            const inPicker = Boolean(
+                target && target.closest('#commandPaletteModal, #quickOpenModal, #findInFilesModal, #diagnosticsModal, #terminalPanelModal, #gitPanelModal, #debugPanelModal')
+            );
+
+            if (!withModifier && !event.altKey && !event.shiftKey) {
+                if (key === 'F5') {
+                    event.preventDefault();
+                    document.getElementById('execute').click();
+                    return;
+                }
+                if (key === 'F6') {
+                    event.preventDefault();
+                    refreshExplorerTree();
+                    return;
+                }
+                if (key === 'F7') {
+                    event.preventDefault();
+                    void startDebugRun();
+                    return;
+                }
+                if (key === 'F8') {
+                    event.preventDefault();
+                    showDiagnosticsModal();
+                    return;
+                }
+                if (key === 'F9') {
+                    event.preventDefault();
+                    toggleBreakpointAtCursor();
+                    return;
+                }
+            }
+
+            if (event.altKey && !withModifier && !event.shiftKey) {
+                if (key === '1') { event.preventDefault(); setPrimaryView('home'); return; }
+                if (key === '2') { event.preventDefault(); setPrimaryView('editor'); return; }
+                if (key === '3') { event.preventDefault(); setPrimaryView('html'); return; }
+                if (key === '4') { event.preventDefault(); setPrimaryView('settings'); return; }
+            }
+
+            if (!withModifier || inPicker) return;
+            if (inEditableField && !inMonaco) return;
+
+            if (keyLower === 's' && !event.shiftKey) {
+                event.preventDefault();
+                document.getElementById('save').click();
+                return;
+            }
+            if (keyLower === 'o' && !event.shiftKey) {
+                event.preventDefault();
+                document.getElementById('open').click();
+                return;
+            }
+            if (keyLower === 'n' && !event.shiftKey) {
+                event.preventDefault();
+                showAddTabChoiceModal();
+                return;
+            }
+            if (keyLower === 'w' && !event.shiftKey) {
+                event.preventDefault();
+                closeActiveTab();
+                return;
+            }
+            if (keyLower === 'b' && !event.shiftKey) {
+                event.preventDefault();
+                document.getElementById('explorerToggle').click();
+                return;
+            }
+            if (keyLower === 'p' && event.shiftKey) {
+                event.preventDefault();
+                showCommandPaletteModal();
+                return;
+            }
+            if (keyLower === 'p' && !event.shiftKey) {
+                event.preventDefault();
+                showQuickOpenModal();
+                return;
+            }
+            if (keyLower === 'f' && event.shiftKey) {
+                event.preventDefault();
+                showFindInFilesModal();
+                return;
+            }
+            if (keyLower === 'g' && event.shiftKey) {
+                event.preventDefault();
+                showGitPanelModal();
+                return;
+            }
+            if (keyLower === 'd' && event.shiftKey) {
+                event.preventDefault();
+                showDebugPanelModal();
+                return;
+            }
+            if (keyLower === 'm' && event.shiftKey) {
+                event.preventDefault();
+                showDiagnosticsModal();
+                return;
+            }
+            if (keyLower === 'e' && event.shiftKey) {
+                event.preventDefault();
+                chooseExplorerFolder();
+                return;
+            }
+            if ((event.code === 'Backquote' || key === '`') && !event.shiftKey) {
+                event.preventDefault();
+                showTerminalPanelModal();
+                return;
+            }
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                document.getElementById('execute').click();
+                return;
+            }
+            if (event.key === 'Tab') {
+                event.preventDefault();
+                switchToRelativeTab(event.shiftKey ? -1 : 1);
+                return;
+            }
+            if (!event.shiftKey && /^[1-9]$/.test(key)) {
+                event.preventDefault();
+                const ordered = getTabOrder();
+                const index = Number(key) - 1;
+                if (ordered[index]) {
+                    openTabById(ordered[index]);
+                }
             }
         });
 
@@ -5916,6 +9019,7 @@ console.log('Dark mode applied!');`
         setPrimaryView('home');
         (async () => {
             await restoreExplorerSession();
+            updateStatusBar();
         })();
 
         document.getElementById("scriptHub").onclick = () => {
@@ -5926,6 +9030,18 @@ console.log('Dark mode applied!');`
         settingsBtn.onclick = () => {
             setPrimaryView('settings');
         };
+        const sourceControlBtn = document.getElementById('sourceControlTab');
+        if (sourceControlBtn) {
+            sourceControlBtn.onclick = () => {
+                setPrimaryView('source-control');
+            };
+        }
+        const debugSidebarBtn = document.getElementById('debugSidebarTab');
+        if (debugSidebarBtn) {
+            debugSidebarBtn.onclick = () => {
+                setPrimaryView('debug');
+            };
+        }
 
         document.getElementById('fontSize').onchange = (e) => {
             if (editor) {
@@ -6027,6 +9143,14 @@ console.log('Dark mode applied!');`
             }
         }
 
+        function updateBridgeStatusPill(status) {
+            const bridgeEl = document.getElementById('statusBridge');
+            if (!bridgeEl) return;
+            const isOnline = Boolean(status && Number(status.connectedClients) > 0);
+            bridgeEl.textContent = isOnline ? 'Bridge: Online' : 'Bridge: Offline';
+            bridgeEl.classList.toggle('online', isOnline);
+        }
+
         function ensureExtensionBridgeSubscription() {
             if (extensionBridgeSubscribed) return;
 
@@ -6043,32 +9167,25 @@ console.log('Dark mode applied!');`
             if (typeof window.extensionBridge.onStatus === 'function') {
                 window.extensionBridge.onStatus((status) => {
                     extensionBridgeStatus = status;
+                    updateBridgeStatusPill(status);
                 });
             }
 
             extensionBridgeSubscribed = true;
         }
 
-        // This updates our floating capsule whenever the extension connects/disconnects
-        window.extensionBridge.onStatus((status) => {
-            const capsule = document.getElementById('statusCapsule');
-            const dot = document.getElementById('statusDot');
-            const text = document.getElementById('statusText');
-
-            if (status.connectedClients > 0) {
-                // TURN GREEN
-                capsule.classList.add('online');
-                dot.classList.add('online');
-                text.classList.add('online');
-                text.textContent = 'Online';
-            } else {
-                // TURN GREY
-                capsule.classList.remove('online');
-                dot.classList.remove('online');
-                text.classList.remove('online');
-                text.textContent = 'Offline';
-            }
-        });
+        if (window.extensionBridge && typeof window.extensionBridge.getStatus === 'function') {
+            window.extensionBridge.getStatus()
+                .then((status) => {
+                    extensionBridgeStatus = status;
+                    updateBridgeStatusPill(status);
+                })
+                .catch(() => {
+                    updateBridgeStatusPill(null);
+                });
+        } else {
+            updateBridgeStatusPill(null);
+        }
 
         async function ensureExtensionSocket() {
             if (!window.extensionBridge || typeof window.extensionBridge.getStatus !== 'function') {
@@ -6079,6 +9196,7 @@ console.log('Dark mode applied!');`
 
             const status = await window.extensionBridge.getStatus();
             extensionBridgeStatus = status;
+            updateBridgeStatusPill(status);
 
             if (!status || !status.serverRunning) {
                 throw new Error((status && status.error) || 'Bridge server is not running');
