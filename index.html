@@ -874,65 +874,72 @@
             padding: 0 6px 6px 6px;
             flex-shrink: 0;
             min-height: 100%;
+            position: relative;
         }
 
-        /* ---------- GLASSY SIDEBAR TABS ---------- */
+        #leftSidebarActiveIndicator {
+            position: absolute;
+            left: 6px;
+            width: 2px;
+            height: 22px;
+            border-radius: 999px;
+            background: #ffffff;
+            opacity: 0;
+            transform: translateY(0);
+            z-index: 8;
+            transition:
+                transform var(--sidebar-tab-transition) var(--sidebar-tab-ease),
+                height var(--sidebar-tab-transition) var(--sidebar-tab-ease),
+                opacity 140ms ease;
+            pointer-events: none;
+        }
+
+        #leftSidebarExplorerIndicator {
+            position: absolute;
+            left: 6px;
+            width: 2px;
+            height: 22px;
+            border-radius: 999px;
+            background: #ffffff;
+            opacity: 0;
+            transform: translateY(0);
+            z-index: 7;
+            transition:
+                transform var(--sidebar-tab-transition) var(--sidebar-tab-ease),
+                height var(--sidebar-tab-transition) var(--sidebar-tab-ease),
+                opacity 140ms ease;
+            pointer-events: none;
+        }
+
+        /* ---------- SIDEBAR ICON TABS ---------- */
         .sidebar-tab {
-            /* 1. Ultra-transparent glass base */
-            background: rgba(255, 255, 255, 0.03) !important;
-            
-            /* 2. Glass blur & saturation */
-            backdrop-filter: blur(15px) saturate(200%);
-            -webkit-backdrop-filter: blur(15px) saturate(200%);
-
-            /* 3. The Triple Glass Shadow */
-            box-shadow: 
-                0 4px 10px rgba(0, 0, 0, 0.3),                /* Drop shadow */
-                inset 0 0 0 1px rgba(255, 255, 255, 0.1),     /* Sharp outer edge highlight */
-                inset 0 2px 8px rgba(255, 255, 255, 0.05) !important; /* Internal refraction */
-
-            /* 4. Border and Icon color */
-            border: 1px solid rgba(255, 255, 255, 0.05) !important;
-            color: rgba(255, 255, 255, 0.4) !important; /* Dim icon by default */
-            
-            /* Layout */
+            background: transparent !important;
+            border: none !important;
+            box-shadow: none !important;
+            backdrop-filter: none !important;
+            -webkit-backdrop-filter: none !important;
+            color: rgba(255, 255, 255, 0.44) !important;
             width: 36px;
             height: 36px;
             display: flex;
             align-items: center;
             justify-content: center;
-            border-radius: 8px; /* Slightly rounder look */
+            border-radius: 0;
             cursor: pointer;
             flex-shrink: 0;
             transition:
-                background-color var(--sidebar-tab-transition) var(--sidebar-tab-ease),
                 color var(--sidebar-tab-transition) var(--sidebar-tab-ease),
-                border-color var(--sidebar-tab-transition) var(--sidebar-tab-ease),
-                box-shadow var(--sidebar-tab-transition) var(--sidebar-tab-ease),
                 transform var(--sidebar-tab-transition) var(--sidebar-tab-ease) !important;
         }
 
-        /* Hover: Glass lights up and icon brightens */
         .sidebar-tab:hover {
-            background: rgba(255, 255, 255, 0.08) !important;
             color: rgba(255, 255, 255, 0.8) !important;
-            box-shadow: 
-                0 4px 12px rgba(0, 0, 0, 0.4),
-                inset 0 0 0 1px rgba(255, 255, 255, 0.2),
-                inset 0 2px 10px rgba(255, 255, 255, 0.1) !important;
-            transform: scale(1.03); /* Subtle pop effect */
+            transform: scale(1.03);
         }
 
-        /* Active: The "Pressed Glass" look */
         .sidebar-tab.active {
-            background: rgba(255, 255, 255, 0.15) !important;
             color: #ffffff !important;
-            border: 1px solid rgba(255, 255, 255, 0.2) !important;
             transform: scale(1.02);
-            box-shadow: 
-                0 0 15px rgba(255, 255, 255, 0.05),           /* Outer glow */
-                inset 0 0 0 1px rgba(255, 255, 255, 0.4),     /* Much brighter edge */
-                inset 0 2px 10px rgba(255, 255, 255, 0.1) !important;
         }
 
         .sidebar-tab:active {
@@ -3308,6 +3315,8 @@
         <div id="editorWrap">
                 <div id="editorContainer">
                     <div id="leftSidebar">
+                    <div id="leftSidebarExplorerIndicator" aria-hidden="true"></div>
+                    <div id="leftSidebarActiveIndicator" aria-hidden="true"></div>
                     <div class="sidebar-tab active" id="homeTab" data-view="home" title="Home">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
                             <path d="M3 10.5L12 3l9 7.5"></path>
@@ -7503,6 +7512,7 @@ console.log('Dark mode applied!');`
                     requestAnimationFrame(() => editor.layout());
                 });
             }
+            updateSidebarActiveIndicator();
         }
 
         function buildExplorerTreeNodes(nodes, depth, fragment) {
@@ -8732,6 +8742,36 @@ console.log('Dark mode applied!');`
             }
         }
 
+        function updateSidebarActiveIndicator() {
+            const sidebarEl = document.getElementById('leftSidebar');
+            const indicatorEl = document.getElementById('leftSidebarActiveIndicator');
+            const explorerIndicatorEl = document.getElementById('leftSidebarExplorerIndicator');
+            const explorerTabEl = document.getElementById('explorerToggle');
+            const explorerPaneEl = document.getElementById('explorerPane');
+            if (!sidebarEl || !indicatorEl) return;
+
+            if (explorerIndicatorEl && explorerTabEl) {
+                const explorerHeight = Math.max(14, Math.floor((explorerTabEl.offsetHeight || 36) * 0.62));
+                const explorerTop = (explorerTabEl.offsetTop || 0) + Math.floor(((explorerTabEl.offsetHeight || 36) - explorerHeight) / 2);
+                explorerIndicatorEl.style.height = `${explorerHeight}px`;
+                explorerIndicatorEl.style.transform = `translateY(${explorerTop}px)`;
+                const isExplorerOpen = Boolean(explorerPaneEl && !explorerPaneEl.classList.contains('collapsed'));
+                explorerIndicatorEl.style.opacity = isExplorerOpen ? '1' : '0';
+            }
+
+            const activeTabEl = sidebarEl.querySelector('.sidebar-tab[data-view].active');
+            if (!activeTabEl) {
+                indicatorEl.style.opacity = '0';
+                return;
+            }
+
+            const height = Math.max(14, Math.floor((activeTabEl.offsetHeight || 36) * 0.62));
+            const top = (activeTabEl.offsetTop || 0) + Math.floor(((activeTabEl.offsetHeight || 36) - height) / 2);
+            indicatorEl.style.height = `${height}px`;
+            indicatorEl.style.transform = `translateY(${top}px)`;
+            indicatorEl.style.opacity = '1';
+        }
+
         function setPrimaryView(view) {
             if (primaryViewTransitionTimer) {
                 clearTimeout(primaryViewTransitionTimer);
@@ -8845,6 +8885,8 @@ console.log('Dark mode applied!');`
 
             currentPrimaryView = view;
             updateStatusBar();
+            updateSidebarActiveIndicator();
+            requestAnimationFrame(updateSidebarActiveIndicator);
 
             if (editor) {
                 requestAnimationFrame(() => {
@@ -8864,6 +8906,8 @@ console.log('Dark mode applied!');`
         document.getElementById('htmlOutputTab').onclick = function () {
             setPrimaryView('html');
         };
+
+        window.addEventListener('resize', updateSidebarActiveIndicator);
 
         document.addEventListener('mousemove', updateProjectLabelProximityFade);
         document.addEventListener('mouseleave', () => {
