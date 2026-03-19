@@ -314,8 +314,8 @@ function stopExtensionBridge() {
 }
 
 function createWindow() {
-    const START_WIDTH = 700;
-    const START_HEIGHT = 385;
+    const START_WIDTH = 850;
+    const START_HEIGHT = 468;
     const TARGET_WIDTH = 1000;
     const TARGET_HEIGHT = 550;
     const ANIM_DURATION_MS = 450;
@@ -373,7 +373,7 @@ function createWindow() {
 
             step++;
             const progress = Math.min(step / steps, 1);
-            const easedProgress = 1 - Math.pow(1 - progress, 4); // stronger ease-out (faster start)
+            const easedProgress = 1 - Math.pow(1 - progress, 2); // stronger ease-out (faster start)
             const width = Math.round(START_WIDTH + (TARGET_WIDTH - START_WIDTH) * easedProgress);
             const height = Math.round(START_HEIGHT + (TARGET_HEIGHT - START_HEIGHT) * easedProgress);
             const x = anchorCenterX - Math.round(width / 2);
