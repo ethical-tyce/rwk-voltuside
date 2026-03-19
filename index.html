@@ -2961,7 +2961,7 @@
             overflow: hidden;
             display: grid;
             place-items: center;
-            transition: opacity 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: opacity 0.45s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
         .splash-content {
@@ -2994,11 +2994,11 @@
         }
 
         body.startup-intro-running .splash-logo {
-            animation: logoEntrance 1.2s cubic-bezier(0.16, 1, 0.3, 1) 0s both;
+            animation: logoEntrance 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0s both;
         }
 
         body.startup-intro-running .splash-loader {
-            animation: loadBar 1.5s ease-in-out 0s forwards;
+            animation: loadBar 0.9s ease-in-out 0s forwards;
         }
 
         /* The "Window Expansion" effect applied to the main app */
@@ -3594,6 +3594,9 @@ throw "Chrome executable not found."
                 startupRevealStarted = true;
                 body.classList.add('startup-intro-running');
 
+                const SPLASH_VISIBLE_MS = 900;
+                const SPLASH_FADE_REMOVE_MS = 450;
+
                 setTimeout(() => {
                     splash.classList.add('splash-fade-out');
                     appContainer.classList.add('expanded');
@@ -3603,8 +3606,8 @@ throw "Chrome executable not found."
                     body.classList.remove('startup-active');
                     setTimeout(() => {
                         splash.remove();
-                    }, 800);
-                }, 2400);
+                    }, SPLASH_FADE_REMOVE_MS);
+                }, SPLASH_VISIBLE_MS);
             };
 
             if (titleIcon) {
@@ -3626,7 +3629,7 @@ throw "Chrome executable not found."
                 // Fallback for non-Electron contexts.
                 setTimeout(() => {
                     startStartupReveal();
-                }, 1800);
+                }, 900);
             }
         });
 

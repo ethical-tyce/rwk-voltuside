@@ -318,7 +318,7 @@ function createWindow() {
     const START_HEIGHT = 385;
     const TARGET_WIDTH = 1000;
     const TARGET_HEIGHT = 550;
-    const ANIM_DURATION_MS = 800; // ← make this bigger for slower
+    const ANIM_DURATION_MS = 450;
     const ANIM_INTERVAL_MS = 10;
 
     // Use the .ico asset on Windows for proper taskbar/shell icon rendering.
@@ -396,8 +396,8 @@ function createWindow() {
             setTimeout(() => {
                 win.setOpacity(1);
                 startGrowAnimation();
-            }, 100);
-        }, 200);
+            }, 40);
+        }, 80);
     });
     
 
@@ -971,3 +971,4 @@ app.on('activate', () => {
 app.on('before-quit', () => {
     stopExtensionBridge();
 });
+
