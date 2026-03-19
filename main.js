@@ -321,8 +321,8 @@ function createWindow() {
     const ANIM_DURATION_MS = 800; // ← make this bigger for slower
     const ANIM_INTERVAL_MS = 10;
 
-    // Use a dedicated Windows icon asset for taskbar/shell visuals.
-    const iconPath = path.join(__dirname, process.platform === 'win32' ? 'winico.png' : 'icon.png');
+    // Use the .ico asset on Windows for proper taskbar/shell icon rendering.
+    const iconPath = path.join(__dirname, process.platform === 'win32' ? 'voltus.ico' : 'icon.png');
 
     win = new BrowserWindow({
         width: START_WIDTH,

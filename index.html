@@ -765,6 +765,44 @@
             color: #c9c9c9;
         }
 
+        .status-action-btn {
+            -webkit-app-region: no-drag;
+            appearance: none;
+            border: none;
+            background: transparent;
+            color: #a9a9a9;
+            height: 22px;
+            width: 22px;
+            padding: 0;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: color 0.16s ease, opacity 0.16s ease, transform 0.16s ease;
+        }
+
+        .status-action-btn:hover {
+            color: #f0f0f0;
+            transform: translateY(-0.5px);
+        }
+
+        .status-action-btn:active {
+            opacity: 0.88;
+            transform: none;
+        }
+
+        .status-action-btn:disabled {
+            opacity: 0.55;
+            cursor: not-allowed;
+        }
+
+        .status-action-btn svg {
+            width: 16px;
+            height: 16px;
+            display: block;
+            pointer-events: none;
+        }
+
         #statusDiagnostics.has-errors {
             color: #f2a0a0;
         }
@@ -1336,18 +1374,14 @@
         }
 
         #dashboard,
-        #settingsView,
-        #sourceControlView,
-        #debugView {
+        #settingsView {
             padding: 22px;
             color: #d2d2d2;
             overflow-y: auto;
         }
 
         #dashboard h2,
-        #settingsView h2,
-        #sourceControlView h2,
-        #debugView h2 {
+        #settingsView h2 {
             margin: 0 0 10px 0;
             font-size: 20px;
             font-weight: 600;
@@ -1413,215 +1447,6 @@
             line-height: 1.4;
             white-space: pre-wrap;
             word-break: break-word;
-        }
-
-        #sourceControlView {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-
-        #sourceControlView h2 {
-            margin-bottom: 0;
-        }
-
-        #sourceControlView .ide-workbench-grid {
-            min-height: 0;
-            flex: 1;
-            grid-template-columns: minmax(280px, 0.95fr) minmax(300px, 1.05fr) minmax(250px, 0.85fr);
-        }
-
-        #sourceControlView .ide-workbench-column {
-            gap: 10px;
-        }
-
-        #sourceControlView .ide-workbench-label {
-            font-size: 12px;
-            letter-spacing: 0.04em;
-        }
-
-        #sourceControlView .ide-workbench-input,
-        #sourceControlView .ide-workbench-meta,
-        #sourceControlView .ide-workbench-pre {
-            font-size: 12px;
-        }
-
-        #sourceControlView .modal-btn {
-            min-height: 32px;
-            padding: 0 12px !important;
-            font-size: 12px !important;
-        }
-
-        .source-control-priority {
-            flex: 0 0 auto;
-            padding: 12px;
-            border-color: rgba(159, 211, 255, 0.25);
-            background: linear-gradient(160deg, rgba(24, 38, 56, 0.42), rgba(8, 10, 14, 0.88));
-        }
-
-        .source-control-priority-top {
-            display: flex;
-            align-items: flex-start;
-            justify-content: space-between;
-            gap: 10px;
-            flex-wrap: wrap;
-            margin-bottom: 10px;
-        }
-
-        .source-control-branch {
-            font-size: 14px;
-            font-weight: 600;
-            color: #e8f3ff;
-        }
-
-        .source-control-summary {
-            border-radius: 999px;
-            border: 1px solid rgba(159, 211, 255, 0.32);
-            background: rgba(159, 211, 255, 0.15);
-            color: #b6deff;
-            padding: 4px 10px;
-            font-size: 12px;
-            line-height: 1.2;
-        }
-
-        .source-control-repo-row {
-            align-items: stretch;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-
-        .source-control-repo-row .ide-workbench-input {
-            min-width: 240px;
-            flex: 1 1 320px;
-        }
-
-        .source-control-controls {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-        }
-
-        .source-control-grid .ide-workbench-surface {
-            padding: 0;
-        }
-
-        #sourceControlDiffPreview {
-            padding: 10px;
-        }
-
-        .source-control-recent-label {
-            margin-top: 4px;
-        }
-
-        .source-control-log-row {
-            padding: 8px 10px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-            font-size: 12px;
-            line-height: 1.35;
-            color: #d0d0d0;
-        }
-
-        .source-control-log-row:last-child {
-            border-bottom: none;
-        }
-
-        .source-control-status-row {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 10px;
-            padding: 8px 10px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-        }
-
-        .source-control-status-row:last-child {
-            border-bottom: none;
-        }
-
-        .source-control-status-info {
-            border: none;
-            background: none;
-            color: #d7d7d7;
-            cursor: pointer;
-            text-align: left;
-            padding: 0;
-            min-width: 0;
-            flex: 1;
-        }
-
-        .source-control-status-main {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            min-width: 0;
-        }
-
-        .source-control-status-tag {
-            flex: 0 0 auto;
-            border-radius: 999px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            padding: 3px 7px;
-            font-size: 10px;
-            letter-spacing: 0.05em;
-            text-transform: uppercase;
-            line-height: 1;
-            color: #d2d2d2;
-            background: rgba(255, 255, 255, 0.08);
-        }
-
-        .source-control-status-tag[data-kind="untracked"] {
-            color: #ffe2a8;
-            border-color: rgba(255, 204, 122, 0.5);
-            background: rgba(255, 204, 122, 0.16);
-        }
-
-        .source-control-status-tag[data-kind="staged-modified"],
-        .source-control-status-tag[data-kind="staged"] {
-            color: #a6ebc1;
-            border-color: rgba(121, 224, 164, 0.55);
-            background: rgba(121, 224, 164, 0.16);
-        }
-
-        .source-control-status-tag[data-kind="modified"] {
-            color: #ffc4cc;
-            border-color: rgba(255, 130, 150, 0.52);
-            background: rgba(255, 130, 150, 0.16);
-        }
-
-        .source-control-status-path {
-            min-width: 0;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-            font-size: 12px;
-            color: #c7c7c7;
-        }
-
-        .source-control-status-actions {
-            display: flex;
-            gap: 6px;
-            flex: 0 0 auto;
-        }
-
-        .source-control-action-btn {
-            min-width: 76px;
-        }
-
-        @media (max-width: 1260px) {
-            #sourceControlView .ide-workbench-grid {
-                grid-template-columns: 1fr 1fr;
-            }
-
-            .source-control-commit-column {
-                grid-column: 1 / -1;
-                min-height: 220px;
-            }
-        }
-
-        @media (max-width: 860px) {
-            #sourceControlView .ide-workbench-grid {
-                grid-template-columns: 1fr;
-            }
         }
 
         .dashboard-grid {
@@ -3377,16 +3202,6 @@
                             <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
                         </svg>
                     </div>
-                    <div class="sidebar-tab" id="sourceControlTab" data-view="source-control" title="Source Control">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960" width="24" height="24" fill="currentColor">
-                            <path d="M194-80q-47.5 0-80.75-32.96T80-193q0-38 22.5-67.32Q125-289.65 160-301v-97q0-46 33-79t79-33h178v-148q-36-10-59.5-40T367-767q0-47.08 33.15-80.04Q433.29-880 480.65-880q47.35 0 79.85 32.96Q593-814.08 593-767q0 39-23.5 69T510-658v148h178q46 0 79 33t33 79v97q35 11.35 57.5 40.68Q880-231 880-193q0 47.08-32.67 80.04Q814.67-80 768-80q-47.5 0-80.75-32.96T654-193q0-40 24.5-70.5T740-303v-95q0-21-15.5-36.5T688-450H510v148q36 10 59.5 40t23.5 69q0 47.08-32.67 80.04Q527.67-80 481-80q-47.5 0-80.75-32.96T367-193q0-39 23.5-69t59.5-40v-148H272q-21 0-36.5 15.5T220-398v95q37 9 61.5 39.5T306-193q0 47.08-32.67 80.04Q240.67-80 194-80Zm.07-60q22.07 0 37-15.5T246-193q0-22-14.93-37.5t-37-15.5Q172-246 156-230.5T140-193q0 22 16 37.5t38.07 15.5Zm287 0q22.07 0 37-15.5T533-193q0-22-14.93-37.5t-37-15.5Q459-246 443-230.5T427-193q0 22 16 37.5t38.07 15.5Zm287 0q22.07 0 37-15.5T820-193q0-22-14.93-37.5t-37-15.5Q746-246 730-230.5T714-193q0 22 16 37.5t38.07 15.5Zm-287-574q22.07 0 37-15.5T533-767q0-22-14.93-37.5t-37-15.5Q459-820 443-804.5T427-767q0 22 16 37.5t38.07 15.5Z"/>
-                        </svg>
-                    </div>
-                    <div class="sidebar-tab" id="debugSidebarTab" data-view="debug" title="Debug">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960" width="24" height="24" fill="currentColor">
-                            <path d="M180-820v293-3 390-680 186-186Zm0 740q-24 0-42-18t-18-42v-680q0-24 18-42t42-18h361l219 219v154q-14-7-29-12t-31-8v-107H511v-186H180v680h315q20 21 44.5 36T593-80H180Zm558.5-141.5Q770-253 770-300t-31.5-78.5Q707-410 660-410t-78.5 31.5Q550-347 550-300t31.5 78.5Q613-190 660-190t78.5-31.5ZM864-54 756.84-161Q736-147 711.5-138.5 687-130 660-130q-70.83 0-120.42-49.62Q490-229.24 490-300.12t49.62-120.38q49.62-49.5 120.5-49.5t120.38 49.58Q830-370.83 830-300q0 27-8.5 51.5T799-203.16L906-96l-42 42Z"/>
-                        </svg>
-                    </div>
                     <div class="sidebar-tab" id="editorTab" data-view="editor" title="Editor">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
                             <polyline points="16 18 22 12 16 6"></polyline>
@@ -3559,59 +3374,6 @@
                             </div>
                         </div>
                     </div>
-                    <div id="sourceControlView" class="primary-view">
-                        <h2>Source Control</h2>
-                        <div class="source-control-priority ide-workbench-surface">
-                            <div class="source-control-priority-top">
-                                <div>
-                                    <div class="ide-workbench-label">Repository</div>
-                                    <div id="sourceControlBranchMeta" class="source-control-branch">Branch: -</div>
-                                </div>
-                                <div id="sourceControlSummaryMeta" class="source-control-summary">No changes</div>
-                            </div>
-                            <div class="ide-workbench-row source-control-repo-row">
-                                <input id="sourceControlCwdInput" class="ide-workbench-input" type="text" spellcheck="false" />
-                                <div class="source-control-controls">
-                                    <button id="sourceControlUseWorkspaceBtn" class="modal-btn cancel">Use Workspace</button>
-                                    <button id="sourceControlRefreshBtn" class="modal-btn confirm">Refresh</button>
-                                    <button id="sourceControlStageAllBtn" class="modal-btn cancel">Stage All</button>
-                                    <button id="sourceControlUnstageAllBtn" class="modal-btn cancel">Unstage All</button>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="ide-workbench-grid source-control-grid">
-                            <div class="ide-workbench-column">
-                                <div class="ide-workbench-label">Changes</div>
-                                <div id="sourceControlStatusList" class="ide-workbench-surface"></div>
-                            </div>
-                            <div class="ide-workbench-column">
-                                <div class="ide-workbench-label">Diff</div>
-                                <pre id="sourceControlDiffPreview" class="ide-workbench-surface ide-workbench-pre"></pre>
-                            </div>
-                            <div class="ide-workbench-column source-control-commit-column">
-                                <div class="ide-workbench-label">Commit</div>
-                                <input id="sourceControlCommitMessageInput" class="ide-workbench-input" type="text" spellcheck="false" placeholder="Commit message" />
-                                <button id="sourceControlCommitBtn" class="modal-btn confirm">Commit</button>
-                                <div class="ide-workbench-label source-control-recent-label">Recent</div>
-                                <div id="sourceControlLogList" class="ide-workbench-surface ide-workbench-pre"></div>
-                            </div>
-                        </div>
-                    </div>
-                    <div id="debugView" class="primary-view">
-                        <h2>Debug</h2>
-                        <div class="ide-workbench-column" style="gap:10px;">
-                            <div class="ide-workbench-meta">Toggle breakpoints in the gutter or with F9, then start debug with F7.</div>
-                            <div id="debugViewBreakpointList" class="ide-workbench-surface"></div>
-                            <div class="ide-workbench-row" style="justify-content:space-between;flex-wrap:wrap;">
-                                <div style="display:flex;gap:8px;flex-wrap:wrap;">
-                                    <button id="debugViewStartBtn" class="modal-btn confirm">Start Debug</button>
-                                    <button id="debugViewToggleBtn" class="modal-btn cancel">Toggle Cursor Breakpoint</button>
-                                    <button id="debugViewClearBtn" class="modal-btn cancel">Clear Breakpoints</button>
-                                </div>
-                                <button id="debugViewDevtoolsBtn" class="modal-btn cancel">Open DevTools</button>
-                            </div>
-                        </div>
-                    </div>
                     <div id="editor" class="primary-view"></div>
                     <div id="editorImageOverlay" aria-hidden="true">
                         <div id="editorImageOverlayStage">
@@ -3653,6 +3415,11 @@
                     <span id="statusLanguage" class="status-pill">javascript</span>
                 </div>
                 <div id="statusBarRight">
+                    <button id="statusChromeDebugBtn" class="status-action-btn" type="button" title="Launch Chrome Debug (9222)" aria-label="Launch Chrome debug on port 9222">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960" fill="currentColor" aria-hidden="true">
+                            <path d="M436.67-344 664-571.33l-47-46.34-178.33 178.34-95.34-95.34L295-486.33 436.67-344ZM480-80.67q-139.67-35-229.83-161.5Q160-368.67 160-520.67v-240l320-120 320 120v240q0 152-90.17 278.5Q619.67-115.67 480-80.67Zm0-69.33q111.33-36.33 182.33-139.67 71-103.33 71-231v-193.66L480-809.67l-253.33 95.34v193.66q0 127.67 71 231Q368.67-186.33 480-150Zm0-330Z"/>
+                        </svg>
+                    </button>
                     <span id="statusExecutionMode" class="status-pill">Mode: Browser</span>
                     <span id="statusBridge" class="status-pill">Bridge: Offline</span>
                     <span id="statusDiagnostics" class="status-pill">Problems: 0</span>
@@ -3703,6 +3470,23 @@
             const openWebsiteBtn = document.getElementById('openWebsiteBtn');
             const downloadLatestBtn = document.getElementById('downloadLatestBtn');
             const joinDiscordBtn = document.getElementById('joinDiscordBtn');
+            const statusChromeDebugBtn = document.getElementById('statusChromeDebugBtn');
+
+            const launchChromeDebugCommand = `
+$candidates = @(
+    "chrome.exe",
+    "$env:ProgramFiles\\Google\\Chrome\\Application\\chrome.exe",
+    "$env:ProgramFiles(x86)\\Google\\Chrome\\Application\\chrome.exe",
+    "$env:LocalAppData\\Google\\Chrome\\Application\\chrome.exe"
+)
+foreach ($candidate in $candidates) {
+    try {
+        Start-Process -FilePath $candidate -ArgumentList "--remote-debugging-port=9222" -ErrorAction Stop | Out-Null
+        exit 0
+    } catch {}
+}
+throw "Chrome executable not found."
+`;
 
             const openExternalLink = async (url) => {
                 if (!window.appInfo || typeof window.appInfo.openExternal !== 'function') {
@@ -3742,6 +3526,40 @@
                     event.preventDefault();
                     event.stopPropagation();
                     await openExternalLink('https://discord.gg/S37zYBH6Rr');
+                });
+            }
+
+            if (statusChromeDebugBtn) {
+                statusChromeDebugBtn.addEventListener('click', async (event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+
+                    if (!window.runtime || typeof window.runtime.runShell !== 'function') {
+                        showToast('Runtime shell API unavailable');
+                        return;
+                    }
+
+                    statusChromeDebugBtn.disabled = true;
+
+                    try {
+                        const result = await window.runtime.runShell(launchChromeDebugCommand, { timeoutMs: 15000 });
+                        const ok = Number(result && result.exitCode) === 0;
+
+                        if (ok) {
+                            showToast('Chrome debug started on port 9222');
+                        } else {
+                            const stderr = String(result && result.stderr ? result.stderr : '').trim();
+                            showToast('Failed to launch Chrome debug');
+                            if (stderr) {
+                                pushConsole('error', `Chrome debug launch failed: ${stderr}`);
+                            }
+                        }
+                    } catch (error) {
+                        showToast('Failed to launch Chrome debug');
+                        pushConsole('error', 'Chrome debug launch failed:', error && error.message ? error.message : String(error));
+                    } finally {
+                        statusChromeDebugBtn.disabled = false;
+                    }
                 });
             }
 
@@ -4956,10 +4774,6 @@ console.log('Dark mode applied!');`
         const breakpointLinesByTabId = new Map();
         let terminalLastCwd = '';
         const terminalHistory = [];
-        let sourceControlViewBound = false;
-        let sourceControlLoading = false;
-        let sourceControlStatusFiles = [];
-        let debugViewBound = false;
 
         function openTabById(tabId) {
             if (!tabId || !tabs[tabId] || !tabs[tabId].tabElement) return;
@@ -5262,10 +5076,6 @@ console.log('Dark mode applied!');`
                 { title: 'Problems: Show Diagnostics', detail: 'Review warnings and errors', meta: 'CTRL+SHIFT+M', run: () => showDiagnosticsModal() },
                 { title: 'Run: Execute', detail: 'Run current code', meta: 'CTRL+ENTER', run: () => document.getElementById('execute').click() },
             { title: 'Run: Terminal', detail: 'Open terminal tab in Output view', meta: 'CTRL+`', run: () => showTerminalPanelModal() },
-            { title: 'Source Control: Open View', detail: 'Inspect status, diff, and commit', meta: 'CTRL+SHIFT+G', run: () => showGitPanelModal() },
-            { title: 'Debug: Open View', detail: 'Manage breakpoints and debug controls', meta: 'CTRL+SHIFT+D', run: () => showDebugPanelModal() },
-                { title: 'Debug: Start', detail: 'Start debug run for JS/TS tab', meta: 'F7', run: () => startDebugRun() },
-                { title: 'Debug: Toggle Breakpoint', detail: 'Toggle breakpoint at current line', meta: 'F9', run: () => toggleBreakpointAtCursor() },
                 { title: 'View: Home', detail: 'Open dashboard', meta: 'ALT+1', run: () => setPrimaryView('home') },
                 { title: 'View: Editor', detail: 'Open editor', meta: 'ALT+2', run: () => setPrimaryView('editor') },
                 { title: 'View: Output', detail: 'Open Project Preview and console', meta: 'ALT+3', run: () => setPrimaryView('html') },
@@ -6122,9 +5932,6 @@ console.log('Dark mode applied!');`
             setBreakpointsForTab(activeTabId, next);
             refreshBreakpointDecorations();
             updateStatusBar();
-            if (currentPrimaryView === 'debug') {
-                renderDebugView();
-            }
         }
 
         function toggleBreakpointAtCursor() {
@@ -6140,9 +5947,6 @@ console.log('Dark mode applied!');`
             breakpointLinesByTabId.delete(key);
             if (key === activeTabId) {
                 refreshBreakpointDecorations();
-            }
-            if (currentPrimaryView === 'debug') {
-                renderDebugView();
             }
         }
 
@@ -6200,498 +6004,6 @@ console.log('Dark mode applied!');`
 
             setBreakpointsForTab(activeTabId, remapped);
             refreshBreakpointDecorations();
-            if (currentPrimaryView === 'debug') {
-                renderDebugView();
-            }
-        }
-
-        function prepareDebugCodeWithBreakpoints(sourceCode, breakpoints) {
-            const normalizedBreakpoints = normalizeBreakpointLines(breakpoints);
-            const lines = String(sourceCode || '').replace(/\r\n/g, '\n').split('\n');
-            const applied = [];
-            const skipped = [];
-
-            for (let i = normalizedBreakpoints.length - 1; i >= 0; i--) {
-                const lineNumber = normalizedBreakpoints[i];
-                const lineIndex = lineNumber - 1;
-                if (lineIndex < 0 || lineIndex >= lines.length) {
-                    skipped.push(lineNumber);
-                    continue;
-                }
-                const sourceLine = String(lines[lineIndex] || '');
-                if (!sourceLine.trim() || /^\s*[}\])]/.test(sourceLine)) {
-                    skipped.push(lineNumber);
-                    continue;
-                }
-                const indent = getLeadingWhitespace(sourceLine);
-                lines.splice(
-                    lineIndex,
-                    0,
-                    `${indent}window.__voltusDebug && window.__voltusDebug.hit(${lineNumber});`,
-                    `${indent}debugger;`
-                );
-                applied.push(lineNumber);
-            }
-
-            const bootstrap = [
-                'window.__voltusDebug = window.__voltusDebug || {',
-                '    hit: function(line) {',
-                "        try { window.parent.postMessage({ isLocalLog: true, type: 'log', args: ['[debug] breakpoint line ' + line] }, '*'); } catch (_error) {}",
-                '    }',
-                '};'
-            ].join('\n');
-
-            return {
-                code: `${bootstrap}\n${lines.join('\n')}`,
-                appliedBreakpoints: applied.sort((a, b) => a - b),
-                skippedBreakpoints: skipped.sort((a, b) => a - b)
-            };
-        }
-
-        async function startDebugRun() {
-            const activeTab = activeTabId && tabs[activeTabId] ? tabs[activeTabId] : null;
-            if (!activeTab) {
-                showToast('No active tab to debug');
-                return;
-            }
-
-            const execType = getLocalExecutionKindForActiveTab();
-            if (execType.kind !== 'javascript') {
-                showToast('Debug run supports JavaScript and TypeScript tabs');
-                return;
-            }
-
-            const code = getCurrentEditorCode();
-            if (!String(code || '').trim()) {
-                showToast('No code to debug');
-                return;
-            }
-
-            if (window.runtime && typeof window.runtime.openDevTools === 'function') {
-                try {
-                    await window.runtime.openDevTools();
-                } catch { }
-            }
-
-            const breakpoints = getBreakpointsForTab(activeTabId);
-            let debugCode = `debugger;\n${code}`;
-            let appliedBreakpoints = [];
-            let skippedBreakpoints = [];
-
-            if (breakpoints.length > 0) {
-                const prepared = prepareDebugCodeWithBreakpoints(code, breakpoints);
-                debugCode = prepared.code;
-                appliedBreakpoints = prepared.appliedBreakpoints;
-                skippedBreakpoints = prepared.skippedBreakpoints;
-            }
-
-            runJavaScriptLocally(debugCode);
-            setHtmlOutputLabel('Debug Session');
-            document.getElementById('htmlOutputTab').click();
-
-            if (appliedBreakpoints.length > 0) {
-                pushConsole('log', `Debug run with breakpoints on line(s): ${appliedBreakpoints.join(', ')}`);
-            } else {
-                pushConsole('log', 'Debug run started with entry breakpoint');
-            }
-            if (skippedBreakpoints.length > 0) {
-                pushConsole('warn', `Skipped unsupported breakpoint line(s): ${skippedBreakpoints.join(', ')}`);
-            }
-            showToast('Debug run started');
-        }
-
-        function ensureDebugViewBound() {
-            if (debugViewBound) return;
-
-            const startBtn = document.getElementById('debugViewStartBtn');
-            const toggleBtn = document.getElementById('debugViewToggleBtn');
-            const clearBtn = document.getElementById('debugViewClearBtn');
-            const devtoolsBtn = document.getElementById('debugViewDevtoolsBtn');
-
-            if (startBtn) {
-                startBtn.onclick = () => {
-                    void startDebugRun();
-                };
-            }
-            if (toggleBtn) {
-                toggleBtn.onclick = () => {
-                    toggleBreakpointAtCursor();
-                    renderDebugView();
-                };
-            }
-            if (clearBtn) {
-                clearBtn.onclick = () => {
-                    clearBreakpointsForTab(activeTabId);
-                    renderDebugView();
-                };
-            }
-            if (devtoolsBtn) {
-                devtoolsBtn.onclick = async () => {
-                    if (window.runtime && typeof window.runtime.openDevTools === 'function') {
-                        try {
-                            await window.runtime.openDevTools();
-                        } catch {
-                            showToast('Could not open DevTools');
-                        }
-                    } else {
-                        showToast('DevTools API unavailable');
-                    }
-                };
-            }
-
-            debugViewBound = true;
-        }
-
-        function renderDebugView() {
-            const listEl = document.getElementById('debugViewBreakpointList');
-            if (!listEl) return;
-            listEl.innerHTML = '';
-
-            const activeTab = activeTabId && tabs[activeTabId] ? tabs[activeTabId] : null;
-            const lines = getBreakpointsForTab(activeTabId);
-            if (!activeTab) {
-                const empty = document.createElement('div');
-                empty.className = 'ide-workbench-meta';
-                empty.textContent = 'No active tab.';
-                listEl.appendChild(empty);
-                return;
-            }
-            if (!lines.length) {
-                const empty = document.createElement('div');
-                empty.className = 'ide-workbench-meta';
-                empty.textContent = `No breakpoints in ${activeTab.name}.`;
-                listEl.appendChild(empty);
-                return;
-            }
-
-            const sourceLines = String(activeTabId && editor ? editor.getValue() : activeTab.content || '')
-                .replace(/\r\n/g, '\n')
-                .split('\n');
-
-            lines.forEach((lineNumber) => {
-                const row = document.createElement('div');
-                row.style.cssText = 'display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 8px;border-bottom:1px solid rgba(255,255,255,0.06);';
-
-                const info = document.createElement('button');
-                info.type = 'button';
-                info.style.cssText = 'border:none;background:none;color:#c8c8c8;cursor:pointer;text-align:left;padding:0;flex:1;min-width:0;';
-                const preview = (sourceLines[lineNumber - 1] || '').trim() || '(blank line)';
-                info.textContent = `Line ${lineNumber}: ${preview}`;
-                info.onclick = () => {
-                    openTabById(activeTabId);
-                    setPrimaryView('editor');
-                    if (editor) {
-                        editor.focus();
-                        editor.setPosition({ lineNumber, column: 1 });
-                        editor.revealLineInCenter(lineNumber);
-                    }
-                };
-
-                const removeBtn = document.createElement('button');
-                removeBtn.type = 'button';
-                removeBtn.className = 'modal-btn cancel';
-                removeBtn.style.padding = '5px 10px';
-                removeBtn.textContent = 'Remove';
-                removeBtn.onclick = () => {
-                    toggleBreakpointAtLine(lineNumber);
-                    renderDebugView();
-                };
-
-                row.append(info, removeBtn);
-                listEl.appendChild(row);
-            });
-        }
-
-        function renderSourceControlLog(entries) {
-            const logList = document.getElementById('sourceControlLogList');
-            if (!logList) return;
-            logList.innerHTML = '';
-            const list = Array.isArray(entries) ? entries : [];
-            if (!list.length) {
-                const empty = document.createElement('div');
-                empty.className = 'ide-workbench-meta';
-                empty.textContent = 'No commits found.';
-                logList.appendChild(empty);
-                return;
-            }
-
-            list.forEach((entry) => {
-                const row = document.createElement('div');
-                row.className = 'source-control-log-row';
-                row.textContent = `${entry.hash || '-'}  ${entry.relativeTime || ''}  ${entry.subject || ''}`;
-                row.title = `${entry.author || ''}`;
-                logList.appendChild(row);
-            });
-        }
-
-        async function loadSourceControlDiff(file, staged) {
-            const diffPreview = document.getElementById('sourceControlDiffPreview');
-            const cwdInput = document.getElementById('sourceControlCwdInput');
-            if (!diffPreview || !cwdInput) return;
-
-            if (!window.runtime || typeof window.runtime.gitDiff !== 'function') {
-                diffPreview.textContent = 'Git diff API unavailable.';
-                return;
-            }
-
-            const cwd = String(cwdInput.value || '').trim();
-            try {
-                diffPreview.textContent = 'Loading diff...';
-                const result = await window.runtime.gitDiff({
-                    cwd,
-                    filePath: file ? file.path : '',
-                    staged: Boolean(staged),
-                    timeoutMs: 30000
-                });
-                const diff = String(result && result.diff ? result.diff : '');
-                diffPreview.textContent = diff || '(no diff)';
-            } catch (error) {
-                diffPreview.textContent = error && error.message ? error.message : String(error);
-            }
-        }
-
-        function renderSourceControlStatusFiles() {
-            const statusList = document.getElementById('sourceControlStatusList');
-            const cwdInput = document.getElementById('sourceControlCwdInput');
-            if (!statusList || !cwdInput) return;
-
-            statusList.innerHTML = '';
-            if (!sourceControlStatusFiles.length) {
-                const empty = document.createElement('div');
-                empty.className = 'ide-workbench-meta';
-                empty.textContent = 'No file changes.';
-                statusList.appendChild(empty);
-                return;
-            }
-
-            sourceControlStatusFiles.forEach((file) => {
-                const statusKind = getGitStatusKind(file);
-                const statusTag = formatGitStatusTag(file);
-                const row = document.createElement('div');
-                row.className = 'source-control-status-row';
-
-                const info = document.createElement('button');
-                info.type = 'button';
-                info.className = 'source-control-status-info';
-                info.title = `${file.indexStatus || ' '}${file.worktreeStatus || ' '}  ${file.path || ''}`;
-                info.onclick = () => {
-                    const stagedOnly = String(file.indexStatus || ' ') !== ' ' && String(file.worktreeStatus || ' ') === ' ';
-                    void loadSourceControlDiff(file, stagedOnly);
-                };
-
-                const main = document.createElement('span');
-                main.className = 'source-control-status-main';
-
-                const tag = document.createElement('span');
-                tag.className = 'source-control-status-tag';
-                tag.dataset.kind = statusKind;
-                tag.textContent = statusTag;
-
-                const pathText = document.createElement('span');
-                pathText.className = 'source-control-status-path';
-                pathText.textContent = file.path || '';
-
-                main.append(tag, pathText);
-                info.appendChild(main);
-
-                const actionWrap = document.createElement('div');
-                actionWrap.className = 'source-control-status-actions';
-
-                const isStaged = String(file.indexStatus || ' ') !== ' ';
-                const toggleStageBtn = document.createElement('button');
-                toggleStageBtn.type = 'button';
-                toggleStageBtn.className = 'modal-btn cancel source-control-action-btn';
-                toggleStageBtn.textContent = isStaged ? 'Unstage' : 'Stage';
-                toggleStageBtn.onclick = async () => {
-                    if (!window.runtime) return;
-                    const cwd = String(cwdInput.value || '').trim();
-                    try {
-                        if (isStaged && typeof window.runtime.gitUnstage === 'function') {
-                            await window.runtime.gitUnstage({ cwd, paths: [file.path], timeoutMs: 20000 });
-                        } else if (!isStaged && typeof window.runtime.gitStage === 'function') {
-                            await window.runtime.gitStage({ cwd, paths: [file.path], timeoutMs: 20000 });
-                        }
-                        await refreshSourceControlView();
-                    } catch (error) {
-                        showToast(error && error.message ? error.message : String(error));
-                    }
-                };
-
-                const diffBtn = document.createElement('button');
-                diffBtn.type = 'button';
-                diffBtn.className = 'modal-btn cancel source-control-action-btn';
-                diffBtn.textContent = 'Diff';
-                diffBtn.onclick = () => {
-                    const stagedOnly = String(file.indexStatus || ' ') !== ' ' && String(file.worktreeStatus || ' ') === ' ';
-                    void loadSourceControlDiff(file, stagedOnly);
-                };
-
-                actionWrap.append(toggleStageBtn, diffBtn);
-                row.append(info, actionWrap);
-                statusList.appendChild(row);
-            });
-        }
-
-        async function refreshSourceControlView() {
-            if (sourceControlLoading) return;
-            const cwdInput = document.getElementById('sourceControlCwdInput');
-            const statusList = document.getElementById('sourceControlStatusList');
-            const diffPreview = document.getElementById('sourceControlDiffPreview');
-            const branchMeta = document.getElementById('sourceControlBranchMeta');
-            const summaryMeta = document.getElementById('sourceControlSummaryMeta');
-            if (!cwdInput || !statusList || !diffPreview || !branchMeta || !summaryMeta) return;
-
-            sourceControlLoading = true;
-            try {
-                if (!window.runtime || typeof window.runtime.gitStatus !== 'function') {
-                    statusList.innerHTML = '<div class="ide-workbench-meta">Git APIs unavailable in this build.</div>';
-                    summaryMeta.textContent = 'Unavailable';
-                    return;
-                }
-
-                const requestedCwd = String(cwdInput.value || '').trim() || getPreferredRuntimeCwd();
-                const status = await window.runtime.gitStatus({ cwd: requestedCwd, timeoutMs: 30000 });
-                if (status && status.cwd) {
-                    cwdInput.value = status.cwd;
-                }
-
-                if (!status || !status.ok) {
-                    const reason = status && (status.error || status.stderr || status.stdout)
-                        ? String(status.error || status.stderr || status.stdout)
-                        : 'This folder is not a Git repository.';
-                    sourceControlStatusFiles = [];
-                    branchMeta.textContent = 'Branch: -';
-                    summaryMeta.textContent = 'Unavailable';
-                    statusList.innerHTML = `<div class="ide-workbench-meta">${reason}</div>`;
-                    diffPreview.textContent = '';
-                    renderSourceControlLog([]);
-                    return;
-                }
-
-                branchMeta.textContent = `Branch: ${status.branchName || status.branchLine || '(detached)'}`;
-                sourceControlStatusFiles = Array.isArray(status.files) ? status.files : [];
-                summaryMeta.textContent = summarizeSourceControlStatus(sourceControlStatusFiles);
-                renderSourceControlStatusFiles();
-
-                if (window.runtime && typeof window.runtime.gitLog === 'function') {
-                    try {
-                        const logResult = await window.runtime.gitLog({
-                            cwd: String(cwdInput.value || '').trim(),
-                            limit: 14,
-                            timeoutMs: 30000
-                        });
-                        renderSourceControlLog(logResult && Array.isArray(logResult.entries) ? logResult.entries : []);
-                    } catch {
-                        renderSourceControlLog([]);
-                    }
-                } else {
-                    renderSourceControlLog([]);
-                }
-            } catch (error) {
-                sourceControlStatusFiles = [];
-                branchMeta.textContent = 'Branch: -';
-                const summaryMeta = document.getElementById('sourceControlSummaryMeta');
-                if (summaryMeta) summaryMeta.textContent = 'Unavailable';
-                statusList.innerHTML = `<div class="ide-workbench-meta">${error && error.message ? error.message : String(error)}</div>`;
-            } finally {
-                sourceControlLoading = false;
-            }
-        }
-
-        function ensureSourceControlViewBound() {
-            if (sourceControlViewBound) return;
-
-            const cwdInput = document.getElementById('sourceControlCwdInput');
-            const useWorkspaceBtn = document.getElementById('sourceControlUseWorkspaceBtn');
-            const refreshBtn = document.getElementById('sourceControlRefreshBtn');
-            const stageAllBtn = document.getElementById('sourceControlStageAllBtn');
-            const unstageAllBtn = document.getElementById('sourceControlUnstageAllBtn');
-            const commitBtn = document.getElementById('sourceControlCommitBtn');
-            const commitInput = document.getElementById('sourceControlCommitMessageInput');
-
-            if (useWorkspaceBtn) {
-                useWorkspaceBtn.onclick = () => {
-                    if (!cwdInput) return;
-                    cwdInput.value = getPreferredRuntimeCwd();
-                };
-            }
-            if (refreshBtn) {
-                refreshBtn.onclick = () => {
-                    void refreshSourceControlView();
-                };
-            }
-            if (stageAllBtn) {
-                stageAllBtn.onclick = async () => {
-                    if (!window.runtime || typeof window.runtime.gitStage !== 'function' || !cwdInput) return;
-                    try {
-                        await window.runtime.gitStage({ cwd: String(cwdInput.value || '').trim(), timeoutMs: 30000 });
-                        await refreshSourceControlView();
-                    } catch (error) {
-                        showToast(error && error.message ? error.message : String(error));
-                    }
-                };
-            }
-            if (unstageAllBtn) {
-                unstageAllBtn.onclick = async () => {
-                    if (!window.runtime || typeof window.runtime.gitUnstage !== 'function' || !cwdInput) return;
-                    try {
-                        await window.runtime.gitUnstage({ cwd: String(cwdInput.value || '').trim(), timeoutMs: 30000 });
-                        await refreshSourceControlView();
-                    } catch (error) {
-                        showToast(error && error.message ? error.message : String(error));
-                    }
-                };
-            }
-            if (commitBtn) {
-                commitBtn.onclick = async () => {
-                    if (!commitInput || !cwdInput) return;
-                    const message = String(commitInput.value || '').trim();
-                    if (!message) {
-                        showToast('Commit message required');
-                        return;
-                    }
-                    if (!window.runtime || typeof window.runtime.gitCommit !== 'function') {
-                        showToast('Git commit API unavailable');
-                        return;
-                    }
-                    try {
-                        const result = await window.runtime.gitCommit({
-                            cwd: String(cwdInput.value || '').trim(),
-                            message,
-                            timeoutMs: 45000
-                        });
-                        if (result && Number(result.exitCode) === 0) {
-                            commitInput.value = '';
-                            showToast('Commit created');
-                        } else {
-                            const reason = result && (result.stderr || result.stdout)
-                                ? String(result.stderr || result.stdout)
-                                : 'Commit failed';
-                            showToast(reason);
-                        }
-                        await refreshSourceControlView();
-                    } catch (error) {
-                        showToast(error && error.message ? error.message : String(error));
-                    }
-                };
-            }
-            if (commitInput && commitBtn) {
-                commitInput.addEventListener('keydown', (event) => {
-                    if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) {
-                        event.preventDefault();
-                        commitBtn.click();
-                    }
-                });
-            }
-
-            if (cwdInput) {
-                cwdInput.value = getPreferredRuntimeCwd();
-            }
-            sourceControlViewBound = true;
-        }
-
-        function showDebugPanelModal() {
-            setPrimaryView('debug');
         }
 
         function showTerminalPanelModal(initialCommand = '') {
@@ -6710,56 +6022,6 @@ console.log('Dark mode applied!');`
                     consoleTerminalInputEl.focus();
                 }
             });
-        }
-
-        function getGitStatusKind(file) {
-            const index = String(file && file.indexStatus ? file.indexStatus : ' ');
-            const worktree = String(file && file.worktreeStatus ? file.worktreeStatus : ' ');
-            const pair = `${index}${worktree}`;
-            if (pair === '??') return 'untracked';
-            if (index !== ' ' && worktree !== ' ') return 'staged-modified';
-            if (index !== ' ') return 'staged';
-            if (worktree !== ' ') return 'modified';
-            return 'clean';
-        }
-
-        function summarizeSourceControlStatus(files) {
-            const list = Array.isArray(files) ? files : [];
-            if (!list.length) return 'No changes';
-
-            let stagedCount = 0;
-            let modifiedCount = 0;
-            let untrackedCount = 0;
-
-            list.forEach((file) => {
-                const kind = getGitStatusKind(file);
-                if (kind === 'untracked') {
-                    untrackedCount += 1;
-                    return;
-                }
-                if (kind === 'staged' || kind === 'staged-modified') stagedCount += 1;
-                if (kind === 'modified' || kind === 'staged-modified') modifiedCount += 1;
-            });
-
-            const parts = [];
-            if (stagedCount > 0) parts.push(`${stagedCount} staged`);
-            if (modifiedCount > 0) parts.push(`${modifiedCount} modified`);
-            if (untrackedCount > 0) parts.push(`${untrackedCount} untracked`);
-
-            return parts.length ? `${list.length} changed, ${parts.join(', ')}` : `${list.length} changed`;
-        }
-
-        function formatGitStatusTag(file) {
-            const kind = getGitStatusKind(file);
-            if (kind === 'untracked') return 'UNTRACKED';
-            if (kind === 'staged-modified') return 'STAGED+MOD';
-            if (kind === 'staged') return 'STAGED';
-            if (kind === 'modified') return 'MODIFIED';
-            return 'CLEAN';
-        }
-
-        function showGitPanelModal() {
-            setPrimaryView('source-control');
         }
 
         function clearDragOverState() {
@@ -8843,8 +8105,6 @@ console.log('Dark mode applied!');`
 
             const dashboardEl = document.getElementById('dashboard');
             const settingsViewEl = document.getElementById('settingsView');
-            const sourceControlViewEl = document.getElementById('sourceControlView');
-            const debugViewEl = document.getElementById('debugView');
             const editorEl = document.getElementById('editor');
             const htmlOutputEl = document.getElementById('htmlOutput');
             const htmlOutputLabelEl = document.getElementById('htmlOutputLabel');
@@ -8860,14 +8120,12 @@ console.log('Dark mode applied!');`
             const viewMap = {
                 home: dashboardEl,
                 settings: settingsViewEl,
-                'source-control': sourceControlViewEl,
-                debug: debugViewEl,
                 editor: editorEl,
                 html: htmlOutputEl
             };
             const nextEl = viewMap[view] || editorEl;
             const prevEl = viewMap[currentPrimaryView] || null;
-            const viewEls = [dashboardEl, settingsViewEl, sourceControlViewEl, debugViewEl, editorEl, htmlOutputEl].filter(Boolean);
+            const viewEls = [dashboardEl, settingsViewEl, editorEl, htmlOutputEl].filter(Boolean);
 
             viewEls.forEach(el => {
                 if (el !== prevEl) {
@@ -8898,22 +8156,6 @@ console.log('Dark mode applied!');`
                 updateDashboardMetrics();
             } else if (view === 'settings') {
                 document.getElementById('client').classList.add('active');
-            } else if (view === 'source-control') {
-                hideImagePreview();
-                const sourceControlTabEl = document.getElementById('sourceControlTab');
-                if (sourceControlTabEl) {
-                    sourceControlTabEl.classList.add('active');
-                }
-                ensureSourceControlViewBound();
-                void refreshSourceControlView();
-            } else if (view === 'debug') {
-                hideImagePreview();
-                const debugSidebarTabEl = document.getElementById('debugSidebarTab');
-                if (debugSidebarTabEl) {
-                    debugSidebarTabEl.classList.add('active');
-                }
-                ensureDebugViewBound();
-                renderDebugView();
             } else if (view === 'editor') {
                 document.getElementById('editorTab').classList.add('active');
                 const activeTab = activeTabId && tabs[activeTabId] ? tabs[activeTabId] : null;
@@ -9038,7 +8280,7 @@ console.log('Dark mode applied!');`
             const inMonaco = Boolean(target && target.closest('.monaco-editor'));
             const inEditableField = Boolean(target && target.closest('input, textarea, select, [contenteditable="true"]'));
             const inPicker = Boolean(
-                target && target.closest('#commandPaletteModal, #quickOpenModal, #findInFilesModal, #diagnosticsModal, #terminalPanelModal, #gitPanelModal, #debugPanelModal')
+                target && target.closest('#commandPaletteModal, #quickOpenModal, #findInFilesModal, #diagnosticsModal, #terminalPanelModal')
             );
 
             if (!withModifier && !event.altKey && !event.shiftKey) {
@@ -9052,19 +8294,9 @@ console.log('Dark mode applied!');`
                     refreshExplorerTree();
                     return;
                 }
-                if (key === 'F7') {
-                    event.preventDefault();
-                    void startDebugRun();
-                    return;
-                }
                 if (key === 'F8') {
                     event.preventDefault();
                     showDiagnosticsModal();
-                    return;
-                }
-                if (key === 'F9') {
-                    event.preventDefault();
-                    toggleBreakpointAtCursor();
                     return;
                 }
             }
@@ -9117,16 +8349,6 @@ console.log('Dark mode applied!');`
             if (keyLower === 'f' && event.shiftKey) {
                 event.preventDefault();
                 showFindInFilesModal();
-                return;
-            }
-            if (keyLower === 'g' && event.shiftKey) {
-                event.preventDefault();
-                showGitPanelModal();
-                return;
-            }
-            if (keyLower === 'd' && event.shiftKey) {
-                event.preventDefault();
-                showDebugPanelModal();
                 return;
             }
             if (keyLower === 'm' && event.shiftKey) {
@@ -9235,19 +8457,6 @@ console.log('Dark mode applied!');`
         settingsBtn.onclick = () => {
             setPrimaryView('settings');
         };
-        const sourceControlBtn = document.getElementById('sourceControlTab');
-        if (sourceControlBtn) {
-            sourceControlBtn.onclick = () => {
-                setPrimaryView('source-control');
-            };
-        }
-        const debugSidebarBtn = document.getElementById('debugSidebarTab');
-        if (debugSidebarBtn) {
-            debugSidebarBtn.onclick = () => {
-                setPrimaryView('debug');
-            };
-        }
-
         document.getElementById('fontSize').onchange = (e) => {
             if (editor) {
                 editor.updateOptions({ fontSize: parseInt(e.target.value) });
