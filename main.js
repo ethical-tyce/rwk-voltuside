@@ -12,6 +12,34 @@ const explorerRoots = new Set();
 const EXPLORER_MAX_DEPTH = 8;
 const EXPLORER_MAX_ENTRIES = 3000;
 const EXPLORER_IGNORED_FOLDERS = new Set(['node_modules', '.git']);
+const SEARCH_IGNORED_FOLDERS = new Set([
+    'node_modules',
+    '.git',
+    '.hg',
+    '.svn',
+    '.next',
+    '.cache',
+    'dist',
+    'build',
+    'out',
+    'coverage'
+]);
+const SEARCH_MAX_RESULTS = 400;
+const SEARCH_MAX_FILES = 2500;
+const SEARCH_MAX_FILE_BYTES = 1_500_000;
+const SEARCH_EXT_DENYLIST = new Set([
+    '.png', '.jpg', '.jpeg', '.gif', '.svg', '.webp', '.ico', '.bmp', '.avif', '.tif', '.tiff',
+    '.pdf', '.zip', '.rar', '.7z', '.tar', '.gz',
+    '.mp3', '.wav', '.flac', '.m4a', '.aac',
+    '.mp4', '.mov', '.avi', '.mkv', '.webm',
+    '.woff', '.woff2', '.ttf', '.otf', '.eot',
+    '.dll', '.so', '.dylib', '.exe', '.bin'
+]);
+const runtimeExecutionPolicy = {
+    allowShell: false,
+    allowPython: false,
+    allowAnyCwd: false
+};
 const IMAGE_MIME_TYPES = {
     '.png': 'image/png',
     '.jpg': 'image/jpeg',
@@ -76,6 +104,224 @@ async function resolveRuntimeCwd(inputValue) {
         return resolved;
     }
     return process.cwd();
+}
+
+function getRuntimeTrustedRoots() {
+    const roots = new Set([path.resolve(process.cwd())]);
+    for (const root of explorerRoots) {
+        if (typeof root === 'string' && root.trim()) {
+            roots.add(path.resolve(root));
+        }
+    }
+    return Array.from(roots);
+}
+
+function isAllowedRuntimeCwd(targetPath) {
+    if (runtimeExecutionPolicy.allowAnyCwd) return true;
+    const resolvedTarget = path.resolve(String(targetPath || process.cwd()));
+    const trustedRoots = getRuntimeTrustedRoots();
+    for (const root of trustedRoots) {
+        if (isPathInsideRoot(resolvedTarget, root)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+function getRuntimePolicyState() {
+    return {
+        allowShell: Boolean(runtimeExecutionPolicy.allowShell),
+        allowPython: Boolean(runtimeExecutionPolicy.allowPython),
+        allowAnyCwd: Boolean(runtimeExecutionPolicy.allowAnyCwd),
+        trustedRoots: getRuntimeTrustedRoots()
+    };
+}
+
+function assertRuntimeExecutionAllowed(kind, cwd) {
+    const scope = String(kind || '').toLowerCase();
+    if (scope === 'shell' && !runtimeExecutionPolicy.allowShell) {
+        throw new Error('Shell execution is blocked. Enable it in Settings > Security.');
+    }
+    if (scope === 'python' && !runtimeExecutionPolicy.allowPython) {
+        throw new Error('Python execution is blocked. Enable it in Settings > Security.');
+    }
+    if (!isAllowedRuntimeCwd(cwd)) {
+        throw new Error('Runtime execution outside trusted workspace roots is blocked.');
+    }
+}
+
+function escapeRegExp(value) {
+    return String(value || '').replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+function buildSearchRegex(query, options = {}) {
+    const sourceQuery = String(query || '');
+    if (!sourceQuery) return null;
+
+    const useRegex = Boolean(options.useRegex);
+    const wholeWord = Boolean(options.wholeWord);
+    const matchCase = Boolean(options.matchCase);
+    const source = useRegex ? sourceQuery : escapeRegExp(sourceQuery);
+    const wrappedSource = wholeWord ? `\\b(?:${source})\\b` : source;
+    const flags = `g${matchCase ? '' : 'i'}`;
+    return new RegExp(wrappedSource, flags);
+}
+
+function parseRipgrepLine(rawLine) {
+    const line = String(rawLine || '');
+    const match = line.match(/^(.*?):(\d+):(\d+):(.*)$/);
+    if (!match) return null;
+    const [, filePath, lineNumber, column, preview] = match;
+    return {
+        path: String(filePath || '').trim(),
+        lineNumber: Math.max(1, Number(lineNumber) || 1),
+        column: Math.max(1, Number(column) || 1),
+        preview: String(preview || '').trim()
+    };
+}
+
+async function collectSearchFiles(rootPath, state, depth = 0) {
+    if (!state || state.files.length >= state.maxFiles) return;
+    if (depth > state.maxDepth) return;
+
+    let entries = [];
+    try {
+        entries = await fs.readdir(rootPath, { withFileTypes: true });
+    } catch {
+        return;
+    }
+
+    for (const entry of entries) {
+        if (state.files.length >= state.maxFiles) return;
+        if (!entry || !entry.name) continue;
+        if (entry.name.startsWith('.')) {
+            if (entry.name !== '.env') continue;
+        }
+        if (entry.isSymbolicLink()) continue;
+
+        const absolutePath = path.join(rootPath, entry.name);
+        if (entry.isDirectory()) {
+            if (SEARCH_IGNORED_FOLDERS.has(entry.name.toLowerCase())) continue;
+            await collectSearchFiles(absolutePath, state, depth + 1);
+            continue;
+        }
+
+        if (!entry.isFile()) continue;
+        const ext = String(path.extname(entry.name || '')).toLowerCase();
+        if (SEARCH_EXT_DENYLIST.has(ext)) continue;
+        state.files.push(absolutePath);
+    }
+}
+
+async function runRipgrepSearch(rootPath, query, options = {}) {
+    if (!buildSearchRegex(query, options)) return [];
+    const maxResults = Math.max(1, Math.min(SEARCH_MAX_RESULTS, Number(options.maxResults) || SEARCH_MAX_RESULTS));
+    const args = [
+        '--line-number',
+        '--column',
+        '--no-heading',
+        '--color',
+        'never',
+        '--hidden',
+        '--max-filesize',
+        '1500K',
+        '--max-count',
+        '8',
+        '--glob',
+        '!node_modules/**',
+        '--glob',
+        '!.git/**'
+    ];
+    if (!options.useRegex) {
+        args.push('-F');
+    }
+    if (!options.matchCase) {
+        args.push('--ignore-case');
+    }
+    args.push(String(query), '.');
+
+    try {
+        const result = await runProcess('rg', args, { cwd: rootPath, timeoutMs: normalizeTimeout(options.timeoutMs, 20000) });
+        if (result.exitCode !== 0 && result.exitCode !== 1) {
+            return [];
+        }
+        const lines = String(result.stdout || '').replace(/\r\n/g, '\n').split('\n').filter(Boolean);
+        const matches = [];
+        for (const line of lines) {
+            if (matches.length >= maxResults) break;
+            const parsed = parseRipgrepLine(line);
+            if (!parsed || !parsed.path) continue;
+            const normalized = path.resolve(rootPath, parsed.path);
+            matches.push({
+                path: normalized,
+                name: path.basename(normalized),
+                lineNumber: parsed.lineNumber,
+                column: parsed.column,
+                preview: parsed.preview
+            });
+        }
+        return matches;
+    } catch (error) {
+        const message = String(error && error.message ? error.message : error || '');
+        const isNotFound = (error && error.code === 'ENOENT')
+            || /not recognized as an internal or external command/i.test(message)
+            || /No such file or directory/i.test(message)
+            || /not found/i.test(message);
+        if (isNotFound) return [];
+        throw error;
+    }
+}
+
+async function runFallbackSearch(rootPath, query, options = {}) {
+    const regex = buildSearchRegex(query, options);
+    if (!regex) return [];
+
+    const maxResults = Math.max(1, Math.min(SEARCH_MAX_RESULTS, Number(options.maxResults) || SEARCH_MAX_RESULTS));
+    const maxFiles = Math.max(1, Math.min(SEARCH_MAX_FILES, Number(options.maxFiles) || SEARCH_MAX_FILES));
+    const state = {
+        files: [],
+        maxFiles,
+        maxDepth: 30
+    };
+
+    await collectSearchFiles(rootPath, state, 0);
+    const matches = [];
+
+    for (const filePath of state.files) {
+        if (matches.length >= maxResults) break;
+
+        const fileStat = await fs.stat(filePath).catch(() => null);
+        if (!fileStat || !fileStat.isFile() || fileStat.size > SEARCH_MAX_FILE_BYTES) continue;
+
+        const content = await fs.readFile(filePath, 'utf8').catch(() => null);
+        if (typeof content !== 'string' || content.length === 0) continue;
+        if (content.includes('\0')) continue;
+
+        const lines = content.replace(/\r\n/g, '\n').split('\n');
+        for (let lineIndex = 0; lineIndex < lines.length; lineIndex += 1) {
+            if (matches.length >= maxResults) break;
+            const lineValue = lines[lineIndex];
+            regex.lastIndex = 0;
+            const firstMatch = regex.exec(lineValue);
+            if (!firstMatch) continue;
+
+            matches.push({
+                path: filePath,
+                name: path.basename(filePath),
+                lineNumber: lineIndex + 1,
+                column: Math.max(1, Number(firstMatch.index || 0) + 1),
+                preview: String(lineValue || '').trim()
+            });
+        }
+    }
+
+    return matches;
+}
+
+async function searchInFiles(rootPath, query, options = {}) {
+    const fromRg = await runRipgrepSearch(rootPath, query, options);
+    if (fromRg.length > 0) return fromRg;
+    return runFallbackSearch(rootPath, query, options);
 }
 
 function runProcess(command, args = [], options = {}) {
@@ -248,6 +494,15 @@ function emitBridgeStatus() {
     win.webContents.send('extension:status', getBridgeStatus());
 }
 
+function isSafeExternalUrl(urlValue) {
+    try {
+        const parsed = new URL(String(urlValue || ''));
+        return parsed.protocol === 'https:' || parsed.protocol === 'http:' || parsed.protocol === 'mailto:';
+    } catch {
+        return false;
+    }
+}
+
 function startExtensionBridge() {
     let WebSocketServer;
     try {
@@ -259,9 +514,9 @@ function startExtensionBridge() {
     }
 
     try {
-        extensionWss = new WebSocketServer({ host: '0.0.0.0', port: 8181 });
+        extensionWss = new WebSocketServer({ host: '127.0.0.1', port: 8181 });
         extensionBridgeError = '';
-        console.log('[Bridge] Listening on ws://0.0.0.0:8181');
+        console.log('[Bridge] Listening on ws://127.0.0.1:8181');
 
         extensionWss.on('connection', (socket) => {
             extensionClients.add(socket);
@@ -340,8 +595,7 @@ function createWindow() {
             nodeIntegration: false,
             contextIsolation: true,
             preload: path.join(__dirname, 'preload.js'),
-            // Allow the CDN scripts (Monaco) to load
-            webSecurity: false 
+            webSecurity: true
         },
         icon: iconPath
     });
@@ -463,7 +717,7 @@ ipcMain.handle('app:get-version', () => {
 });
 
 ipcMain.handle('app:open-external', async (_event, url) => {
-    if (typeof url !== 'string' || !url.trim()) return false;
+    if (typeof url !== 'string' || !url.trim() || !isSafeExternalUrl(url)) return false;
     try {
         return await shell.openExternal(url);
     } catch (error) {
@@ -671,6 +925,8 @@ ipcMain.handle('runtime:run-python', async (_event, code, options = {}) => {
         }
     }
 
+    assertRuntimeExecutionAllowed('python', cwd);
+
     const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'voltus-python-'));
     const scriptPath = path.join(tempDir, 'run.py');
     await fs.writeFile(scriptPath, scriptSource, 'utf8');
@@ -769,6 +1025,7 @@ ipcMain.handle('runtime:run-shell', async (_event, command, options = {}) => {
 
     const cwd = await resolveRuntimeCwd(options && options.cwd);
     const timeoutMs = normalizeTimeout(options && options.timeoutMs, 45000);
+    assertRuntimeExecutionAllowed('shell', cwd);
     const attempts = process.platform === 'win32'
         ? [
             { command: 'powershell', args: ['-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-Command', script] },
@@ -806,6 +1063,123 @@ ipcMain.handle('runtime:open-devtools', () => {
         win.webContents.focus();
     }
     return true;
+});
+
+ipcMain.handle('runtime:permissions:get', () => {
+    return getRuntimePolicyState();
+});
+
+ipcMain.handle('runtime:permissions:set', (_event, options = {}) => {
+    if (options && Object.prototype.hasOwnProperty.call(options, 'allowShell')) {
+        runtimeExecutionPolicy.allowShell = Boolean(options.allowShell);
+    }
+    if (options && Object.prototype.hasOwnProperty.call(options, 'allowPython')) {
+        runtimeExecutionPolicy.allowPython = Boolean(options.allowPython);
+    }
+    if (options && Object.prototype.hasOwnProperty.call(options, 'allowAnyCwd')) {
+        runtimeExecutionPolicy.allowAnyCwd = Boolean(options.allowAnyCwd);
+    }
+    return getRuntimePolicyState();
+});
+
+ipcMain.handle('runtime:find-in-files', async (_event, options = {}) => {
+    const query = String(options && options.query ? options.query : '').trim();
+    if (!query) {
+        return {
+            ok: true,
+            cwd: await resolveRuntimeCwd(options && options.cwd),
+            query: '',
+            results: []
+        };
+    }
+
+    const cwd = await resolveRuntimeCwd((options && options.cwd) || (options && options.rootPath));
+    if (!isAllowedRuntimeCwd(cwd)) {
+        throw new Error('Search root is outside trusted workspace roots.');
+    }
+
+    const results = await searchInFiles(cwd, query, {
+        useRegex: Boolean(options && options.useRegex),
+        matchCase: Boolean(options && options.matchCase),
+        wholeWord: Boolean(options && options.wholeWord),
+        maxResults: options && options.maxResults,
+        maxFiles: options && options.maxFiles,
+        timeoutMs: options && options.timeoutMs
+    });
+
+    return {
+        ok: true,
+        cwd,
+        query,
+        results
+    };
+});
+
+ipcMain.handle('runtime:replace-in-files', async (_event, options = {}) => {
+    const query = String(options && options.query ? options.query : '');
+    const replacement = String(options && Object.prototype.hasOwnProperty.call(options, 'replacement') ? options.replacement : '');
+    const filePaths = Array.isArray(options && options.files)
+        ? options.files.map((value) => String(value || '').trim()).filter(Boolean)
+        : [];
+    const dryRun = Boolean(options && options.dryRun);
+
+    if (!query.trim()) {
+        throw new Error('Replace query is required.');
+    }
+    if (!filePaths.length) {
+        throw new Error('No files were provided for replace operation.');
+    }
+
+    const regex = buildSearchRegex(query, {
+        useRegex: Boolean(options && options.useRegex),
+        wholeWord: Boolean(options && options.wholeWord),
+        matchCase: Boolean(options && options.matchCase)
+    });
+    if (!regex) {
+        throw new Error('Invalid search pattern.');
+    }
+
+    const updated = [];
+    let touchedFiles = 0;
+    let totalReplacements = 0;
+
+    for (const filePath of filePaths) {
+        const resolved = path.resolve(filePath);
+        if (!isAllowedRuntimeCwd(resolved)) continue;
+
+        const fileStat = await fs.stat(resolved).catch(() => null);
+        if (!fileStat || !fileStat.isFile() || fileStat.size > SEARCH_MAX_FILE_BYTES) continue;
+
+        const content = await fs.readFile(resolved, 'utf8').catch(() => null);
+        if (typeof content !== 'string' || content.includes('\0')) continue;
+
+        let count = 0;
+        const nextContent = content.replace(regex, () => {
+            count += 1;
+            return replacement;
+        });
+
+        if (count <= 0 || nextContent === content) continue;
+        touchedFiles += 1;
+        totalReplacements += count;
+
+        if (!dryRun) {
+            await fs.writeFile(resolved, nextContent, 'utf8');
+        }
+
+        updated.push({
+            path: resolved,
+            replacements: count
+        });
+    }
+
+    return {
+        ok: true,
+        dryRun,
+        touchedFiles,
+        totalReplacements,
+        updated
+    };
 });
 
 ipcMain.handle('runtime:git-status', async (_event, options = {}) => {
@@ -960,6 +1334,122 @@ ipcMain.handle('runtime:git-log', async (_event, options = {}) => {
     };
 });
 
+ipcMain.handle('runtime:git-branches', async (_event, options = {}) => {
+    const cwdInput = typeof options === 'string' ? options : (options && options.cwd);
+    const args = ['branch', '--all', '--verbose', '--no-color'];
+    const result = await runGit(args, { cwd: cwdInput, timeoutMs: options && options.timeoutMs });
+    const entries = String(result.stdout || '')
+        .replace(/\r\n/g, '\n')
+        .split('\n')
+        .map((line) => String(line || '').trimEnd())
+        .filter(Boolean)
+        .map((line) => {
+            const isActive = line.startsWith('*');
+            const cleaned = line.replace(/^[* ]+/, '');
+            const firstSpace = cleaned.search(/\s/);
+            const name = firstSpace === -1 ? cleaned : cleaned.slice(0, firstSpace);
+            const detail = firstSpace === -1 ? '' : cleaned.slice(firstSpace).trim();
+            return {
+                name,
+                detail,
+                isActive,
+                isRemote: name.startsWith('remotes/')
+            };
+        });
+
+    return {
+        ok: result.exitCode === 0,
+        cwd: result.cwd,
+        entries,
+        stdout: result.stdout,
+        stderr: result.stderr,
+        exitCode: result.exitCode
+    };
+});
+
+ipcMain.handle('runtime:git-checkout', async (_event, options = {}) => {
+    const cwdInput = typeof options === 'string' ? options : (options && options.cwd);
+    const branch = String(options && options.branch ? options.branch : '').trim();
+    const create = Boolean(options && options.create);
+    if (!branch) {
+        throw new Error('Branch name is required.');
+    }
+
+    const args = create ? ['checkout', '-b', branch] : ['checkout', branch];
+    const result = await runGit(args, { cwd: cwdInput, timeoutMs: options && options.timeoutMs });
+    return {
+        ok: result.exitCode === 0,
+        cwd: result.cwd,
+        stdout: result.stdout,
+        stderr: result.stderr,
+        exitCode: result.exitCode
+    };
+});
+
+ipcMain.handle('runtime:git-discard', async (_event, options = {}) => {
+    const cwdInput = typeof options === 'string' ? options : (options && options.cwd);
+    const paths = Array.isArray(options && options.paths)
+        ? options.paths.map((value) => String(value || '').trim()).filter(Boolean)
+        : [];
+    const args = paths.length > 0
+        ? ['restore', '--worktree', '--', ...paths]
+        : ['restore', '--worktree', '.'];
+
+    try {
+        const result = await runGit(args, { cwd: cwdInput, timeoutMs: options && options.timeoutMs });
+        return {
+            ok: result.exitCode === 0,
+            cwd: result.cwd,
+            stdout: result.stdout,
+            stderr: result.stderr,
+            exitCode: result.exitCode
+        };
+    } catch (error) {
+        const fallbackArgs = paths.length > 0
+            ? ['checkout', '--', ...paths]
+            : ['checkout', '--', '.'];
+        const result = await runGit(fallbackArgs, { cwd: cwdInput, timeoutMs: options && options.timeoutMs });
+        return {
+            ok: result.exitCode === 0,
+            cwd: result.cwd,
+            stdout: result.stdout,
+            stderr: result.stderr,
+            exitCode: result.exitCode,
+            note: error && error.message ? error.message : String(error)
+        };
+    }
+});
+
+ipcMain.handle('runtime:git-pull', async (_event, options = {}) => {
+    const cwdInput = typeof options === 'string' ? options : (options && options.cwd);
+    const rebase = Boolean(options && options.rebase);
+    const args = ['pull'];
+    if (rebase) args.push('--rebase');
+    const result = await runGit(args, { cwd: cwdInput, timeoutMs: options && options.timeoutMs });
+    return {
+        ok: result.exitCode === 0,
+        cwd: result.cwd,
+        stdout: result.stdout,
+        stderr: result.stderr,
+        exitCode: result.exitCode
+    };
+});
+
+ipcMain.handle('runtime:git-push', async (_event, options = {}) => {
+    const cwdInput = typeof options === 'string' ? options : (options && options.cwd);
+    const setUpstream = Boolean(options && options.setUpstream);
+    const args = ['push'];
+    if (setUpstream) args.push('--set-upstream', 'origin', 'HEAD');
+    const result = await runGit(args, { cwd: cwdInput, timeoutMs: options && options.timeoutMs });
+    return {
+        ok: result.exitCode === 0,
+        cwd: result.cwd,
+        stdout: result.stdout,
+        stderr: result.stderr,
+        exitCode: result.exitCode
+    };
+});
+
 app.on('window-all-closed', () => {
     if (process.platform !== 'darwin') app.quit();
 });
@@ -971,4 +1461,3 @@ app.on('activate', () => {
 app.on('before-quit', () => {
     stopExtensionBridge();
 });
-

@@ -62,11 +62,20 @@ contextBridge.exposeInMainWorld('appInfo', {
 contextBridge.exposeInMainWorld('runtime', {
     runPython: (code, options = {}) => ipcRenderer.invoke('runtime:run-python', code, options),
     runShell: (command, options = {}) => ipcRenderer.invoke('runtime:run-shell', command, options),
+    getPermissions: () => ipcRenderer.invoke('runtime:permissions:get'),
+    setPermissions: (options = {}) => ipcRenderer.invoke('runtime:permissions:set', options),
+    findInFiles: (options = {}) => ipcRenderer.invoke('runtime:find-in-files', options),
+    replaceInFiles: (options = {}) => ipcRenderer.invoke('runtime:replace-in-files', options),
     gitStatus: (options = {}) => ipcRenderer.invoke('runtime:git-status', options),
     gitDiff: (options = {}) => ipcRenderer.invoke('runtime:git-diff', options),
     gitStage: (options = {}) => ipcRenderer.invoke('runtime:git-stage', options),
     gitUnstage: (options = {}) => ipcRenderer.invoke('runtime:git-unstage', options),
     gitCommit: (options = {}) => ipcRenderer.invoke('runtime:git-commit', options),
     gitLog: (options = {}) => ipcRenderer.invoke('runtime:git-log', options),
+    gitBranches: (options = {}) => ipcRenderer.invoke('runtime:git-branches', options),
+    gitCheckout: (options = {}) => ipcRenderer.invoke('runtime:git-checkout', options),
+    gitDiscard: (options = {}) => ipcRenderer.invoke('runtime:git-discard', options),
+    gitPull: (options = {}) => ipcRenderer.invoke('runtime:git-pull', options),
+    gitPush: (options = {}) => ipcRenderer.invoke('runtime:git-push', options),
     openDevTools: () => ipcRenderer.invoke('runtime:open-devtools')
 });

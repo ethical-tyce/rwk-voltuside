@@ -911,6 +911,7 @@
             flex-shrink: 0;
             min-height: 100%;
             position: relative;
+            z-index: 12;
         }
 
         #leftSidebarActiveIndicator {
@@ -1966,7 +1967,7 @@
             flex-direction: column;
             background: #050505;
             position: absolute;
-            left: 0;
+            left: var(--console-left-offset);
             right: 0;
             bottom: 0;
             z-index: 5;
@@ -2114,6 +2115,118 @@
             flex-direction: column;
             gap: 8px;
             padding: 0;
+        }
+
+        #consoleTerminalSessionBar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            min-height: 28px;
+        }
+
+        #consoleTerminalSessions {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            min-width: 0;
+            overflow-x: auto;
+            scrollbar-width: thin;
+        }
+
+        .console-session-chip {
+            height: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            background: rgba(255, 255, 255, 0.04);
+            color: #b8b8b8;
+            border-radius: 999px;
+            padding: 0 10px;
+            font-size: 10px;
+            letter-spacing: 0.03em;
+            text-transform: uppercase;
+            cursor: pointer;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .console-session-chip.active {
+            color: #f1f1f1;
+            border-color: rgba(255, 255, 255, 0.25);
+            background: rgba(255, 255, 255, 0.12);
+        }
+
+        .console-session-add {
+            width: 24px;
+            height: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            background: rgba(255, 255, 255, 0.05);
+            color: #d0d0d0;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 16px;
+            line-height: 1;
+            padding: 0;
+            flex-shrink: 0;
+        }
+
+        .console-session-add:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: #f0f0f0;
+        }
+
+        .workspace-modal-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .workspace-card {
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.03);
+            padding: 10px;
+        }
+
+        .workspace-card h4 {
+            margin: 0 0 8px;
+            font-size: 12px;
+            color: #dcdcdc;
+            letter-spacing: 0.02em;
+        }
+
+        .workspace-list {
+            max-height: 260px;
+            overflow-y: auto;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 8px;
+            background: rgba(0, 0, 0, 0.25);
+        }
+
+        .workspace-list-row {
+            width: 100%;
+            border: none;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            background: transparent;
+            color: #c5c5c5;
+            padding: 8px 10px;
+            text-align: left;
+            font-family: 'Consolas', monospace;
+            font-size: 11px;
+            cursor: pointer;
+        }
+
+        .workspace-list-row:last-child {
+            border-bottom: none;
+        }
+
+        .workspace-list-row:hover {
+            background: rgba(255, 255, 255, 0.06);
+        }
+
+        .workspace-list-row.active {
+            background: rgba(255, 255, 255, 0.12);
+            color: #f3f3f3;
         }
 
         #consoleTerminalOutput {
@@ -2612,7 +2725,7 @@
             background: #1a1a1a;
             display: block;
             position: absolute;
-            left: 0;
+            left: var(--console-left-offset);
             right: 0;
             bottom: 140px;
             z-index: 6;
@@ -3445,8 +3558,22 @@
                     <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2" />
                 </svg>
             </button>
+            <button class="icon-btn" id="taskRunner" title="Task Runner">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path d="M4 6h16M4 12h16M4 18h16"></path>
+                    <path d="M8 6h0M8 12h0M8 18h0"></path>
+                </svg>
+            </button>
 
-            <button id="execute" class="run-btn">▶ Execute</button>
+            <button class="icon-btn" id="gitPanel" title="Git Panel">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <circle cx="6" cy="6" r="2"></circle>
+                    <circle cx="18" cy="6" r="2"></circle>
+                    <circle cx="12" cy="18" r="2"></circle>
+                    <path d="M8 7.1 10.95 16M16 7.1 13.05 16"></path>
+                </svg>
+            </button>
+            <button id="execute" class="run-btn">&#9654; Execute</button>
         </div>
 
         <div id="editorWrap">
@@ -3660,6 +3787,38 @@
                                 <h3 class="settings-setting-name">Auto-detect folder directory in Terminal</h3>
                                 <div class="settings-toggle active" id="toggleTerminalFolderAutoDetect"></div>
                             </div>
+                            <div class="dashboard-card settings-card">
+                                <div class="dashboard-card-label">Security</div>
+                                <h3 class="settings-setting-name">Allow Local Shell Execution</h3>
+                                <div class="settings-toggle" id="toggleAllowShellExecution"></div>
+                            </div>
+                            <div class="dashboard-card settings-card">
+                                <div class="dashboard-card-label">Security</div>
+                                <h3 class="settings-setting-name">Allow Local Python Execution</h3>
+                                <div class="settings-toggle" id="toggleAllowPythonExecution"></div>
+                            </div>
+                            <div class="dashboard-card settings-card">
+                                <div class="dashboard-card-label">Security</div>
+                                <h3 class="settings-setting-name">Allow Runtime Outside Workspace</h3>
+                                <div class="settings-toggle" id="toggleAllowAnyCwd"></div>
+                            </div>
+                            <div class="dashboard-card settings-card">
+                                <div class="dashboard-card-label">Automation</div>
+                                <h3 class="settings-setting-name">Run on Save (Local Mode)</h3>
+                                <div class="settings-toggle" id="toggleRunOnSave"></div>
+                            </div>
+                            <div class="dashboard-card settings-card">
+                                <div class="dashboard-card-label">Automation</div>
+                                <h3 class="settings-setting-name">Run Saved Task on Save</h3>
+                                <select class="settings-select" id="runOnSaveTaskSelect">
+                                    <option value="">Execute Active File</option>
+                                </select>
+                            </div>
+                            <div class="dashboard-card settings-card">
+                                <div class="dashboard-card-label">Diagnostics</div>
+                                <h3 class="settings-setting-name">Problem Matcher from Terminal</h3>
+                                <div class="settings-toggle active" id="toggleProblemMatcher"></div>
+                            </div>
                         </div>
                     </div>
                     <div id="editor" class="primary-view"></div>
@@ -3687,6 +3846,10 @@
                         <div id="consolePanels">
                             <div id="console" class="console-panel active"></div>
                             <div id="consoleTerminalPanel" class="console-panel">
+                                <div id="consoleTerminalSessionBar">
+                                    <div id="consoleTerminalSessions"></div>
+                                    <button id="consoleTerminalNewSession" type="button" class="console-session-add" title="New Terminal Session">+</button>
+                                </div>
                                 <div id="consoleTerminalOutput"></div>
                                 <div id="consoleTerminalInputRow">
                                     <span id="consoleTerminalPrompt" aria-hidden="true"></span>
@@ -3931,10 +4094,17 @@ throw "Chrome executable not found."
         const consoleTerminalOutputEl = document.getElementById("consoleTerminalOutput");
         const consoleTerminalPromptEl = document.getElementById("consoleTerminalPrompt");
         const consoleTerminalInputEl = document.getElementById("consoleTerminalInput");
+        const consoleTerminalSessionsEl = document.getElementById("consoleTerminalSessions");
+        const consoleTerminalNewSessionBtn = document.getElementById("consoleTerminalNewSession");
         const consoleWrapRootEl = document.getElementById("consoleWrap");
         let activeConsoleTab = 'output';
         let consoleTerminalRunning = false;
-        let consoleTerminalHistoryIndex = 0;
+        const TERMINAL_SESSION_STORAGE_KEY = 'voltus.terminal.sessions.v1';
+        const TERMINAL_SESSION_VERSION = 1;
+        const TERMINAL_MAX_LINES_PER_SESSION = 1200;
+        let activeTerminalSessionId = '';
+        const terminalSessions = [];
+        let problemMatcherEnabled = true;
         let consoleTabIndicatorFrame = null;
         const windowMinimizeBtn = document.getElementById("windowMinimize");
         const windowMaximizeBtn = document.getElementById("windowMaximize");
@@ -3958,7 +4128,7 @@ throw "Chrome executable not found."
                 name: 'Scrape Table to Console',
                 category: 'Web Scraping',
                 description: 'Extract all tables from the current page',
-                icon: '📊',
+                icon: 'ðŸ“Š',
                 code: `const tables = document.querySelectorAll('table');
 console.log(\`Found \${tables.length} tables\`);
 tables.forEach((table, index) => {
@@ -3975,7 +4145,7 @@ tables.forEach((table, index) => {
                 name: 'Remove Common Ads',
                 category: 'Page Modification',
                 description: 'Hide common ad elements from the page',
-                icon: '🚫',
+                icon: 'ðŸš«',
                 code: `const adSelectors = ['[id*="ad"]', '[class*="ad"]', '[id*="banner"]', '[class*="banner"]'];
 let removedCount = 0;
 adSelectors.forEach(selector => {
@@ -3991,7 +4161,7 @@ console.log(\`Removed \${removedCount} ad elements\`);`
                 name: 'Extract All Links',
                 category: 'Web Scraping',
                 description: 'Get all links from the current page',
-                icon: '🔗',
+                icon: 'ðŸ”—',
                 code: `const links = Array.from(document.querySelectorAll('a[href]'))
             .map(a => ({
                 text: a.textContent.trim(),
@@ -4006,7 +4176,7 @@ console.table(links);`
                 name: 'Force Dark Mode',
                 category: 'Page Modification',
                 description: 'Apply dark mode to any website',
-                icon: '🌙',
+                icon: 'ðŸŒ™',
                 code: `const style = document.createElement('style');
 style.innerHTML = \`
             * {
@@ -4118,49 +4288,204 @@ console.log('Dark mode applied!');`
             consoleEl.scrollTop = consoleEl.scrollHeight;
         }
 
-        function pushTerminalLine(type, text) {
+        function buildTerminalSessionName(index) {
+            return `Shell ${Math.max(1, Number(index) || 1)}`;
+        }
+
+        function createTerminalSession(name = '') {
+            const nextIndex = terminalSessions.length + 1;
+            return {
+                id: `term-${Date.now()}-${Math.random().toString(16).slice(2, 8)}`,
+                name: String(name || buildTerminalSessionName(nextIndex)),
+                cwd: '',
+                history: [],
+                historyIndex: 0,
+                lines: []
+            };
+        }
+
+        function getActiveTerminalSession() {
+            let session = terminalSessions.find((item) => item && item.id === activeTerminalSessionId);
+            if (!session) {
+                if (!terminalSessions.length) {
+                    terminalSessions.push(createTerminalSession('Main'));
+                }
+                session = terminalSessions[0];
+                activeTerminalSessionId = session.id;
+            }
+            return session;
+        }
+
+        function persistTerminalSessions() {
+            try {
+                const payload = {
+                    version: TERMINAL_SESSION_VERSION,
+                    activeTerminalSessionId,
+                    sessions: terminalSessions.slice(0, 8).map((session) => ({
+                        id: String(session.id || ''),
+                        name: String(session.name || 'Shell'),
+                        cwd: String(session.cwd || ''),
+                        history: Array.isArray(session.history) ? session.history.slice(-120) : [],
+                        lines: Array.isArray(session.lines) ? session.lines.slice(-300) : []
+                    }))
+                };
+                localStorage.setItem(TERMINAL_SESSION_STORAGE_KEY, JSON.stringify(payload));
+            } catch { }
+        }
+
+        function hydrateTerminalSessions() {
+            let restored = false;
+            try {
+                const raw = localStorage.getItem(TERMINAL_SESSION_STORAGE_KEY);
+                if (!raw) throw new Error('empty');
+                const parsed = JSON.parse(raw);
+                if (!parsed || parsed.version !== TERMINAL_SESSION_VERSION || !Array.isArray(parsed.sessions)) {
+                    throw new Error('invalid');
+                }
+
+                parsed.sessions.slice(0, 8).forEach((sessionValue, idx) => {
+                    const next = createTerminalSession(buildTerminalSessionName(idx + 1));
+                    next.id = String(sessionValue && sessionValue.id ? sessionValue.id : next.id);
+                    next.name = String(sessionValue && sessionValue.name ? sessionValue.name : next.name);
+                    next.cwd = String(sessionValue && sessionValue.cwd ? sessionValue.cwd : '');
+                    next.history = Array.isArray(sessionValue && sessionValue.history)
+                        ? sessionValue.history.map((value) => String(value || '')).filter(Boolean).slice(-120)
+                        : [];
+                    next.historyIndex = next.history.length;
+                    next.lines = Array.isArray(sessionValue && sessionValue.lines)
+                        ? sessionValue.lines
+                            .map((entry) => ({
+                                type: String(entry && entry.type ? entry.type : 'log'),
+                                text: String(entry && entry.text ? entry.text : '')
+                            }))
+                            .slice(-300)
+                        : [];
+                    terminalSessions.push(next);
+                });
+
+                activeTerminalSessionId = String(parsed.activeTerminalSessionId || '');
+                restored = terminalSessions.length > 0;
+            } catch {
+                terminalSessions.length = 0;
+                activeTerminalSessionId = '';
+            }
+
+            if (!restored) {
+                terminalSessions.push(createTerminalSession('Main'));
+                activeTerminalSessionId = terminalSessions[0].id;
+            }
+        }
+
+        function renderActiveTerminalOutput() {
             if (!consoleTerminalOutputEl) return;
-            const row = document.createElement('div');
-            row.className = `entry ${type}`;
-            row.textContent = `[${new Date().toLocaleTimeString()}] ${String(text || '')}`;
-            consoleTerminalOutputEl.appendChild(row);
+            const session = getActiveTerminalSession();
+            consoleTerminalOutputEl.innerHTML = '';
+            const fragment = document.createDocumentFragment();
+
+            session.lines.forEach((entry) => {
+                const row = document.createElement('div');
+                row.className = `entry ${String(entry && entry.type ? entry.type : 'log')}`;
+                row.textContent = String(entry && entry.text ? entry.text : '');
+                fragment.appendChild(row);
+            });
+
+            consoleTerminalOutputEl.appendChild(fragment);
             consoleTerminalOutputEl.scrollTop = consoleTerminalOutputEl.scrollHeight;
         }
 
+        function renderTerminalSessionTabs() {
+            if (!consoleTerminalSessionsEl) return;
+            consoleTerminalSessionsEl.innerHTML = '';
+            terminalSessions.forEach((session) => {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'console-session-chip' + (session.id === activeTerminalSessionId ? ' active' : '');
+                btn.textContent = String(session.name || 'Shell');
+                btn.title = session.cwd || session.name || 'Shell';
+                btn.onclick = () => {
+                    activeTerminalSessionId = session.id;
+                    const active = getActiveTerminalSession();
+                    active.historyIndex = Array.isArray(active.history) ? active.history.length : 0;
+                    renderTerminalSessionTabs();
+                    renderActiveTerminalOutput();
+                    updateTerminalPrompt();
+                    persistTerminalSessions();
+                };
+                consoleTerminalSessionsEl.appendChild(btn);
+            });
+        }
+
+        function appendTerminalLine(type, text) {
+            const session = getActiveTerminalSession();
+            const line = {
+                type: String(type || 'log'),
+                text: `[${new Date().toLocaleTimeString()}] ${String(text || '')}`
+            };
+            session.lines.push(line);
+            if (session.lines.length > TERMINAL_MAX_LINES_PER_SESSION) {
+                session.lines.splice(0, session.lines.length - TERMINAL_MAX_LINES_PER_SESSION);
+            }
+
+            if (activeConsoleTab === 'terminal' && activeTerminalSessionId === session.id && consoleTerminalOutputEl) {
+                const row = document.createElement('div');
+                row.className = `entry ${line.type}`;
+                row.textContent = line.text;
+                consoleTerminalOutputEl.appendChild(row);
+                consoleTerminalOutputEl.scrollTop = consoleTerminalOutputEl.scrollHeight;
+            }
+
+            if (problemMatcherEnabled && (line.type === 'error' || line.type === 'warn') && typeof collectRuntimeProblemFromLine === 'function') {
+                collectRuntimeProblemFromLine(String(text || ''), session.cwd || getPreferredRuntimeCwd());
+            }
+        }
+
+        function pushTerminalLine(type, text) {
+            appendTerminalLine(type, text);
+            persistTerminalSessions();
+        }
+
         function getTerminalPromptPrefix() {
-            const cwd = String(getPreferredRuntimeCwd() || terminalLastCwd || '').trim();
+            const session = getActiveTerminalSession();
+            const cwd = String(getPreferredRuntimeCwd() || session.cwd || terminalLastCwd || '').trim();
             const normalized = cwd.replace(/[\\/]+$/, '');
             if (!normalized) return '[unknown-cwd]>';
             return `[${normalized}]>`;
         }
 
         async function ensureTerminalCwdResolved() {
+            const session = getActiveTerminalSession();
             const preferred = String(getPreferredRuntimeCwd() || '').trim();
             if (preferred) {
+                session.cwd = preferred;
                 terminalLastCwd = preferred;
-                return terminalLastCwd;
+                return session.cwd;
             }
-            if (String(terminalLastCwd || '').trim()) return terminalLastCwd;
+            if (String(session.cwd || '').trim()) return session.cwd;
+            if (String(terminalLastCwd || '').trim()) {
+                session.cwd = terminalLastCwd;
+                return session.cwd;
+            }
 
             if (!window.runtime || typeof window.runtime.runShell !== 'function') {
-                return terminalLastCwd;
+                return session.cwd;
             }
 
             try {
-                // Empty command still returns resolved runtime cwd from the Electron side.
                 const probe = await window.runtime.runShell('', { timeoutMs: 5000 });
                 const detected = String(probe && probe.cwd ? probe.cwd : '').trim();
                 if (detected) {
+                    session.cwd = detected;
                     terminalLastCwd = detected;
                 }
             } catch { }
 
-            return terminalLastCwd;
+            return session.cwd;
         }
 
         function updateTerminalPrompt() {
             if (!consoleTerminalPromptEl) return;
-            const cwd = String(getPreferredRuntimeCwd() || terminalLastCwd || '').trim();
+            const session = getActiveTerminalSession();
+            const cwd = String(getPreferredRuntimeCwd() || session.cwd || terminalLastCwd || '').trim();
             const prompt = getTerminalPromptPrefix();
             consoleTerminalPromptEl.textContent = prompt;
             consoleTerminalPromptEl.title = cwd || prompt;
@@ -4230,26 +4555,33 @@ console.log('Dark mode applied!');`
                 return;
             }
 
-            const cwd = String(getPreferredRuntimeCwd() || terminalLastCwd || '').trim();
+            const session = getActiveTerminalSession();
+            const cwd = String(getPreferredRuntimeCwd() || session.cwd || terminalLastCwd || '').trim();
             if (cwd) {
+                session.cwd = cwd;
                 terminalLastCwd = cwd;
                 updateTerminalPrompt();
             }
-            terminalHistory.push(command);
-            if (terminalHistory.length > 120) {
-                terminalHistory.shift();
+            if (!Array.isArray(session.history)) {
+                session.history = [];
             }
-            consoleTerminalHistoryIndex = terminalHistory.length;
+            session.history.push(command);
+            if (session.history.length > 120) {
+                session.history.shift();
+            }
+            session.historyIndex = session.history.length;
             consoleTerminalInputEl.value = '';
             consoleTerminalRunning = true;
             consoleTerminalInputEl.disabled = true;
+            clearRuntimeProblems();
 
             pushTerminalLine('log', `${getTerminalPromptPrefix()} ${command}`);
 
             try {
                 const result = await window.runtime.runShell(command, { cwd, timeoutMs: 60000 });
                 if (result && result.cwd) {
-                    terminalLastCwd = String(result.cwd);
+                    session.cwd = String(result.cwd);
+                    terminalLastCwd = session.cwd;
                     updateTerminalPrompt();
                 }
 
@@ -4274,6 +4606,7 @@ console.log('Dark mode applied!');`
                 consoleTerminalRunning = false;
                 consoleTerminalInputEl.disabled = false;
                 consoleTerminalInputEl.focus();
+                persistTerminalSessions();
             }
         }
 
@@ -4288,15 +4621,15 @@ console.log('Dark mode applied!');`
             }
 
             // Determine icon based on message content
-            let icon = '✅';
-            if (message.toLowerCase().includes('save')) icon = '💾';
-            else if (message.toLowerCase().includes('load')) icon = '📂';
-            else if (message.toLowerCase().includes('open')) icon = '📁';
-            else if (message.toLowerCase().includes('clear')) icon = '🗑️';
-            else if (message.toLowerCase().includes('switched') || message.toLowerCase().includes('mode')) icon = '🔄';
-            else if (message.toLowerCase().includes('sent')) icon = '📤';
-            else if (message.toLowerCase().includes('no code')) icon = '⚠️';
-            else if (message.toLowerCase().includes('no browser')) icon = '❌';
+            let icon = 'âœ…';
+            if (message.toLowerCase().includes('save')) icon = 'ðŸ’¾';
+            else if (message.toLowerCase().includes('load')) icon = 'ðŸ“‚';
+            else if (message.toLowerCase().includes('open')) icon = 'ðŸ“';
+            else if (message.toLowerCase().includes('clear')) icon = 'ðŸ—‘ï¸';
+            else if (message.toLowerCase().includes('switched') || message.toLowerCase().includes('mode')) icon = 'ðŸ”„';
+            else if (message.toLowerCase().includes('sent')) icon = 'ðŸ“¤';
+            else if (message.toLowerCase().includes('no code')) icon = 'âš ï¸';
+            else if (message.toLowerCase().includes('no browser')) icon = 'âŒ';
 
             toast.innerHTML = `<span class="toast-icon">${icon}</span><span>${message}</span>`;
             toastContainer.appendChild(toast);
@@ -4317,12 +4650,15 @@ console.log('Dark mode applied!');`
 
         document.getElementById("clearConsole").onclick = () => {
             if (activeConsoleTab === 'terminal') {
-                if (consoleTerminalOutputEl) {
-                    consoleTerminalOutputEl.innerHTML = '';
-                }
+                const session = getActiveTerminalSession();
+                session.lines = [];
+                renderActiveTerminalOutput();
+                clearRuntimeProblems();
+                persistTerminalSessions();
                 return;
             }
             consoleEl.innerHTML = "";
+            clearRuntimeProblems();
         };
 
         if (consoleOutputTabBtn) {
@@ -4340,18 +4676,22 @@ console.log('Dark mode applied!');`
                 }
                 if (event.key === 'ArrowUp') {
                     event.preventDefault();
-                    if (!terminalHistory.length) return;
-                    consoleTerminalHistoryIndex = Math.max(0, (consoleTerminalHistoryIndex || terminalHistory.length) - 1);
-                    consoleTerminalInputEl.value = terminalHistory[consoleTerminalHistoryIndex] || '';
+                    const session = getActiveTerminalSession();
+                    const history = Array.isArray(session.history) ? session.history : [];
+                    if (!history.length) return;
+                    session.historyIndex = Math.max(0, (session.historyIndex || history.length) - 1);
+                    consoleTerminalInputEl.value = history[session.historyIndex] || '';
                     consoleTerminalInputEl.setSelectionRange(consoleTerminalInputEl.value.length, consoleTerminalInputEl.value.length);
                     return;
                 }
                 if (event.key === 'ArrowDown') {
                     event.preventDefault();
-                    if (!terminalHistory.length) return;
-                    consoleTerminalHistoryIndex = Math.min(terminalHistory.length, (consoleTerminalHistoryIndex || terminalHistory.length) + 1);
-                    consoleTerminalInputEl.value = consoleTerminalHistoryIndex < terminalHistory.length
-                        ? terminalHistory[consoleTerminalHistoryIndex]
+                    const session = getActiveTerminalSession();
+                    const history = Array.isArray(session.history) ? session.history : [];
+                    if (!history.length) return;
+                    session.historyIndex = Math.min(history.length, (session.historyIndex || history.length) + 1);
+                    consoleTerminalInputEl.value = session.historyIndex < history.length
+                        ? history[session.historyIndex]
                         : '';
                     consoleTerminalInputEl.setSelectionRange(consoleTerminalInputEl.value.length, consoleTerminalInputEl.value.length);
                 }
@@ -4372,6 +4712,27 @@ console.log('Dark mode applied!');`
                     scheduleConsoleTabIndicatorUpdate();
                 }
             });
+        }
+        hydrateTerminalSessions();
+        renderTerminalSessionTabs();
+        renderActiveTerminalOutput();
+        if (consoleTerminalNewSessionBtn) {
+            consoleTerminalNewSessionBtn.onclick = () => {
+                if (terminalSessions.length >= 8) {
+                    showToast('Terminal session limit reached (8)');
+                    return;
+                }
+                const next = createTerminalSession();
+                terminalSessions.push(next);
+                activeTerminalSessionId = next.id;
+                renderTerminalSessionTabs();
+                renderActiveTerminalOutput();
+                updateTerminalPrompt();
+                persistTerminalSessions();
+                if (consoleTerminalInputEl) {
+                    consoleTerminalInputEl.focus();
+                }
+            };
         }
         void ensureTerminalCwdResolved().finally(() => {
             updateTerminalPrompt();
@@ -4932,6 +5293,7 @@ console.log('Dark mode applied!');`
                     if (activeTabId && tabs[activeTabId]) {
                         tabs[activeTabId].content = editor.getValue();
                     }
+                    scheduleRunOnSave();
                     scheduleInlineSuggestTrigger();
                     scheduleDiagnosticsRefresh();
                     updateStatusBar();
@@ -5158,7 +5520,25 @@ console.log('Dark mode applied!');`
         let breakpointDecorationIds = [];
         const breakpointLinesByTabId = new Map();
         let terminalLastCwd = '';
-        const terminalHistory = [];
+        let runOnSaveEnabled = false;
+        let runOnSaveTaskId = '';
+        let runOnSaveTimer = null;
+        const RUN_ON_SAVE_STORAGE_KEY = 'voltus.runOnSave.enabled';
+        const RUN_ON_SAVE_TASK_STORAGE_KEY = 'voltus.runOnSave.taskId';
+        const RUN_ON_SAVE_DELAY_MS = 850;
+        const PROBLEM_MATCHER_STORAGE_KEY = 'voltus.problemMatcher.enabled';
+        const RUNTIME_PERMISSION_STORAGE_KEY = 'voltus.runtime.permissions.v1';
+        const RUNTIME_PROBLEM_LIMIT = 320;
+        const runtimeProblemEntries = [];
+        const TASKS_STORAGE_KEY = 'voltus.tasks.v1';
+        const TASKS_STORAGE_VERSION = 1;
+        let taskDefinitions = [];
+        let runtimePermissionsState = {
+            allowShell: false,
+            allowPython: false,
+            allowAnyCwd: false,
+            trustedRoots: []
+        };
 
         function openTabById(tabId) {
             if (!tabId || !tabs[tabId] || !tabs[tabId].tabElement) return;
@@ -5236,7 +5616,7 @@ console.log('Dark mode applied!');`
 
         function createPickerModalShell(modalId, titleText, placeholderText, widthPx = 760) {
             const app = document.getElementById('app');
-            ['quickOpenModal', 'commandPaletteModal', 'findInFilesModal', 'diagnosticsModal'].forEach((id) => {
+            ['quickOpenModal', 'commandPaletteModal', 'findInFilesModal', 'replaceInFilesModal', 'diagnosticsModal'].forEach((id) => {
                 const existingModal = document.getElementById(id);
                 if (existingModal) existingModal.remove();
             });
@@ -5458,9 +5838,11 @@ console.log('Dark mode applied!');`
                 { title: 'File: New Tab', detail: 'Create a new file tab', meta: 'CTRL+N', run: () => showAddTabChoiceModal() },
                 { title: 'File: Close Active Tab', detail: 'Close selected tab', meta: 'CTRL+W', run: () => closeActiveTab() },
                 { title: 'Search: Find In Files', detail: 'Search across open tabs and workspace', meta: 'CTRL+SHIFT+F', run: () => showFindInFilesModal() },
+                { title: 'Search: Replace In Files', detail: 'Search and replace across workspace', meta: 'CTRL+SHIFT+H', run: () => showReplaceInFilesModal() },
                 { title: 'Problems: Show Diagnostics', detail: 'Review warnings and errors', meta: 'CTRL+SHIFT+M', run: () => showDiagnosticsModal() },
                 { title: 'Run: Execute', detail: 'Run current code', meta: 'CTRL+ENTER', run: () => document.getElementById('execute').click() },
             { title: 'Run: Terminal', detail: 'Open terminal tab in Output view', meta: 'CTRL+`', run: () => showTerminalPanelModal() },
+                { title: 'Run: Task Runner', detail: 'Open task dashboard and run saved commands', meta: 'CTRL+SHIFT+R', run: () => showTaskRunnerModal() },
                 { title: 'View: Home', detail: 'Open dashboard', meta: 'ALT+1', run: () => setPrimaryView('home') },
                 { title: 'View: Editor', detail: 'Open editor', meta: 'ALT+2', run: () => setPrimaryView('editor') },
                 { title: 'View: Output', detail: 'Open Project Preview and console', meta: 'ALT+3', run: () => setPrimaryView('html') },
@@ -5468,6 +5850,7 @@ console.log('Dark mode applied!');`
                 { title: 'Explorer: Toggle', detail: 'Show or hide explorer panel', meta: 'CTRL+B', run: () => document.getElementById('explorerToggle').click() },
                 { title: 'Explorer: Open Folder', detail: 'Attach a workspace folder', meta: 'CTRL+SHIFT+E', run: () => chooseExplorerFolder() },
                 { title: 'Explorer: Refresh', detail: 'Refresh file tree', meta: 'F6', run: () => refreshExplorerTree() },
+                { title: 'Source Control: Open Git Panel', detail: 'Review changes, stage, commit, pull, and push', meta: 'CTRL+SHIFT+G', run: () => showGitPanelModal() },
                 { title: 'Editor: Format Document', detail: 'Format current file', meta: 'SHIFT+ALT+F', run: () => editor && editor.getAction('editor.action.formatDocument')?.run() },
                 { title: 'Editor: Toggle Word Wrap', detail: 'Switch wrapping on/off', meta: '', run: () => document.getElementById('toggleWordWrap').click() },
                 { title: 'Editor: Toggle Minimap', detail: 'Switch minimap on/off', meta: '', run: () => document.getElementById('toggleMinimap').click() },
@@ -5655,6 +6038,41 @@ console.log('Dark mode applied!');`
                 if (
                     resultBucket.length < maxResults &&
                     explorerRootPath &&
+                    window.runtime &&
+                    typeof window.runtime.findInFiles === 'function'
+                ) {
+                    try {
+                        const backendResult = await window.runtime.findInFiles({
+                            cwd: explorerRootPath,
+                            query,
+                            maxResults: maxResults - resultBucket.length,
+                            maxFiles: fileLimit
+                        });
+                        if (requestToken !== findInFilesRequestToken) return;
+                        const matches = Array.isArray(backendResult && backendResult.results) ? backendResult.results : [];
+                        matches.forEach((match) => {
+                            if (resultBucket.length >= maxResults) return;
+                            const matchPath = String(match && match.path ? match.path : '');
+                            const normalizedPath = normalizePathForCompare(matchPath);
+                            if (normalizedPath && visitedPaths.has(normalizedPath)) return;
+                            if (normalizedPath) visitedPaths.add(normalizedPath);
+                            pushResult(resultBucket, {
+                                source: 'workspace',
+                                tabId: '',
+                                name: String(match && match.name ? match.name : getFileNameFromPath(matchPath)),
+                                path: matchPath,
+                                lineNumber: Math.max(1, Number(match && match.lineNumber ? match.lineNumber : 1)),
+                                column: Math.max(1, Number(match && match.column ? match.column : 1)),
+                                preview: String(match && match.preview ? match.preview : '')
+                            });
+                        });
+                    } catch (error) {
+                        const message = error && error.message ? error.message : String(error);
+                        pushConsole('warn', `Fast workspace search unavailable: ${message}`);
+                    }
+                } else if (
+                    resultBucket.length < maxResults &&
+                    explorerRootPath &&
                     window.fileExplorer &&
                     typeof window.fileExplorer.readFile === 'function'
                 ) {
@@ -5751,6 +6169,223 @@ console.log('Dark mode applied!');`
             scheduleSearch();
         }
 
+        async function refreshOpenTabsFromDisk(paths = []) {
+            if (!Array.isArray(paths) || paths.length === 0) return;
+            if (!window.fileExplorer || typeof window.fileExplorer.readFile !== 'function') return;
+
+            const normalizedTargets = new Set(
+                paths.map((value) => normalizePathForCompare(value)).filter(Boolean)
+            );
+
+            const tabIds = getTabOrder();
+            for (const tabId of tabIds) {
+                const tabState = tabs[tabId];
+                if (!tabState || !tabState.filePath) continue;
+                const normalized = normalizePathForCompare(tabState.filePath);
+                if (!normalized || !normalizedTargets.has(normalized)) continue;
+                if (isImageLikePath(tabState.filePath)) continue;
+
+                try {
+                    const nextContent = await window.fileExplorer.readFile(tabState.filePath);
+                    if (typeof nextContent === 'string') {
+                        tabState.content = nextContent;
+                        if (tabId === activeTabId && editor) {
+                            editor.setValue(nextContent);
+                        }
+                    }
+                } catch { }
+            }
+        }
+
+        function showReplaceInFilesModal(initialQuery = '') {
+            if (!explorerRootPath) {
+                showToast('Open a workspace folder first');
+                return;
+            }
+
+            const shell = createPickerModalShell('replaceInFilesModal', 'Replace In Files', 'Find text in workspace', 940);
+            if (!shell || !shell.input || !shell.list || !shell.hint) return;
+
+            const replaceInput = document.createElement('input');
+            replaceInput.type = 'text';
+            replaceInput.autocomplete = 'off';
+            replaceInput.spellcheck = false;
+            replaceInput.placeholder = 'Replace with';
+            replaceInput.style.cssText = 'margin-top:8px;background:#070707;border:1px solid rgba(255,255,255,0.14);color:#d7d7d7;border-radius:8px;padding:10px 11px;font-size:12px;outline:none;';
+
+            const optionsRow = document.createElement('div');
+            optionsRow.style.cssText = 'display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:8px;';
+            optionsRow.innerHTML = `
+                <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+                    <label style="display:flex;align-items:center;gap:6px;font-size:11px;color:#bdbdbd;">
+                        <input id="replaceUseRegex" type="checkbox" />
+                        Regex
+                    </label>
+                    <label style="display:flex;align-items:center;gap:6px;font-size:11px;color:#bdbdbd;">
+                        <input id="replaceMatchCase" type="checkbox" />
+                        Match Case
+                    </label>
+                    <label style="display:flex;align-items:center;gap:6px;font-size:11px;color:#bdbdbd;">
+                        <input id="replaceWholeWord" type="checkbox" />
+                        Whole Word
+                    </label>
+                </div>
+                <div style="display:flex;align-items:center;gap:8px;">
+                    <button type="button" id="replacePreviewBtn" class="settings-close" style="width:auto;padding:0 10px;border-radius:8px;">Preview</button>
+                    <button type="button" id="replaceApplyBtn" class="settings-close" style="width:auto;padding:0 10px;border-radius:8px;">Replace All</button>
+                </div>
+            `;
+
+            shell.input.insertAdjacentElement('afterend', replaceInput);
+            replaceInput.insertAdjacentElement('afterend', optionsRow);
+
+            const regexCheckbox = optionsRow.querySelector('#replaceUseRegex');
+            const matchCaseCheckbox = optionsRow.querySelector('#replaceMatchCase');
+            const wholeWordCheckbox = optionsRow.querySelector('#replaceWholeWord');
+            const previewBtn = optionsRow.querySelector('#replacePreviewBtn');
+            const applyBtn = optionsRow.querySelector('#replaceApplyBtn');
+
+            let latestResults = [];
+            let latestPaths = [];
+            let searchToken = 0;
+
+            const runSearch = async () => {
+                const query = String(shell.input.value || '').trim();
+                const requestToken = ++searchToken;
+                latestResults = [];
+                latestPaths = [];
+
+                if (!query) {
+                    renderPickerListItems(shell.list, [], 0, () => { });
+                    shell.hint.textContent = 'Type a query to preview replacements';
+                    return;
+                }
+
+                if (!window.runtime || typeof window.runtime.findInFiles !== 'function') {
+                    shell.hint.textContent = 'Search API unavailable';
+                    return;
+                }
+
+                try {
+                    const result = await window.runtime.findInFiles({
+                        cwd: explorerRootPath,
+                        query,
+                        useRegex: Boolean(regexCheckbox && regexCheckbox.checked),
+                        matchCase: Boolean(matchCaseCheckbox && matchCaseCheckbox.checked),
+                        wholeWord: Boolean(wholeWordCheckbox && wholeWordCheckbox.checked),
+                        maxResults: 280
+                    });
+                    if (requestToken !== searchToken) return;
+
+                    const matches = Array.isArray(result && result.results) ? result.results : [];
+                    const items = matches.map((entry) => {
+                        const filePath = String(entry && entry.path ? entry.path : '');
+                        const fileName = String(entry && entry.name ? entry.name : getFileNameFromPath(filePath));
+                        if (filePath) latestPaths.push(filePath);
+                        return {
+                            title: `${fileName}:${Math.max(1, Number(entry && entry.lineNumber ? entry.lineNumber : 1))}`,
+                            detail: `${filePath}  |  ${String(entry && entry.preview ? entry.preview : '')}`,
+                            meta: 'FILE'
+                        };
+                    });
+
+                    latestResults = items;
+                    renderPickerListItems(shell.list, items, 0, () => { });
+                    shell.hint.textContent = `${items.length} match(es) in ${new Set(latestPaths.map((value) => normalizePathForCompare(value))).size} file(s)`;
+                } catch (error) {
+                    const message = error && error.message ? error.message : String(error);
+                    shell.hint.textContent = `Search failed: ${message}`;
+                }
+            };
+
+            const scheduleSearch = (() => {
+                let timer = null;
+                return () => {
+                    if (timer !== null) clearTimeout(timer);
+                    timer = window.setTimeout(() => {
+                        timer = null;
+                        void runSearch();
+                    }, 120);
+                };
+            })();
+
+            const applyReplace = async () => {
+                const query = String(shell.input.value || '').trim();
+                if (!query) {
+                    showToast('Enter text to find');
+                    return;
+                }
+                if (!window.runtime || typeof window.runtime.replaceInFiles !== 'function') {
+                    showToast('Replace API unavailable');
+                    return;
+                }
+
+                const normalizedPaths = Array.from(new Set(latestPaths.map((value) => String(value || '').trim()).filter(Boolean)));
+                if (!normalizedPaths.length) {
+                    showToast('No files to replace');
+                    return;
+                }
+
+                applyBtn.disabled = true;
+                previewBtn.disabled = true;
+                try {
+                    const result = await window.runtime.replaceInFiles({
+                        cwd: explorerRootPath,
+                        query,
+                        replacement: String(replaceInput.value || ''),
+                        files: normalizedPaths,
+                        useRegex: Boolean(regexCheckbox && regexCheckbox.checked),
+                        matchCase: Boolean(matchCaseCheckbox && matchCaseCheckbox.checked),
+                        wholeWord: Boolean(wholeWordCheckbox && wholeWordCheckbox.checked)
+                    });
+                    const touched = Number(result && result.touchedFiles ? result.touchedFiles : 0);
+                    const total = Number(result && result.totalReplacements ? result.totalReplacements : 0);
+                    if (touched > 0) {
+                        showToast(`Replaced ${total} occurrence(s) in ${touched} file(s)`);
+                        const updatedPaths = Array.isArray(result && result.updated)
+                            ? result.updated.map((entry) => String(entry && entry.path ? entry.path : '')).filter(Boolean)
+                            : [];
+                        await refreshOpenTabsFromDisk(updatedPaths);
+                        await refreshExplorerTree();
+                    } else {
+                        showToast('No replacements applied');
+                    }
+                    void runSearch();
+                } catch (error) {
+                    showToast(error && error.message ? error.message : 'Replace failed');
+                } finally {
+                    applyBtn.disabled = false;
+                    previewBtn.disabled = false;
+                }
+            };
+
+            shell.input.value = String(initialQuery || '');
+            shell.input.addEventListener('input', scheduleSearch);
+            replaceInput.addEventListener('input', () => { });
+            if (regexCheckbox) regexCheckbox.addEventListener('change', scheduleSearch);
+            if (matchCaseCheckbox) matchCaseCheckbox.addEventListener('change', scheduleSearch);
+            if (wholeWordCheckbox) wholeWordCheckbox.addEventListener('change', scheduleSearch);
+            if (previewBtn) previewBtn.onclick = () => { void runSearch(); };
+            if (applyBtn) applyBtn.onclick = () => { void applyReplace(); };
+
+            replaceInput.addEventListener('keydown', (event) => {
+                if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) {
+                    event.preventDefault();
+                    void applyReplace();
+                }
+            });
+
+            shell.input.addEventListener('keydown', (event) => {
+                if (event.key === 'Enter' && (event.ctrlKey || event.metaKey)) {
+                    event.preventDefault();
+                    void applyReplace();
+                }
+            });
+
+            shell.hint.textContent = 'Ctrl+Enter applies replacement';
+            scheduleSearch();
+        }
+
         function getPreferredRuntimeCwd() {
             const activeTab = activeTabId && tabs[activeTabId] ? tabs[activeTabId] : null;
             if (terminalAutoDetectFolderDirectory && explorerRootPath) {
@@ -5762,6 +6397,241 @@ console.log('Dark mode applied!');`
             }
             if (explorerRootPath) return explorerRootPath;
             return terminalLastCwd || '';
+        }
+
+        function safeStorageGet(key, fallback = '') {
+            try {
+                const value = localStorage.getItem(key);
+                return value === null || value === undefined ? fallback : value;
+            } catch {
+                return fallback;
+            }
+        }
+
+        function safeStorageSet(key, value) {
+            try {
+                localStorage.setItem(key, value);
+            } catch { }
+        }
+
+        function safeStorageRemove(key) {
+            try {
+                localStorage.removeItem(key);
+            } catch { }
+        }
+
+        function normalizeAbsolutePath(pathValue) {
+            const raw = String(pathValue || '').trim();
+            if (!raw) return '';
+            if (/^[a-zA-Z]:[\\/]/.test(raw) || /^\\\\/.test(raw)) {
+                return raw.replace(/\//g, '\\');
+            }
+            if (raw.startsWith('/')) {
+                const drive = explorerRootPath && /^[a-zA-Z]:/.test(explorerRootPath)
+                    ? explorerRootPath.slice(0, 2)
+                    : '';
+                if (drive) {
+                    return `${drive}\\${raw.replace(/^\/+/, '').replace(/\//g, '\\')}`;
+                }
+            }
+            if (explorerRootPath) {
+                return joinExplorerPath(explorerRootPath, raw);
+            }
+            return raw.replace(/\//g, '\\');
+        }
+
+        function normalizeProblemFilePath(pathValue, cwdValue = '') {
+            const raw = String(pathValue || '').trim();
+            if (!raw) return '';
+            if (/^[a-zA-Z]:[\\/]/.test(raw) || /^\\\\/.test(raw)) return raw;
+            if (/^\//.test(raw)) return normalizeAbsolutePath(raw);
+            const cwd = String(cwdValue || '').trim();
+            if (cwd) return joinExplorerPath(cwd, raw);
+            if (explorerRootPath) return joinExplorerPath(explorerRootPath, raw);
+            return raw;
+        }
+
+        function collectRuntimeProblemFromLine(lineText, cwdValue = '') {
+            const line = String(lineText || '').trim();
+            if (!line) return;
+
+            const patterns = [
+                /^(?<file>.+?):(?<line>\d+):(?<col>\d+):\s*(?<severity>error|warning)?\s*(?<message>.+)$/i,
+                /^(?<file>.+?):(?<line>\d+):\s*(?<severity>error|warning)?\s*(?<message>.+)$/i
+            ];
+
+            for (const pattern of patterns) {
+                const match = line.match(pattern);
+                if (!match || !match.groups) continue;
+
+                const severityRaw = String(match.groups.severity || '').toLowerCase();
+                const severity = severityRaw === 'warning'
+                    ? safeMarkerSeverity('warning')
+                    : safeMarkerSeverity('error');
+                const filePath = normalizeProblemFilePath(match.groups.file, cwdValue);
+                if (!filePath) continue;
+
+                runtimeProblemEntries.push({
+                    source: 'runtime',
+                    filePath,
+                    fileName: getFileNameFromPath(filePath) || 'runtime',
+                    message: String(match.groups.message || line).trim(),
+                    severity,
+                    line: Math.max(1, Number(match.groups.line) || 1),
+                    column: Math.max(1, Number(match.groups.col) || 1),
+                    preview: line
+                });
+
+                if (runtimeProblemEntries.length > RUNTIME_PROBLEM_LIMIT) {
+                    runtimeProblemEntries.splice(0, runtimeProblemEntries.length - RUNTIME_PROBLEM_LIMIT);
+                }
+                return;
+            }
+        }
+
+        function clearRuntimeProblems() {
+            runtimeProblemEntries.length = 0;
+            updateStatusBar();
+        }
+
+        function scheduleRunOnSave() {
+            if (!runOnSaveEnabled || executionMode !== 'local') return;
+            if (runOnSaveTimer !== null) {
+                clearTimeout(runOnSaveTimer);
+            }
+
+            runOnSaveTimer = window.setTimeout(() => {
+                runOnSaveTimer = null;
+                if (!runOnSaveEnabled || executionMode !== 'local') return;
+
+                if (runOnSaveTaskId) {
+                    void runTaskById(runOnSaveTaskId, { silentOnMissing: true });
+                    return;
+                }
+
+                const executeBtn = document.getElementById('execute');
+                if (executeBtn) {
+                    executeBtn.click();
+                }
+            }, RUN_ON_SAVE_DELAY_MS);
+        }
+
+        function getDefaultTaskDefinitions() {
+            return [
+                { id: 'npm-dev', name: 'npm run dev', command: 'npm run dev' },
+                { id: 'npm-test', name: 'npm test', command: 'npm test' },
+                { id: 'npm-build', name: 'npm run build', command: 'npm run build' },
+                { id: 'python-main', name: 'python main.py', command: 'python main.py' }
+            ];
+        }
+
+        function persistTaskDefinitions() {
+            try {
+                const payload = {
+                    version: TASKS_STORAGE_VERSION,
+                    tasks: taskDefinitions.map((task) => ({
+                        id: String(task && task.id ? task.id : ''),
+                        name: String(task && task.name ? task.name : ''),
+                        command: String(task && task.command ? task.command : '')
+                    })).filter((task) => task.id && task.name && task.command)
+                };
+                localStorage.setItem(TASKS_STORAGE_KEY, JSON.stringify(payload));
+            } catch { }
+        }
+
+        function loadTaskDefinitions() {
+            taskDefinitions = [];
+            try {
+                const raw = localStorage.getItem(TASKS_STORAGE_KEY);
+                if (!raw) throw new Error('empty');
+                const parsed = JSON.parse(raw);
+                if (!parsed || parsed.version !== TASKS_STORAGE_VERSION || !Array.isArray(parsed.tasks)) {
+                    throw new Error('invalid');
+                }
+                taskDefinitions = parsed.tasks
+                    .map((task, idx) => ({
+                        id: String(task && task.id ? task.id : `task-${idx + 1}`),
+                        name: String(task && task.name ? task.name : `Task ${idx + 1}`),
+                        command: String(task && task.command ? task.command : '').trim()
+                    }))
+                    .filter((task) => Boolean(task.command));
+            } catch {
+                taskDefinitions = getDefaultTaskDefinitions();
+                persistTaskDefinitions();
+            }
+        }
+
+        function syncRunOnSaveTaskSelect() {
+            const selectEl = document.getElementById('runOnSaveTaskSelect');
+            if (!selectEl) return;
+            const currentValue = String(runOnSaveTaskId || '');
+            const options = [
+                { id: '', name: 'Execute Active File' },
+                ...taskDefinitions.map((task) => ({ id: task.id, name: task.name }))
+            ];
+            selectEl.innerHTML = options
+                .map((option) => `<option value="${option.id}">${option.name}</option>`)
+                .join('');
+            selectEl.value = options.some((option) => option.id === currentValue) ? currentValue : '';
+        }
+
+        function findTaskById(taskId) {
+            const id = String(taskId || '').trim();
+            if (!id) return null;
+            return taskDefinitions.find((task) => task && task.id === id) || null;
+        }
+
+        async function runTaskById(taskId, options = {}) {
+            const task = findTaskById(taskId);
+            if (!task) {
+                if (!options || !options.silentOnMissing) {
+                    showToast('Task not found');
+                }
+                return false;
+            }
+
+            if (!window.runtime || typeof window.runtime.runShell !== 'function') {
+                showToast('Task runtime unavailable');
+                return false;
+            }
+
+            const cwd = String(getPreferredRuntimeCwd() || explorerRootPath || terminalLastCwd || '').trim();
+            setConsoleTab('terminal');
+            pushTerminalLine('log', `[task] ${task.name}`);
+
+            try {
+                const result = await window.runtime.runShell(task.command, { cwd, timeoutMs: 120000 });
+                const stdout = String(result && result.stdout ? result.stdout : '');
+                const stderr = String(result && result.stderr ? result.stderr : '');
+                const exitCode = Number.isFinite(Number(result && result.exitCode)) ? Number(result.exitCode) : 0;
+                if (result && result.cwd) {
+                    const session = getActiveTerminalSession();
+                    session.cwd = String(result.cwd);
+                    terminalLastCwd = session.cwd;
+                    updateTerminalPrompt();
+                    persistTerminalSessions();
+                }
+
+                stdout.replace(/\r\n/g, '\n').split('\n').forEach((line) => {
+                    if (!line) return;
+                    pushTerminalLine('log', line);
+                });
+                stderr.replace(/\r\n/g, '\n').split('\n').forEach((line) => {
+                    if (!line) return;
+                    pushTerminalLine('error', line);
+                });
+                pushTerminalLine(exitCode === 0 ? 'log' : 'warn', `(task exit ${exitCode})`);
+                if (exitCode === 0) {
+                    showToast(`Task finished: ${task.name}`);
+                } else {
+                    showToast(`Task failed: ${task.name}`);
+                }
+                return exitCode === 0;
+            } catch (error) {
+                pushTerminalLine('error', error && error.message ? error.message : String(error));
+                showToast(`Task failed: ${task.name}`);
+                return false;
+            }
         }
 
         function collectLineOffsets(sourceText) {
@@ -6076,10 +6946,20 @@ console.log('Dark mode applied!');`
                 if (marker.severity === monaco.MarkerSeverity.Error) errors += 1;
                 else if (marker.severity === monaco.MarkerSeverity.Warning) warnings += 1;
             });
+            const activeTab = activeTabId && tabs[activeTabId] ? tabs[activeTabId] : null;
+            const activePathNorm = normalizePathForCompare(activeTab && activeTab.filePath ? activeTab.filePath : activeTab && activeTab.name ? activeTab.name : '');
+            let runtimeMatches = 0;
+            runtimeProblemEntries.forEach((entry) => {
+                const entryNorm = normalizePathForCompare(entry && entry.filePath ? entry.filePath : '');
+                if (activePathNorm && entryNorm && activePathNorm !== entryNorm) return;
+                runtimeMatches += 1;
+                if (entry.severity === safeMarkerSeverity('error')) errors += 1;
+                else warnings += 1;
+            });
             return {
                 errors,
                 warnings,
-                total: markers.length
+                total: markers.length + runtimeMatches
             };
         }
 
@@ -6112,6 +6992,29 @@ console.log('Dark mode applied!');`
                 });
             });
 
+            runtimeProblemEntries.forEach((entry) => {
+                const filePath = String(entry && entry.filePath ? entry.filePath : '');
+                const fileName = String(entry && entry.fileName ? entry.fileName : getFileNameFromPath(filePath) || 'runtime');
+                const normalizedPath = normalizePathForCompare(filePath);
+                const tabId = getTabOrder().find((candidateId) => {
+                    const tabState = tabs[candidateId];
+                    if (!tabState) return false;
+                    const tabNorm = normalizePathForCompare(tabState.filePath || tabState.name);
+                    return Boolean(tabNorm && normalizedPath && tabNorm === normalizedPath);
+                }) || '';
+
+                entries.push({
+                    tabId,
+                    fileName,
+                    filePath,
+                    message: String(entry && entry.message ? entry.message : 'Runtime issue'),
+                    severity: Number(entry && entry.severity ? entry.severity : safeMarkerSeverity('warning')),
+                    line: Math.max(1, Number(entry && entry.line ? entry.line : 1)),
+                    column: Math.max(1, Number(entry && entry.column ? entry.column : 1)),
+                    preview: String(entry && entry.preview ? entry.preview : '')
+                });
+            });
+
             entries.sort((a, b) => {
                 if (a.severity !== b.severity) return b.severity - a.severity;
                 if (a.fileName !== b.fileName) return a.fileName.localeCompare(b.fileName, undefined, { sensitivity: 'base' });
@@ -6130,11 +7033,13 @@ console.log('Dark mode applied!');`
             let filteredEntries = [];
             let selectedIndex = 0;
 
-            const openEntry = (entry) => {
+            const openEntry = async (entry) => {
                 if (!entry) return;
                 shell.close();
                 if (entry.tabId) {
                     openTabById(entry.tabId);
+                } else if (entry.filePath) {
+                    await openFileFromExplorer(entry.filePath, entry.fileName);
                 }
                 setPrimaryView('editor');
                 if (editor) {
@@ -6170,7 +7075,7 @@ console.log('Dark mode applied!');`
                 });
 
                 renderPickerListItems(shell.list, items, selectedIndex, (item) => {
-                    openEntry(item.raw);
+                    void openEntry(item.raw);
                 });
                 shell.hint.textContent = `${filteredEntries.length} problem(s)`;
             };
@@ -6194,7 +7099,7 @@ console.log('Dark mode applied!');`
                     event.preventDefault();
                     const picked = filteredEntries[selectedIndex] || null;
                     if (!picked) return;
-                    openEntry(picked);
+                    void openEntry(picked);
                     return;
                 }
                 if (event.key === 'F5') {
@@ -7492,7 +8397,7 @@ console.log('Dark mode applied!');`
             const onlyOne = all.length === 1;
             all.forEach(tab => {
                 const btn = tab.querySelector("button");
-                btn.textContent = onlyOne ? "✎" : "✕";
+                btn.textContent = onlyOne ? "âœŽ" : "âœ•";
             });
         }
 
@@ -8639,6 +9544,7 @@ console.log('Dark mode applied!');`
         window.addEventListener('beforeunload', () => {
             persistTabSession();
             persistExplorerSession();
+            persistTerminalSessions();
         });
 
         const explorerToggle = document.getElementById('explorerToggle');
@@ -8698,7 +9604,7 @@ console.log('Dark mode applied!');`
             const inMonaco = Boolean(target && target.closest('.monaco-editor'));
             const inEditableField = Boolean(target && target.closest('input, textarea, select, [contenteditable="true"]'));
             const inPicker = Boolean(
-                target && target.closest('#commandPaletteModal, #quickOpenModal, #findInFilesModal, #diagnosticsModal, #terminalPanelModal')
+                target && target.closest('#commandPaletteModal, #quickOpenModal, #findInFilesModal, #replaceInFilesModal, #diagnosticsModal, #terminalPanelModal, #taskRunnerModal, #gitPanelModal')
             );
 
             if (!withModifier && !event.altKey && !event.shiftKey) {
@@ -8769,9 +9675,24 @@ console.log('Dark mode applied!');`
                 showFindInFilesModal();
                 return;
             }
+            if (keyLower === 'h' && event.shiftKey) {
+                event.preventDefault();
+                showReplaceInFilesModal();
+                return;
+            }
             if (keyLower === 'm' && event.shiftKey) {
                 event.preventDefault();
                 showDiagnosticsModal();
+                return;
+            }
+            if (keyLower === 'r' && event.shiftKey) {
+                event.preventDefault();
+                showTaskRunnerModal();
+                return;
+            }
+            if (keyLower === 'g' && event.shiftKey) {
+                event.preventDefault();
+                showGitPanelModal();
                 return;
             }
             if (keyLower === 'e' && event.shiftKey) {
@@ -8862,6 +9783,11 @@ console.log('Dark mode applied!');`
         setExplorerPaneOpen(false);
         renderExplorerTree();
         setPrimaryView('home');
+        loadTaskDefinitions();
+        runOnSaveEnabled = safeStorageGet(RUN_ON_SAVE_STORAGE_KEY, '0') === '1';
+        runOnSaveTaskId = String(safeStorageGet(RUN_ON_SAVE_TASK_STORAGE_KEY, '') || '');
+        problemMatcherEnabled = safeStorageGet(PROBLEM_MATCHER_STORAGE_KEY, '1') !== '0';
+        syncRunOnSaveTaskSelect();
         (async () => {
             await restoreExplorerSession();
             updateStatusBar();
@@ -8975,6 +9901,175 @@ console.log('Dark mode applied!');`
             updateDashboardMetrics();
             updateStatusBar();
         };
+
+        const runOnSaveToggle = document.getElementById('toggleRunOnSave');
+        const runOnSaveTaskSelect = document.getElementById('runOnSaveTaskSelect');
+        const problemMatcherToggle = document.getElementById('toggleProblemMatcher');
+        const allowShellToggle = document.getElementById('toggleAllowShellExecution');
+        const allowPythonToggle = document.getElementById('toggleAllowPythonExecution');
+        const allowAnyCwdToggle = document.getElementById('toggleAllowAnyCwd');
+
+        const setRunOnSaveUI = (enabled, options = {}) => {
+            runOnSaveEnabled = Boolean(enabled);
+            if (runOnSaveToggle) runOnSaveToggle.classList.toggle('active', runOnSaveEnabled);
+            if (!options || options.persist !== false) {
+                safeStorageSet(RUN_ON_SAVE_STORAGE_KEY, runOnSaveEnabled ? '1' : '0');
+            }
+        };
+
+        const setProblemMatcherUI = (enabled, options = {}) => {
+            problemMatcherEnabled = Boolean(enabled);
+            if (problemMatcherToggle) {
+                problemMatcherToggle.classList.toggle('active', problemMatcherEnabled);
+            }
+            if (!options || options.persist !== false) {
+                safeStorageSet(PROBLEM_MATCHER_STORAGE_KEY, problemMatcherEnabled ? '1' : '0');
+            }
+            if (!problemMatcherEnabled) {
+                clearRuntimeProblems();
+            }
+        };
+
+        const setRuntimePermissionUI = (state) => {
+            const nextState = state && typeof state === 'object' ? state : {};
+            runtimePermissionsState = {
+                allowShell: Boolean(nextState.allowShell),
+                allowPython: Boolean(nextState.allowPython),
+                allowAnyCwd: Boolean(nextState.allowAnyCwd),
+                trustedRoots: Array.isArray(nextState.trustedRoots) ? nextState.trustedRoots.slice() : []
+            };
+            if (allowShellToggle) allowShellToggle.classList.toggle('active', runtimePermissionsState.allowShell);
+            if (allowPythonToggle) allowPythonToggle.classList.toggle('active', runtimePermissionsState.allowPython);
+            if (allowAnyCwdToggle) allowAnyCwdToggle.classList.toggle('active', runtimePermissionsState.allowAnyCwd);
+        };
+
+        function persistRuntimePermissionPrefs() {
+            const payload = {
+                allowShell: Boolean(runtimePermissionsState.allowShell),
+                allowPython: Boolean(runtimePermissionsState.allowPython),
+                allowAnyCwd: Boolean(runtimePermissionsState.allowAnyCwd)
+            };
+            safeStorageSet(RUNTIME_PERMISSION_STORAGE_KEY, JSON.stringify(payload));
+        }
+
+        function readRuntimePermissionPrefs() {
+            try {
+                const raw = safeStorageGet(RUNTIME_PERMISSION_STORAGE_KEY, '');
+                if (!raw) return null;
+                const parsed = JSON.parse(raw);
+                if (!parsed || typeof parsed !== 'object') return null;
+                return {
+                    allowShell: Boolean(parsed.allowShell),
+                    allowPython: Boolean(parsed.allowPython),
+                    allowAnyCwd: Boolean(parsed.allowAnyCwd)
+                };
+            } catch {
+                return null;
+            }
+        }
+
+        async function syncRuntimePermissionState() {
+            if (!window.runtime || typeof window.runtime.getPermissions !== 'function') {
+                return;
+            }
+            try {
+                const state = await window.runtime.getPermissions();
+                setRuntimePermissionUI(state);
+                persistRuntimePermissionPrefs();
+            } catch (error) {
+                pushConsole('warn', 'Could not read runtime security settings:', error && error.message ? error.message : String(error));
+            }
+        }
+
+        async function updateRuntimePermissionState(partialState = {}) {
+            if (!window.runtime || typeof window.runtime.setPermissions !== 'function') {
+                const merged = {
+                    ...runtimePermissionsState,
+                    ...partialState
+                };
+                setRuntimePermissionUI(merged);
+                return;
+            }
+
+            try {
+                const next = await window.runtime.setPermissions(partialState);
+                setRuntimePermissionUI(next);
+                persistRuntimePermissionPrefs();
+            } catch (error) {
+                showToast(error && error.message ? error.message : 'Could not update runtime permissions');
+            }
+        }
+
+        async function restoreRuntimePermissionState() {
+            const stored = readRuntimePermissionPrefs();
+            if (!stored) return;
+            await updateRuntimePermissionState(stored);
+        }
+
+        setRunOnSaveUI(runOnSaveEnabled, { persist: false });
+        setProblemMatcherUI(problemMatcherEnabled, { persist: false });
+        if (runOnSaveTaskSelect) {
+            syncRunOnSaveTaskSelect();
+            if (runOnSaveTaskId) {
+                runOnSaveTaskSelect.value = runOnSaveTaskId;
+            }
+            runOnSaveTaskSelect.onchange = (event) => {
+                runOnSaveTaskId = String(event && event.target && event.target.value ? event.target.value : '');
+                safeStorageSet(RUN_ON_SAVE_TASK_STORAGE_KEY, runOnSaveTaskId);
+                if (runOnSaveTaskId) {
+                    const task = findTaskById(runOnSaveTaskId);
+                    if (task) {
+                        showToast(`Run on Save task: ${task.name}`);
+                    }
+                } else {
+                    showToast('Run on Save will execute active file');
+                }
+            };
+        }
+
+        if (runOnSaveToggle) {
+            runOnSaveToggle.onclick = function () {
+                const nextState = !this.classList.contains('active');
+                setRunOnSaveUI(nextState);
+                showToast(`Run on Save ${nextState ? 'enabled' : 'disabled'}`);
+            };
+        }
+
+        if (problemMatcherToggle) {
+            problemMatcherToggle.onclick = function () {
+                const nextState = !this.classList.contains('active');
+                setProblemMatcherUI(nextState);
+                showToast(`Problem matcher ${nextState ? 'enabled' : 'disabled'}`);
+            };
+        }
+
+        if (allowShellToggle) {
+            allowShellToggle.onclick = async function () {
+                const nextState = !this.classList.contains('active');
+                await updateRuntimePermissionState({ allowShell: nextState });
+                showToast(`Shell execution ${nextState ? 'enabled' : 'blocked'}`);
+            };
+        }
+
+        if (allowPythonToggle) {
+            allowPythonToggle.onclick = async function () {
+                const nextState = !this.classList.contains('active');
+                await updateRuntimePermissionState({ allowPython: nextState });
+                showToast(`Python execution ${nextState ? 'enabled' : 'blocked'}`);
+            };
+        }
+
+        if (allowAnyCwdToggle) {
+            allowAnyCwdToggle.onclick = async function () {
+                const nextState = !this.classList.contains('active');
+                await updateRuntimePermissionState({ allowAnyCwd: nextState });
+                showToast(`Outside-workspace runtime ${nextState ? 'enabled' : 'blocked'}`);
+            };
+        }
+
+        void restoreRuntimePermissionState().finally(() => {
+            void syncRuntimePermissionState();
+        });
 
         function normalizeBrowserTabList(rawData) {
             const list = Array.isArray(rawData) ? rawData : [];
@@ -9277,7 +10372,437 @@ console.log('Dark mode applied!');`
             }
         }
 
+        function closeTaskRunnerModal() {
+            const overlay = document.getElementById('taskRunnerModal');
+            if (!overlay) return;
+            overlay.classList.add('hide');
+            setTimeout(() => {
+                overlay.remove();
+                document.getElementById('app').classList.remove('ui-blur');
+            }, MENU_TRANSITION_MS);
+        }
+
+        function showTaskRunnerModal() {
+            loadTaskDefinitions();
+            syncRunOnSaveTaskSelect();
+
+            const existing = document.getElementById('taskRunnerModal');
+            if (existing) existing.remove();
+
+            const overlay = document.createElement('div');
+            overlay.id = 'taskRunnerModal';
+            overlay.className = 'modal-backdrop';
+            overlay.innerHTML = `
+                <div class="modal-content" style="width:95%;max-width:980px;max-height:88vh;padding:12px;display:flex;flex-direction:column;">
+                    <div class="settings-header">
+                        <h3>Task Runner</h3>
+                        <button id="closeTaskRunnerBtn" class="settings-close">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <line x1="18" y1="6" x2="6" y2="18"></line>
+                                <line x1="6" y1="6" x2="18" y2="18"></line>
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="workspace-modal-grid">
+                        <div class="workspace-card">
+                            <h4>Saved Tasks</h4>
+                            <div id="taskRunnerList" class="workspace-list"></div>
+                        </div>
+                        <div class="workspace-card">
+                            <h4>Create Task</h4>
+                            <input id="taskRunnerName" type="text" placeholder="Task name" style="width:100%;margin-bottom:8px;background:#070707;border:1px solid rgba(255,255,255,0.14);color:#d7d7d7;border-radius:8px;padding:9px 10px;font-size:12px;outline:none;" />
+                            <textarea id="taskRunnerCommand" placeholder="Command (example: npm run test)" style="width:100%;min-height:100px;background:#070707;border:1px solid rgba(255,255,255,0.14);color:#d7d7d7;border-radius:8px;padding:9px 10px;font-size:12px;outline:none;resize:vertical;"></textarea>
+                            <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:8px;">
+                                <button id="taskRunnerAddBtn" class="settings-close" style="width:auto;padding:0 12px;border-radius:8px;">Add Task</button>
+                            </div>
+                        </div>
+                        <div class="workspace-card">
+                            <h4>Run on Save</h4>
+                            <div style="font-size:11px;color:#b9b9b9;line-height:1.5;">
+                                Configure whether save triggers execution or a specific task from Settings.
+                            </div>
+                            <div style="margin-top:8px;font-size:11px;color:#9f9f9f;">
+                                Current mode: <span id="taskRunnerModeHint">${executionMode === 'local' ? 'Local' : 'Browser'} execution</span>
+                            </div>
+                            <div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;">
+                                <button id="taskRunnerRunActiveBtn" class="settings-close" style="width:auto;padding:0 12px;border-radius:8px;">Run Active File</button>
+                                <button id="taskRunnerOpenSettingsBtn" class="settings-close" style="width:auto;padding:0 12px;border-radius:8px;">Open Settings</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            document.body.appendChild(overlay);
+            document.getElementById('app').classList.add('ui-blur');
+
+            const listEl = overlay.querySelector('#taskRunnerList');
+            const nameInput = overlay.querySelector('#taskRunnerName');
+            const commandInput = overlay.querySelector('#taskRunnerCommand');
+
+            const renderTasks = () => {
+                if (!listEl) return;
+                listEl.innerHTML = '';
+                taskDefinitions.forEach((task) => {
+                    const row = document.createElement('div');
+                    row.style.cssText = 'display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 10px;border-bottom:1px solid rgba(255,255,255,0.06);';
+
+                    const left = document.createElement('div');
+                    left.style.minWidth = '0';
+                    left.innerHTML = `
+                        <div style="font-size:11px;color:#f0f0f0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${task.name}</div>
+                        <div style="font-family:Consolas,monospace;font-size:10px;color:#9f9f9f;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${task.command}</div>
+                    `;
+
+                    const right = document.createElement('div');
+                    right.style.cssText = 'display:flex;align-items:center;gap:6px;';
+                    const runBtn = document.createElement('button');
+                    runBtn.type = 'button';
+                    runBtn.className = 'settings-close';
+                    runBtn.style.cssText = 'width:auto;padding:0 10px;border-radius:8px;';
+                    runBtn.textContent = 'Run';
+                    runBtn.onclick = async () => {
+                        await runTaskById(task.id);
+                    };
+
+                    const deleteBtn = document.createElement('button');
+                    deleteBtn.type = 'button';
+                    deleteBtn.className = 'settings-close';
+                    deleteBtn.style.cssText = 'width:auto;padding:0 10px;border-radius:8px;';
+                    deleteBtn.textContent = 'Delete';
+                    deleteBtn.onclick = () => {
+                        taskDefinitions = taskDefinitions.filter((item) => item.id !== task.id);
+                        persistTaskDefinitions();
+                        syncRunOnSaveTaskSelect();
+                        if (runOnSaveTaskId === task.id) {
+                            runOnSaveTaskId = '';
+                            safeStorageSet(RUN_ON_SAVE_TASK_STORAGE_KEY, '');
+                        }
+                        renderTasks();
+                    };
+
+                    right.append(runBtn, deleteBtn);
+                    row.append(left, right);
+                    listEl.appendChild(row);
+                });
+            };
+
+            renderTasks();
+            overlay.querySelector('#closeTaskRunnerBtn').onclick = closeTaskRunnerModal;
+            overlay.querySelector('#taskRunnerOpenSettingsBtn').onclick = () => {
+                closeTaskRunnerModal();
+                setPrimaryView('settings');
+            };
+            overlay.querySelector('#taskRunnerRunActiveBtn').onclick = () => {
+                closeTaskRunnerModal();
+                const executeBtn = document.getElementById('execute');
+                if (executeBtn) executeBtn.click();
+            };
+            overlay.querySelector('#taskRunnerAddBtn').onclick = () => {
+                const name = String(nameInput && nameInput.value ? nameInput.value : '').trim();
+                const command = String(commandInput && commandInput.value ? commandInput.value : '').trim();
+                if (!name || !command) {
+                    showToast('Task name and command are required');
+                    return;
+                }
+                const id = `task-${Date.now()}-${Math.random().toString(16).slice(2, 7)}`;
+                taskDefinitions.push({ id, name, command });
+                persistTaskDefinitions();
+                syncRunOnSaveTaskSelect();
+                if (nameInput) nameInput.value = '';
+                if (commandInput) commandInput.value = '';
+                renderTasks();
+                showToast(`Task added: ${name}`);
+            };
+
+            overlay.addEventListener('click', (event) => {
+                if (event.target === overlay) closeTaskRunnerModal();
+            });
+        }
+
+        function closeGitPanelModal() {
+            const overlay = document.getElementById('gitPanelModal');
+            if (!overlay) return;
+            overlay.classList.add('hide');
+            setTimeout(() => {
+                overlay.remove();
+                document.getElementById('app').classList.remove('ui-blur');
+            }, MENU_TRANSITION_MS);
+        }
+
+        function getGitWorkspaceCwd() {
+            return String(explorerRootPath || getPreferredRuntimeCwd() || '').trim();
+        }
+
+        function formatGitStatusLabel(file) {
+            const index = String(file && file.indexStatus ? file.indexStatus : ' ').trim() || '.';
+            const worktree = String(file && file.worktreeStatus ? file.worktreeStatus : ' ').trim() || '.';
+            return `${index}${worktree}`;
+        }
+
+        function showGitPanelModal() {
+            const cwd = getGitWorkspaceCwd();
+            if (!cwd) {
+                showToast('Open a workspace folder for Git operations');
+                return;
+            }
+            if (!window.runtime || typeof window.runtime.gitStatus !== 'function') {
+                showToast('Git API unavailable');
+                return;
+            }
+
+            const existing = document.getElementById('gitPanelModal');
+            if (existing) existing.remove();
+
+            const overlay = document.createElement('div');
+            overlay.id = 'gitPanelModal';
+            overlay.className = 'modal-backdrop';
+            overlay.innerHTML = `
+                <div class="modal-content" style="width:96%;max-width:1160px;max-height:90vh;padding:12px;display:flex;flex-direction:column;">
+                    <div class="settings-header">
+                        <h3>Git Control Center</h3>
+                        <div style="display:flex;gap:8px;">
+                            <button id="gitRefreshBtn" class="settings-close" style="width:auto;padding:0 12px;border-radius:8px;">Refresh</button>
+                            <button id="gitPullBtn" class="settings-close" style="width:auto;padding:0 12px;border-radius:8px;">Pull</button>
+                            <button id="gitPushBtn" class="settings-close" style="width:auto;padding:0 12px;border-radius:8px;">Push</button>
+                            <button id="gitCloseBtn" class="settings-close">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                    <div style="font-size:11px;color:#a8a8a8;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${cwd}">${cwd}</div>
+                    <div style="display:flex;align-items:center;gap:8px;margin-top:8px;flex-wrap:wrap;">
+                        <select id="gitBranchSelect" style="min-width:220px;background:#070707;border:1px solid rgba(255,255,255,0.14);color:#d7d7d7;border-radius:8px;padding:7px 9px;font-size:12px;outline:none;"></select>
+                        <button id="gitCheckoutBtn" class="settings-close" style="width:auto;padding:0 12px;border-radius:8px;">Checkout</button>
+                        <button id="gitCreateBranchBtn" class="settings-close" style="width:auto;padding:0 12px;border-radius:8px;">Create Branch</button>
+                    </div>
+                    <div class="workspace-modal-grid" style="grid-template-columns: 1.15fr 1fr;">
+                        <div class="workspace-card">
+                            <h4>Changes</h4>
+                            <div id="gitChangesList" class="workspace-list"></div>
+                        </div>
+                        <div class="workspace-card">
+                            <h4>Diff Preview</h4>
+                            <pre id="gitDiffPreview" style="margin:0;max-height:260px;overflow:auto;background:rgba(0,0,0,0.28);border:1px solid rgba(255,255,255,0.08);border-radius:8px;padding:10px;color:#c5c5c5;font-size:11px;line-height:1.35;white-space:pre-wrap;"></pre>
+                        </div>
+                        <div class="workspace-card">
+                            <h4>Commit</h4>
+                            <input id="gitCommitMessage" type="text" placeholder="Commit message" style="width:100%;margin-bottom:8px;background:#070707;border:1px solid rgba(255,255,255,0.14);color:#d7d7d7;border-radius:8px;padding:9px 10px;font-size:12px;outline:none;" />
+                            <div style="display:flex;justify-content:flex-end;gap:8px;">
+                                <button id="gitCommitBtn" class="settings-close" style="width:auto;padding:0 12px;border-radius:8px;">Commit</button>
+                            </div>
+                        </div>
+                        <div class="workspace-card">
+                            <h4>Recent Commits</h4>
+                            <div id="gitLogList" class="workspace-list"></div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            document.body.appendChild(overlay);
+            document.getElementById('app').classList.add('ui-blur');
+
+            const changesListEl = overlay.querySelector('#gitChangesList');
+            const diffPreviewEl = overlay.querySelector('#gitDiffPreview');
+            const logListEl = overlay.querySelector('#gitLogList');
+            const commitInputEl = overlay.querySelector('#gitCommitMessage');
+            const branchSelectEl = overlay.querySelector('#gitBranchSelect');
+            let selectedPath = '';
+            let currentFiles = [];
+            let currentBranches = [];
+
+            const renderChanges = () => {
+                if (!changesListEl) return;
+                changesListEl.innerHTML = '';
+                if (!currentFiles.length) {
+                    const empty = document.createElement('div');
+                    empty.style.cssText = 'padding:10px;font-size:11px;color:#9f9f9f;';
+                    empty.textContent = 'Working tree is clean';
+                    changesListEl.appendChild(empty);
+                    return;
+                }
+
+                currentFiles.forEach((file) => {
+                    const row = document.createElement('div');
+                    row.className = 'workspace-list-row' + (selectedPath === file.path ? ' active' : '');
+                    row.style.cursor = 'default';
+                    row.innerHTML = `
+                        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
+                            <div style="min-width:0;">
+                                <div style="font-size:11px;color:#f1f1f1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${file.path}</div>
+                                <div style="font-size:10px;color:#9f9f9f;">status ${formatGitStatusLabel(file)}</div>
+                            </div>
+                            <div style="display:flex;align-items:center;gap:6px;">
+                                <button data-action="stage" class="settings-close" style="width:auto;padding:0 8px;border-radius:8px;">Stage</button>
+                                <button data-action="unstage" class="settings-close" style="width:auto;padding:0 8px;border-radius:8px;">Unstage</button>
+                                <button data-action="discard" class="settings-close" style="width:auto;padding:0 8px;border-radius:8px;">Discard</button>
+                            </div>
+                        </div>
+                    `;
+                    row.addEventListener('click', async () => {
+                        selectedPath = file.path;
+                        renderChanges();
+                        await refreshDiff();
+                    });
+                    row.querySelector('[data-action="stage"]').onclick = async (event) => {
+                        event.stopPropagation();
+                        await window.runtime.gitStage({ cwd, paths: [file.path] });
+                        await refreshAll();
+                    };
+                    row.querySelector('[data-action="unstage"]').onclick = async (event) => {
+                        event.stopPropagation();
+                        await window.runtime.gitUnstage({ cwd, paths: [file.path] });
+                        await refreshAll();
+                    };
+                    row.querySelector('[data-action="discard"]').onclick = async (event) => {
+                        event.stopPropagation();
+                        const confirmed = confirm(`Discard changes for ${file.path}?`);
+                        if (!confirmed) return;
+                        await window.runtime.gitDiscard({ cwd, paths: [file.path] });
+                        await refreshAll();
+                    };
+                    changesListEl.appendChild(row);
+                });
+            };
+
+            const renderLog = (entries = []) => {
+                if (!logListEl) return;
+                logListEl.innerHTML = '';
+                entries.forEach((entry) => {
+                    const row = document.createElement('div');
+                    row.className = 'workspace-list-row';
+                    row.style.cursor = 'default';
+                    row.innerHTML = `
+                        <div style="font-size:11px;color:#efefef;">${entry.hash} - ${entry.subject}</div>
+                        <div style="font-size:10px;color:#9f9f9f;">${entry.author} â€¢ ${entry.relativeTime}</div>
+                    `;
+                    logListEl.appendChild(row);
+                });
+                if (!entries.length) {
+                    const empty = document.createElement('div');
+                    empty.style.cssText = 'padding:10px;font-size:11px;color:#9f9f9f;';
+                    empty.textContent = 'No commits available';
+                    logListEl.appendChild(empty);
+                }
+            };
+
+            const refreshDiff = async () => {
+                if (!diffPreviewEl) return;
+                if (!selectedPath) {
+                    diffPreviewEl.textContent = 'Select a file to preview diff';
+                    return;
+                }
+                try {
+                    const result = await window.runtime.gitDiff({ cwd, filePath: selectedPath });
+                    diffPreviewEl.textContent = String(result && result.diff ? result.diff : '(no diff output)');
+                } catch (error) {
+                    diffPreviewEl.textContent = error && error.message ? error.message : String(error);
+                }
+            };
+
+            const refreshAll = async () => {
+                try {
+                    const [statusResult, logResult, branchesResult] = await Promise.all([
+                        window.runtime.gitStatus({ cwd }),
+                        window.runtime.gitLog({ cwd, limit: 22 }),
+                        window.runtime.gitBranches({ cwd })
+                    ]);
+                    currentFiles = Array.isArray(statusResult && statusResult.files) ? statusResult.files : [];
+                    currentBranches = Array.isArray(branchesResult && branchesResult.entries) ? branchesResult.entries : [];
+                    if (selectedPath && !currentFiles.some((file) => file.path === selectedPath)) {
+                        selectedPath = '';
+                    }
+                    renderChanges();
+                    renderLog(Array.isArray(logResult && logResult.entries) ? logResult.entries : []);
+                    if (branchSelectEl) {
+                        const branchOptions = currentBranches
+                            .filter((entry) => !entry.isRemote)
+                            .map((entry) => `<option value="${entry.name}" ${entry.isActive ? 'selected' : ''}>${entry.isActive ? '* ' : ''}${entry.name}</option>`)
+                            .join('');
+                        branchSelectEl.innerHTML = branchOptions || '<option value="">No branches</option>';
+                    }
+                    await refreshDiff();
+                } catch (error) {
+                    const message = error && error.message ? error.message : String(error);
+                    pushConsole('error', message);
+                    showToast(`Git refresh failed: ${message}`);
+                }
+            };
+
+            overlay.querySelector('#gitCloseBtn').onclick = closeGitPanelModal;
+            overlay.querySelector('#gitRefreshBtn').onclick = () => { void refreshAll(); };
+            overlay.querySelector('#gitPullBtn').onclick = async () => {
+                const result = await window.runtime.gitPull({ cwd });
+                if (Number(result && result.exitCode) === 0) showToast('Git pull completed');
+                else showToast('Git pull failed');
+                await refreshAll();
+            };
+            overlay.querySelector('#gitPushBtn').onclick = async () => {
+                const result = await window.runtime.gitPush({ cwd });
+                if (Number(result && result.exitCode) === 0) showToast('Git push completed');
+                else showToast('Git push failed');
+                await refreshAll();
+            };
+            overlay.querySelector('#gitCheckoutBtn').onclick = async () => {
+                const branch = String(branchSelectEl && branchSelectEl.value ? branchSelectEl.value : '').trim();
+                if (!branch) {
+                    showToast('Select a branch');
+                    return;
+                }
+                const result = await window.runtime.gitCheckout({ cwd, branch });
+                if (Number(result && result.exitCode) === 0) {
+                    showToast(`Checked out ${branch}`);
+                } else {
+                    showToast(`Checkout failed: ${branch}`);
+                }
+                await refreshAll();
+            };
+            overlay.querySelector('#gitCreateBranchBtn').onclick = async () => {
+                const branchName = prompt('New branch name:', '');
+                if (branchName === null) return;
+                const branch = String(branchName || '').trim();
+                if (!branch) {
+                    showToast('Branch name required');
+                    return;
+                }
+                const result = await window.runtime.gitCheckout({ cwd, branch, create: true });
+                if (Number(result && result.exitCode) === 0) {
+                    showToast(`Created branch ${branch}`);
+                } else {
+                    showToast(`Could not create branch ${branch}`);
+                }
+                await refreshAll();
+            };
+            overlay.querySelector('#gitCommitBtn').onclick = async () => {
+                const message = String(commitInputEl && commitInputEl.value ? commitInputEl.value : '').trim();
+                if (!message) {
+                    showToast('Commit message required');
+                    return;
+                }
+                const result = await window.runtime.gitCommit({ cwd, message });
+                if (Number(result && result.exitCode) === 0) {
+                    if (commitInputEl) commitInputEl.value = '';
+                    showToast('Commit created');
+                    await refreshAll();
+                } else {
+                    showToast('Commit failed');
+                }
+            };
+
+            overlay.addEventListener('click', (event) => {
+                if (event.target === overlay) closeGitPanelModal();
+            });
+
+            void refreshAll();
+        }
+
         document.getElementById("tabBrowser").onclick = showTabBrowser;
+        document.getElementById("taskRunner").onclick = showTaskRunnerModal;
+        document.getElementById("gitPanel").onclick = showGitPanelModal;
 
         window.addEventListener('message', (event) => {
             if (event.data && event.data.isLocalLog) {
@@ -9712,6 +11237,9 @@ console.log('Dark mode applied!');`
                         .forEach((line) => {
                             if (!line.trim()) return;
                             pushConsole(type, line);
+                            if (problemMatcherEnabled && (type === 'error' || type === 'warn')) {
+                                collectRuntimeProblemFromLine(line, cwd);
+                            }
                         });
                 };
 
@@ -10041,6 +11569,7 @@ console.log('Dark mode applied!');`
 
         document.getElementById("execute").onclick = async () => {
             const code = getCurrentEditorCode();
+            clearRuntimeProblems();
 
             if (!code.trim()) {
                 showToast('No code to execute');
@@ -10099,5 +11628,3 @@ console.log('Dark mode applied!');`
     </script>
 </body>
 </html>
-
-
