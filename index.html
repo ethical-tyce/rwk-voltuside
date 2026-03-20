@@ -993,7 +993,7 @@
         /* ---------- EXPLORER PANE ---------- */
         #explorerPane {
             width: var(--explorer-width);
-            min-width: 180px;
+            min-width: 200px;
             background: #060606;
             border-right: 1px solid rgba(255, 255, 255, 0.08);
             display: flex;
@@ -1002,11 +1002,17 @@
             opacity: 1;
             min-height: 100%;
             flex-shrink: 0;
+            position: relative;
+            isolation: isolate;
+            box-shadow:
+                inset -1px 0 0 rgba(255, 255, 255, 0.04),
+                inset 0 1px 0 rgba(255, 255, 255, 0.03);
             transition:
                 width var(--primary-view-transition) var(--primary-view-ease),
                 min-width var(--primary-view-transition) var(--primary-view-ease),
                 opacity var(--primary-view-transition) var(--primary-view-ease),
-                border-color var(--primary-view-transition) var(--primary-view-ease);
+                border-color var(--primary-view-transition) var(--primary-view-ease),
+                filter var(--primary-view-transition) var(--primary-view-ease);
         }
 
         #explorerPane.collapsed {
@@ -1014,6 +1020,7 @@
             min-width: 0;
             border-right-color: transparent;
             opacity: 0;
+            filter: saturate(0.95);
             pointer-events: none;
         }
 
@@ -1022,7 +1029,7 @@
             flex-shrink: 0;
             position: relative;
             cursor: col-resize;
-            background: linear-gradient(to right, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.02));
+            background: rgba(255, 255, 255, 0.06);
             min-height: 100%;
             transition: background 0.18s ease, width var(--primary-view-transition) var(--primary-view-ease);
         }
@@ -1033,15 +1040,15 @@
             top: 50%;
             left: 50%;
             width: 2px;
-            height: 54px;
+            height: 72px;
             transform: translate(-50%, -50%);
             border-radius: 8px;
-            background: rgba(255, 255, 255, 0.18);
+            background: rgba(255, 255, 255, 0.28);
         }
 
         #explorerResizeHandle:hover,
         #explorerResizeHandle.dragging {
-            background: linear-gradient(to right, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.06));
+            background: rgba(255, 255, 255, 0.12);
         }
 
         #explorerResizeHandle.hidden {
@@ -1074,18 +1081,39 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            gap: 8px;
-            padding: 10px 12px 9px 12px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            gap: 10px;
+            padding: 13px 12px 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            background: #060606;
+            box-shadow: inset 0 -1px 0 rgba(255, 255, 255, 0.03);
+        }
+
+        .explorer-heading {
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
         }
 
         .explorer-title {
-            font-size: 11px;
-            letter-spacing: 0.14em;
-            color: #c5c5c5;
-            font-weight: 600;
+            font-size: 10px;
+            letter-spacing: 0.18em;
+            color: rgba(232, 232, 232, 0.86);
+            font-weight: 700;
             text-transform: uppercase;
             white-space: nowrap;
+            line-height: 1;
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        .explorer-meta {
+            color: rgba(168, 168, 168, 0.84);
+            font-size: 11px;
+            line-height: 1.1;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            font-family: 'Segoe UI', sans-serif;
         }
 
         .explorer-actions {
@@ -1095,158 +1123,305 @@
             flex-shrink: 0;
         }
 
-        .explorer-btn {
-            border: 1px solid rgba(255, 255, 255, 0.12);
+        #explorerPane .explorer-btn {
+            display: inline-flex;
+            align-items: center;
             background: rgba(255, 255, 255, 0.03);
-            color: #d2d2d2;
-            border-radius: 6px;
-            padding: 4px 8px;
-            font-size: 11px;
+            backdrop-filter: blur(var(--menu-glass-blur)) saturate(var(--menu-glass-saturate));
+            -webkit-backdrop-filter: blur(var(--menu-glass-blur)) saturate(var(--menu-glass-saturate));
+            box-shadow:
+                0 4px 15px rgba(0, 0, 0, 0.3),
+                inset 0 0 0 1px rgba(255, 255, 255, 0.15),
+                inset 0 2px 10px rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            color: rgba(224, 224, 224, 0.95);
+            border-radius: 9px;
+            padding: 8px 12px;
+            font-size: 12px;
+            font-weight: 500;
             cursor: pointer;
-            opacity: 0.68;
-            transition: opacity 170ms ease, background-color 170ms ease, color 170ms ease;
+            transition:
+                border-color 170ms ease,
+                background-color 170ms ease,
+                color 170ms ease,
+                box-shadow 170ms ease,
+                transform 170ms ease;
+            min-height: 34px;
+            line-height: 1;
+            justify-content: center;
         }
 
-        .explorer-btn:hover {
-            background: rgba(255, 255, 255, 0.12);
+        #explorerPane .explorer-btn.explorer-btn-icon {
+            width: 34px;
+            min-width: 34px;
+            padding: 8px;
+        }
+
+        #explorerPane .explorer-btn svg {
+            width: 16px;
+            height: 16px;
+            display: block;
+            margin: 0 auto;
+            stroke-width: 2;
+            filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.2));
+        }
+
+        #explorerPane .explorer-btn.explorer-btn-primary {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        #explorerPane .explorer-btn:hover {
+            border-color: rgba(255, 255, 255, 0.25);
+            background: rgba(255, 255, 255, 0.09);
             color: #ffffff;
-            opacity: 0.9;
+            transform: none;
+            box-shadow:
+                0 6px 20px rgba(0, 0, 0, 0.4),
+                inset 0 0 0 1px rgba(255, 255, 255, 0.25),
+                inset 0 2px 12px rgba(255, 255, 255, 0.15);
         }
 
-        .explorer-btn:active {
-            opacity: 1;
+        #explorerPane .explorer-btn:active {
+            transform: none;
+            box-shadow:
+                0 4px 12px rgba(0, 0, 0, 0.28),
+                inset 0 0 0 1px rgba(255, 255, 255, 0.18),
+                inset 0 1px 8px rgba(255, 255, 255, 0.09);
+        }
+
+        #explorerPathWrap {
+            padding: 10px 12px 11px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            background: rgba(255, 255, 255, 0.02);
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .explorer-path-label {
+            color: rgba(165, 165, 165, 0.85);
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            line-height: 1;
+            font-family: 'Segoe UI', sans-serif;
         }
 
         #explorerPath {
-            padding: 8px 12px;
-            font-size: 11px;
-            color: #7f7f7f;
+            min-height: 24px;
+            padding: 6px 8px;
+            border-radius: 7px;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            background: rgba(255, 255, 255, 0.03);
+            color: rgba(206, 206, 206, 0.9);
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            font-size: 11px;
+            line-height: 1.1;
+            font-family: 'Consolas', monospace;
         }
 
         #explorerTree {
             flex: 1;
             min-height: 0;
             overflow: auto;
-            padding: 6px 0;
+            padding: 5px 4px 8px;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(170, 170, 170, 0.44) rgba(10, 10, 10, 0.54);
+        }
+
+        #explorerTree::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        #explorerTree::-webkit-scrollbar-track {
+            background: rgba(10, 10, 10, 0.58);
+            border-radius: 999px;
+        }
+
+        #explorerTree::-webkit-scrollbar-thumb {
+            background: rgba(155, 155, 155, 0.48);
+            border-radius: 999px;
+            border: 2px solid rgba(10, 10, 10, 0.58);
         }
 
         .explorer-empty {
-            padding: 12px;
-            color: #737373;
-            font-size: 12px;
+            margin: 7px 4px;
+            padding: 9px 8px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            background: rgba(255, 255, 255, 0.03);
+            color: rgba(156, 156, 156, 0.88);
+            font-size: 11px;
+            line-height: 1.25;
         }
 
         .explorer-item {
             width: 100%;
             display: flex;
             align-items: center;
-            gap: 8px;
-            padding: 5px 10px;
-            border: none;
-            background: transparent;
-            color: #b8b8b8;
+            gap: 6px;
+            padding: 4px 7px;
+            border: 1px solid transparent;
+            border-radius: 7px;
+            background: rgba(255, 255, 255, 0);
+            color: rgba(192, 192, 192, 0.88);
             text-align: left;
-            font-size: 12px;
+            font-size: 11px;
+            line-height: 1.15;
             cursor: pointer;
             user-select: none;
+            margin: 1px 2px;
+            position: relative;
+            transition:
+                background-color 160ms ease,
+                border-color 160ms ease,
+                color 160ms ease,
+                transform 160ms ease,
+                box-shadow 160ms ease;
+            animation: explorer-row-in 240ms var(--menu-ease) both;
+            animation-delay: calc(var(--explorer-depth, 0) * 10ms);
+        }
+
+        @keyframes explorer-row-in {
+            0% {
+                opacity: 0;
+                transform: translateX(-6px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .explorer-item::before {
+            content: '';
+            position: absolute;
+            left: 3px;
+            top: 5px;
+            bottom: 5px;
+            width: 2px;
+            border-radius: 3px;
+            background: rgba(255, 255, 255, 0);
+            transition: background-color 160ms ease;
         }
 
         .explorer-item:hover {
-            background: rgba(255, 255, 255, 0.06);
-            color: #ffffff;
+            background: rgba(255, 255, 255, 0.07);
+            border-color: rgba(255, 255, 255, 0.14);
+            color: #f4f4f4;
+            transform: translateX(1px);
         }
 
         .explorer-item.is-dir {
-            color: #d7d7d7;
+            color: rgba(222, 222, 222, 0.96);
+        }
+
+        .explorer-item.is-dir.is-expanded {
+            background: rgba(255, 255, 255, 0.04);
         }
 
         .explorer-item.is-file.active {
-            background: rgba(255, 255, 255, 0.14);
+            background: rgba(255, 255, 255, 0.12);
+            border-color: rgba(255, 255, 255, 0.24);
+            box-shadow:
+                inset 0 1px 0 rgba(255, 255, 255, 0.08),
+                0 8px 20px rgba(0, 0, 0, 0.35);
             color: #ffffff;
         }
 
+        .explorer-item.is-file.active::before {
+            background: rgba(255, 255, 255, 0.9);
+        }
+
         .explorer-caret {
-            width: 10px;
+            width: 8px;
             flex-shrink: 0;
-            color: #7a7a7a;
+            color: rgba(145, 145, 145, 0.75);
             text-align: center;
-            font-size: 10px;
+            font-size: 8px;
             line-height: 1;
+            font-family: 'Cascadia Mono', 'Consolas', monospace;
+        }
+
+        .explorer-item.is-dir:hover .explorer-caret,
+        .explorer-item.is-dir.is-expanded .explorer-caret {
+            color: rgba(235, 235, 235, 0.98);
         }
 
         .explorer-icon {
-            width: 24px;
-            min-width: 24px;
-            height: 16px;
+            width: 20px;
+            min-width: 20px;
+            height: 14px;
             border-radius: 4px;
-            border: 1px solid rgba(255, 255, 255, 0.16);
-            background: rgba(255, 255, 255, 0.04);
-            color: #b9d6ff;
-            font-size: 9px;
-            line-height: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            background: rgba(255, 255, 255, 0.05);
+            color: #e1e1e1;
+            font-size: 8px;
+            line-height: 12px;
             font-weight: 700;
             letter-spacing: 0.03em;
             text-align: center;
             text-transform: uppercase;
             flex-shrink: 0;
-            padding-top: 1px;
+            padding-top: 0;
+            font-family: 'Cascadia Mono', 'Consolas', monospace;
         }
 
         .explorer-icon[data-kind="dir"] {
-            color: #ffd589;
-            border-color: rgba(255, 213, 137, 0.35);
-            background: rgba(255, 213, 137, 0.08);
+            color: #ececec;
+            border-color: rgba(255, 255, 255, 0.18);
+            background: rgba(255, 255, 255, 0.07);
         }
 
         .explorer-icon[data-kind="js"] {
-            color: #ffe16a;
-            border-color: rgba(255, 225, 106, 0.34);
-            background: rgba(255, 225, 106, 0.09);
+            color: #e3e3e3;
+            border-color: rgba(255, 255, 255, 0.16);
+            background: rgba(255, 255, 255, 0.05);
         }
 
         .explorer-icon[data-kind="ts"] {
-            color: #79c1ff;
-            border-color: rgba(121, 193, 255, 0.34);
-            background: rgba(121, 193, 255, 0.09);
+            color: #d7d7d7;
+            border-color: rgba(255, 255, 255, 0.14);
+            background: rgba(255, 255, 255, 0.04);
         }
 
         .explorer-icon[data-kind="json"] {
-            color: #b39aff;
-            border-color: rgba(179, 154, 255, 0.34);
-            background: rgba(179, 154, 255, 0.09);
+            color: #d2d2d2;
+            border-color: rgba(255, 255, 255, 0.14);
+            background: rgba(255, 255, 255, 0.04);
         }
 
         .explorer-icon[data-kind="html"] {
-            color: #ff9f7a;
-            border-color: rgba(255, 159, 122, 0.34);
-            background: rgba(255, 159, 122, 0.09);
+            color: #e0e0e0;
+            border-color: rgba(255, 255, 255, 0.16);
+            background: rgba(255, 255, 255, 0.05);
         }
 
         .explorer-icon[data-kind="css"] {
-            color: #8de0ff;
-            border-color: rgba(141, 224, 255, 0.34);
-            background: rgba(141, 224, 255, 0.09);
+            color: #dcdcdc;
+            border-color: rgba(255, 255, 255, 0.15);
+            background: rgba(255, 255, 255, 0.045);
         }
 
         .explorer-icon[data-kind="md"] {
-            color: #9bd7a4;
-            border-color: rgba(155, 215, 164, 0.34);
-            background: rgba(155, 215, 164, 0.09);
+            color: #dedede;
+            border-color: rgba(255, 255, 255, 0.15);
+            background: rgba(255, 255, 255, 0.045);
         }
 
         .explorer-icon[data-kind="img"] {
-            color: #ffadcb;
-            border-color: rgba(255, 173, 203, 0.34);
-            background: rgba(255, 173, 203, 0.09);
+            color: #e0e0e0;
+            border-color: rgba(255, 255, 255, 0.16);
+            background: rgba(255, 255, 255, 0.05);
         }
 
         .explorer-icon[data-kind="txt"] {
-            color: #d0d0d0;
-            border-color: rgba(255, 255, 255, 0.22);
+            color: #d3d3d3;
+            border-color: rgba(255, 255, 255, 0.17);
             background: rgba(255, 255, 255, 0.05);
         }
 
@@ -1270,7 +1445,8 @@
         .explorer-name-ext {
             flex-shrink: 0;
             white-space: nowrap;
-            color: #c8c8c8;
+            color: rgba(178, 178, 178, 0.76);
+            margin-left: 1px;
         }
 
         #explorerContextMenu {
@@ -1280,12 +1456,12 @@
             min-width: 0;
             max-width: 220px;
             padding: 6px;
-            border-radius: 10px;
+            border-radius: 11px;
             border: 1px solid rgba(255, 255, 255, 0.14);
-            background: rgba(10, 10, 10, 0.92);
-            box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45);
-            backdrop-filter: blur(10px) saturate(160%);
-            -webkit-backdrop-filter: blur(10px) saturate(160%);
+            background: rgba(10, 10, 10, 0.93);
+            box-shadow: 0 14px 32px rgba(0, 0, 0, 0.55);
+            backdrop-filter: blur(12px) saturate(160%);
+            -webkit-backdrop-filter: blur(12px) saturate(160%);
             opacity: 0;
             transform: translateY(4px) scale(0.985);
             transition: opacity 150ms ease, transform 150ms ease;
@@ -1308,24 +1484,25 @@
         .explorer-context-item {
             display: block;
             width: auto;
-            border: none;
+            border: 1px solid transparent;
             background: transparent;
-            color: #d5d5d5;
+            color: rgba(224, 224, 224, 0.9);
             text-align: left;
             white-space: nowrap;
             font-size: 12px;
-            border-radius: 6px;
+            border-radius: 7px;
             padding: 7px 9px;
             cursor: pointer;
         }
 
         .explorer-context-item:hover {
-            background: rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.09);
+            border-color: rgba(255, 255, 255, 0.18);
             color: #ffffff;
         }
 
         .explorer-context-item.danger {
-            color: #ff9b9b;
+            color: #ffb2b2;
         }
 
         /* ---------- MAIN CONTENT AREA ---------- */
@@ -1630,6 +1807,11 @@
 
         #dashboard .changelog-list li:last-child {
             margin-bottom: 0;
+        }
+
+        #dashboard,
+        #dashboard * {
+            color: #ffffff !important;
         }
 
         .toolbar-button.run {
@@ -2940,7 +3122,6 @@
         .icon-btn,
         .run-btn,
         .modal-btn,
-        .explorer-btn,
         .toolbar-button.run,
         .console-tab-btn,
         .mode-btn,
@@ -2997,7 +3178,6 @@
         .icon-btn:hover,
         .run-btn:hover,
         .modal-btn:hover,
-        .explorer-btn:hover,
         .toolbar-button.run:hover,
         .console-tab-btn:hover,
         .mode-btn:hover,
@@ -3013,7 +3193,6 @@
         .icon-btn:active,
         .run-btn:active,
         .modal-btn:active,
-        .explorer-btn:active,
         .toolbar-button.run:active,
         .console-tab-btn:active,
         .mode-btn:active,
@@ -3025,7 +3204,6 @@
         .icon-btn:disabled,
         .run-btn:disabled,
         .modal-btn:disabled,
-        .explorer-btn:disabled,
         .toolbar-button.run:disabled,
         .console-tab-btn:disabled,
         .mode-btn:disabled,
@@ -3310,13 +3488,27 @@
 
                 <div id="explorerPane" class="collapsed">
                     <div class="explorer-header">
-                        <span class="explorer-title">Explorer</span>
+                        <div class="explorer-heading">
+                            <span class="explorer-title">Workspace Explorer</span>
+                            <span id="explorerMeta" class="explorer-meta">No workspace attached</span>
+                        </div>
                         <div class="explorer-actions">
-                            <button id="explorerOpenFolder" class="explorer-btn" type="button">Open Folder</button>
-                            <button id="explorerRefresh" class="explorer-btn" type="button">Refresh</button>
+                            <button id="explorerOpenFolder" class="explorer-btn explorer-btn-primary explorer-btn-icon" type="button" title="Open Folder" aria-label="Open Folder">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                    <path d="m6 14 1.5-2.9A2 2 0 0 1 9.24 10H20a2 2 0 0 1 1.94 2.5l-1.54 6a2 2 0 0 1-1.95 1.5H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h3.9a2 2 0 0 1 1.69.9l.81 1.2a2 2 0 0 0 1.67.9H18a2 2 0 0 1 2 2v2"></path>
+                                </svg>
+                            </button>
+                            <button id="explorerRefresh" class="explorer-btn explorer-btn-secondary explorer-btn-icon" type="button" title="Refresh Explorer" aria-label="Refresh Explorer">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                    <path d="M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+                                </svg>
+                            </button>
                         </div>
                     </div>
-                    <div id="explorerPath">No folder opened</div>
+                    <div id="explorerPathWrap">
+                        <span class="explorer-path-label">Current Root</span>
+                        <div id="explorerPath">No folder opened</div>
+                    </div>
                     <div id="explorerTree">
                         <div class="explorer-empty">Open a folder to browse files.</div>
                     </div>
@@ -6723,6 +6915,15 @@ console.log('Dark mode applied!');`
             return tabs[activeTabId].filePath || '';
         }
 
+        function countExplorerEntries(nodes) {
+            if (!Array.isArray(nodes)) return 0;
+            return nodes.reduce((total, node) => {
+                if (!node) return total;
+                const nested = node.type === 'directory' ? countExplorerEntries(node.children) : 0;
+                return total + 1 + nested;
+            }, 0);
+        }
+
         function updateExplorerActiveFile() {
             const activePath = getActiveTabFilePath();
             document.querySelectorAll('.explorer-item.is-file').forEach((item) => {
@@ -7027,7 +7228,8 @@ console.log('Dark mode applied!');`
                 const row = document.createElement('button');
                 row.type = 'button';
                 row.className = `explorer-item ${isDirectory ? 'is-dir' : 'is-file'}`;
-                row.style.paddingLeft = `${10 + depth * 14}px`;
+                row.style.paddingLeft = `${8 + depth * 12}px`;
+                row.style.setProperty('--explorer-depth', String(depth));
                 row.dataset.path = nodePath;
                 row.dataset.type = nodeType;
 
@@ -7069,6 +7271,7 @@ console.log('Dark mode applied!');`
                 if (isDirectory) {
                     const expanded = !collapsedExplorerDirs.has(nodePath);
                     caret.textContent = expanded ? 'v' : '>';
+                    row.classList.toggle('is-expanded', expanded);
                     row.appendChild(caret);
                     row.appendChild(icon);
                     row.appendChild(name);
@@ -7100,12 +7303,24 @@ console.log('Dark mode applied!');`
         function renderExplorerTree(statusMessage = '') {
             const treeEl = document.getElementById('explorerTree');
             const pathEl = document.getElementById('explorerPath');
+            const metaEl = document.getElementById('explorerMeta');
             if (!treeEl || !pathEl) return;
 
             pathEl.textContent = explorerRootPath || 'No folder opened';
             pathEl.title = explorerRootPath || '';
             updateTerminalPrompt();
             treeEl.innerHTML = '';
+
+            if (metaEl) {
+                if (!explorerRootPath) {
+                    metaEl.textContent = 'No workspace attached';
+                } else if (statusMessage) {
+                    metaEl.textContent = 'Syncing workspace...';
+                } else {
+                    const totalEntries = countExplorerEntries(explorerTreeData);
+                    metaEl.textContent = `${totalEntries} ${totalEntries === 1 ? 'item' : 'items'}`;
+                }
+            }
 
             if (statusMessage) {
                 const status = document.createElement('div');
