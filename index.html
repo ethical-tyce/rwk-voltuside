@@ -4128,7 +4128,7 @@ throw "Chrome executable not found."
                 name: 'Scrape Table to Console',
                 category: 'Web Scraping',
                 description: 'Extract all tables from the current page',
-                icon: 'ðŸ“Š',
+                icon: '[TABLE]',
                 code: `const tables = document.querySelectorAll('table');
 console.log(\`Found \${tables.length} tables\`);
 tables.forEach((table, index) => {
@@ -4145,7 +4145,7 @@ tables.forEach((table, index) => {
                 name: 'Remove Common Ads',
                 category: 'Page Modification',
                 description: 'Hide common ad elements from the page',
-                icon: 'ðŸš«',
+                icon: '[CLEAN]',
                 code: `const adSelectors = ['[id*="ad"]', '[class*="ad"]', '[id*="banner"]', '[class*="banner"]'];
 let removedCount = 0;
 adSelectors.forEach(selector => {
@@ -4161,7 +4161,7 @@ console.log(\`Removed \${removedCount} ad elements\`);`
                 name: 'Extract All Links',
                 category: 'Web Scraping',
                 description: 'Get all links from the current page',
-                icon: 'ðŸ”—',
+                icon: '[LINKS]',
                 code: `const links = Array.from(document.querySelectorAll('a[href]'))
             .map(a => ({
                 text: a.textContent.trim(),
@@ -4176,7 +4176,7 @@ console.table(links);`
                 name: 'Force Dark Mode',
                 category: 'Page Modification',
                 description: 'Apply dark mode to any website',
-                icon: 'ðŸŒ™',
+                icon: '[DARK]',
                 code: `const style = document.createElement('style');
 style.innerHTML = \`
             * {
@@ -4621,15 +4621,15 @@ console.log('Dark mode applied!');`
             }
 
             // Determine icon based on message content
-            let icon = 'âœ…';
-            if (message.toLowerCase().includes('save')) icon = 'ðŸ’¾';
-            else if (message.toLowerCase().includes('load')) icon = 'ðŸ“‚';
-            else if (message.toLowerCase().includes('open')) icon = 'ðŸ“';
-            else if (message.toLowerCase().includes('clear')) icon = 'ðŸ—‘ï¸';
-            else if (message.toLowerCase().includes('switched') || message.toLowerCase().includes('mode')) icon = 'ðŸ”„';
-            else if (message.toLowerCase().includes('sent')) icon = 'ðŸ“¤';
-            else if (message.toLowerCase().includes('no code')) icon = 'âš ï¸';
-            else if (message.toLowerCase().includes('no browser')) icon = 'âŒ';
+            let icon = '[OK]';
+            if (message.toLowerCase().includes('save')) icon = '[SAVE]';
+            else if (message.toLowerCase().includes('load')) icon = '[LOAD]';
+            else if (message.toLowerCase().includes('open')) icon = '[OPEN]';
+            else if (message.toLowerCase().includes('clear')) icon = '[CLEAR]';
+            else if (message.toLowerCase().includes('switched') || message.toLowerCase().includes('mode')) icon = '[MODE]';
+            else if (message.toLowerCase().includes('sent')) icon = '[SEND]';
+            else if (message.toLowerCase().includes('no code')) icon = '[WARN]';
+            else if (message.toLowerCase().includes('no browser')) icon = '[ERR]';
 
             toast.innerHTML = `<span class="toast-icon">${icon}</span><span>${message}</span>`;
             toastContainer.appendChild(toast);
@@ -8397,7 +8397,7 @@ console.log('Dark mode applied!');`
             const onlyOne = all.length === 1;
             all.forEach(tab => {
                 const btn = tab.querySelector("button");
-                btn.textContent = onlyOne ? "âœŽ" : "âœ•";
+                btn.textContent = onlyOne ? "\u270E" : "\u2715";
             });
         }
 
@@ -10678,7 +10678,7 @@ console.log('Dark mode applied!');`
                     row.style.cursor = 'default';
                     row.innerHTML = `
                         <div style="font-size:11px;color:#efefef;">${entry.hash} - ${entry.subject}</div>
-                        <div style="font-size:10px;color:#9f9f9f;">${entry.author} â€¢ ${entry.relativeTime}</div>
+                        <div style="font-size:10px;color:#9f9f9f;">${entry.author} - ${entry.relativeTime}</div>
                     `;
                     logListEl.appendChild(row);
                 });
