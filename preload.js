@@ -59,6 +59,12 @@ contextBridge.exposeInMainWorld('appInfo', {
     openExternal: (url) => ipcRenderer.invoke('app:open-external', url)
 });
 
+contextBridge.exposeInMainWorld('discordRpc', {
+    getStatus: () => ipcRenderer.invoke('discord-rpc:status'),
+    updatePresence: (payload = {}) => ipcRenderer.invoke('discord-rpc:update', payload),
+    clearPresence: () => ipcRenderer.invoke('discord-rpc:clear')
+});
+
 contextBridge.exposeInMainWorld('runtime', {
     runPython: (code, options = {}) => ipcRenderer.invoke('runtime:run-python', code, options),
     runShell: (command, options = {}) => ipcRenderer.invoke('runtime:run-shell', command, options),

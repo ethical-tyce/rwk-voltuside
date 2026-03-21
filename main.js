@@ -3,6 +3,7 @@ const path = require('path');
 const fs = require('fs/promises');
 const os = require('os');
 const { spawn } = require('child_process');
+const DiscordRPC = require('discord-rpc');
 
 let win;
 let extensionWss = null;
@@ -53,6 +54,22 @@ const IMAGE_MIME_TYPES = {
     '.tif': 'image/tiff',
     '.tiff': 'image/tiff'
 };
+const DISCORD_RPC_CLIENT_ID = String(
+    process.env.DISCORD_RPC_CLIENT_ID
+    || process.env.VOLTUS_DISCORD_CLIENT_ID
+    || '1466678889987444879'
+).trim();
+const DISCORD_RPC_TEXT_LIMIT = 128;
+const DISCORD_RPC_BUTTON_LABEL_LIMIT = 32;
+const DISCORD_RPC_MAX_BUTTONS = 2;
+const DISCORD_RPC_RECONNECT_MS = 15000;
+let discordRpcClient = null;
+let discordRpcReady = false;
+let discordRpcConnecting = false;
+let discordRpcReconnectTimer = null;
+let discordRpcActivity = null;
+const discordRpcSessionStartedAt = Date.now();
+let discordRpcWarnedMissingClientId = false;
 
 function isPathInsideRoot(targetPath, rootPath) {
     const relative = path.relative(rootPath, targetPath);
@@ -503,6 +520,210 @@ function isSafeExternalUrl(urlValue) {
     }
 }
 
+function truncateDiscordRpcText(value, maxLength = DISCORD_RPC_TEXT_LIMIT) {
+    if (value === null || value === undefined) return '';
+    const text = String(value).trim();
+    if (!text) return '';
+    return text.length > maxLength ? text.slice(0, maxLength) : text;
+}
+
+function sanitizeDiscordRpcButtons(inputButtons) {
+    if (!Array.isArray(inputButtons)) return [];
+    const buttons = [];
+    for (const button of inputButtons) {
+        if (!button || typeof button !== 'object') continue;
+        const label = truncateDiscordRpcText(button.label, DISCORD_RPC_BUTTON_LABEL_LIMIT);
+        const url = String(button.url || '').trim();
+        if (!label || !url || !isSafeExternalUrl(url)) continue;
+        buttons.push({ label, url });
+        if (buttons.length >= DISCORD_RPC_MAX_BUTTONS) break;
+    }
+    return buttons;
+}
+
+function normalizeDiscordRpcTimestamp(value) {
+    const numeric = Number(value);
+    if (!Number.isFinite(numeric) || numeric <= 0) return null;
+    if (numeric > 10_000_000_000) return new Date(numeric);
+    return new Date(Math.floor(numeric * 1000));
+}
+
+function sanitizeDiscordRpcActivity(input = {}) {
+    if (!input || typeof input !== 'object') return null;
+
+    const details = truncateDiscordRpcText(input.details);
+    const state = truncateDiscordRpcText(input.state);
+    const largeImageKey = truncateDiscordRpcText(input.largeImageKey);
+    const largeImageText = truncateDiscordRpcText(input.largeImageText);
+    const smallImageKey = truncateDiscordRpcText(input.smallImageKey);
+    const smallImageText = truncateDiscordRpcText(input.smallImageText);
+    const startTimestamp = normalizeDiscordRpcTimestamp(input.startTimestamp);
+    const endTimestamp = normalizeDiscordRpcTimestamp(input.endTimestamp);
+    const buttons = sanitizeDiscordRpcButtons(input.buttons);
+
+    const activity = {};
+    if (details) activity.details = details;
+    if (state) activity.state = state;
+    if (largeImageKey) activity.largeImageKey = largeImageKey;
+    if (largeImageText) activity.largeImageText = largeImageText;
+    if (smallImageKey) activity.smallImageKey = smallImageKey;
+    if (smallImageText) activity.smallImageText = smallImageText;
+    if (startTimestamp) activity.startTimestamp = startTimestamp;
+    if (endTimestamp) activity.endTimestamp = endTimestamp;
+    if (buttons.length > 0) activity.buttons = buttons;
+
+    if (!activity.details && !activity.state && !activity.largeImageKey && !activity.smallImageKey) {
+        return null;
+    }
+
+    return activity;
+}
+
+function buildDefaultDiscordRpcActivity() {
+    return sanitizeDiscordRpcActivity({
+        details: 'Using Voltus IDE',
+        state: 'In workspace',
+        startTimestamp: discordRpcSessionStartedAt
+    });
+}
+
+function getDiscordRpcStatus() {
+    return {
+        enabled: Boolean(DISCORD_RPC_CLIENT_ID),
+        connected: discordRpcReady,
+        connecting: discordRpcConnecting,
+        clientIdConfigured: Boolean(DISCORD_RPC_CLIENT_ID)
+    };
+}
+
+function destroyDiscordRpcClient(client) {
+    if (!client) return;
+    try {
+        client.removeAllListeners();
+    } catch {
+        // Ignore listener cleanup errors.
+    }
+    try {
+        if (typeof client.destroy === 'function') {
+            client.destroy();
+        }
+    } catch {
+        // Ignore destroy errors during shutdown/reconnect.
+    }
+}
+
+function scheduleDiscordRpcReconnect() {
+    if (!DISCORD_RPC_CLIENT_ID) return;
+    if (discordRpcReconnectTimer) return;
+    discordRpcReconnectTimer = setTimeout(() => {
+        discordRpcReconnectTimer = null;
+        void startDiscordRpc();
+    }, DISCORD_RPC_RECONNECT_MS);
+}
+
+function handleDiscordRpcDrop(client, message) {
+    if (discordRpcClient !== client) return;
+    if (message) {
+        console.warn(`[Discord RPC] ${message}`);
+    }
+    discordRpcReady = false;
+    discordRpcConnecting = false;
+    discordRpcClient = null;
+    destroyDiscordRpcClient(client);
+    scheduleDiscordRpcReconnect();
+}
+
+async function applyDiscordRpcActivity() {
+    if (!discordRpcClient || !discordRpcReady) return false;
+    try {
+        if (!discordRpcActivity) {
+            if (typeof discordRpcClient.clearActivity === 'function') {
+                await discordRpcClient.clearActivity();
+            }
+            return true;
+        }
+        await discordRpcClient.setActivity(discordRpcActivity);
+        return true;
+    } catch (error) {
+        const message = error && error.message ? error.message : String(error);
+        console.warn(`[Discord RPC] Failed to apply activity: ${message}`);
+        return false;
+    }
+}
+
+async function startDiscordRpc() {
+    if (!DISCORD_RPC_CLIENT_ID) {
+        if (!discordRpcWarnedMissingClientId) {
+            discordRpcWarnedMissingClientId = true;
+            console.log('[Discord RPC] Disabled. Set DISCORD_RPC_CLIENT_ID to enable Rich Presence.');
+        }
+        return;
+    }
+    if (discordRpcReady || discordRpcConnecting) return;
+
+    if (discordRpcReconnectTimer) {
+        clearTimeout(discordRpcReconnectTimer);
+        discordRpcReconnectTimer = null;
+    }
+
+    DiscordRPC.register(DISCORD_RPC_CLIENT_ID);
+
+    const client = new DiscordRPC.Client({ transport: 'ipc' });
+    discordRpcClient = client;
+    discordRpcConnecting = true;
+
+    client.on('ready', async () => {
+        if (discordRpcClient !== client) return;
+        discordRpcReady = true;
+        discordRpcConnecting = false;
+        if (!discordRpcActivity) {
+            discordRpcActivity = buildDefaultDiscordRpcActivity();
+        }
+        await applyDiscordRpcActivity();
+        console.log('[Discord RPC] Connected');
+    });
+
+    client.on('disconnected', () => {
+        handleDiscordRpcDrop(client, 'Disconnected. Retrying...');
+    });
+
+    client.on('error', (error) => {
+        const message = error && error.message ? error.message : String(error);
+        handleDiscordRpcDrop(client, `Error: ${message}`);
+    });
+
+    try {
+        await client.login({ clientId: DISCORD_RPC_CLIENT_ID });
+    } catch (error) {
+        const message = error && error.message ? error.message : String(error);
+        handleDiscordRpcDrop(client, `Login failed: ${message}`);
+    }
+}
+
+async function stopDiscordRpc() {
+    if (discordRpcReconnectTimer) {
+        clearTimeout(discordRpcReconnectTimer);
+        discordRpcReconnectTimer = null;
+    }
+
+    const client = discordRpcClient;
+    discordRpcClient = null;
+    discordRpcReady = false;
+    discordRpcConnecting = false;
+
+    if (!client) return;
+
+    try {
+        if (typeof client.clearActivity === 'function') {
+            await client.clearActivity();
+        }
+    } catch {
+        // Ignore clear failures while shutting down.
+    }
+
+    destroyDiscordRpcClient(client);
+}
+
 function startExtensionBridge() {
     let WebSocketServer;
     try {
@@ -661,6 +882,7 @@ function createWindow() {
 
 app.whenReady().then(() => {
     startExtensionBridge();
+    void startDiscordRpc();
     createWindow();
 });
 
@@ -724,6 +946,45 @@ ipcMain.handle('app:open-external', async (_event, url) => {
         console.error('[OpenExternal] Failed:', error && error.message ? error.message : String(error));
         return false;
     }
+});
+
+ipcMain.handle('discord-rpc:status', () => {
+    return getDiscordRpcStatus();
+});
+
+ipcMain.handle('discord-rpc:update', async (_event, payload = {}) => {
+    const sanitizedActivity = sanitizeDiscordRpcActivity(payload);
+    discordRpcActivity = sanitizedActivity || buildDefaultDiscordRpcActivity();
+
+    if (!DISCORD_RPC_CLIENT_ID) {
+        return {
+            ...getDiscordRpcStatus(),
+            applied: false
+        };
+    }
+
+    if (!discordRpcReady && !discordRpcConnecting) {
+        void startDiscordRpc();
+        return {
+            ...getDiscordRpcStatus(),
+            applied: false
+        };
+    }
+
+    const applied = await applyDiscordRpcActivity();
+    return {
+        ...getDiscordRpcStatus(),
+        applied
+    };
+});
+
+ipcMain.handle('discord-rpc:clear', async () => {
+    discordRpcActivity = null;
+    const applied = await applyDiscordRpcActivity();
+    return {
+        ...getDiscordRpcStatus(),
+        applied
+    };
 });
 
 ipcMain.handle('explorer:pick-folder', async () => {
@@ -1460,4 +1721,5 @@ app.on('activate', () => {
 
 app.on('before-quit', () => {
     stopExtensionBridge();
+    void stopDiscordRpc();
 });

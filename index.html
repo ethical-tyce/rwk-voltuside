@@ -5542,6 +5542,74 @@ console.log('Dark mode applied!');`
             allowAnyCwd: false,
             trustedRoots: []
         };
+        const DISCORD_PRESENCE_DEBOUNCE_MS = 650;
+        const discordPresenceSessionStartedAt = Date.now();
+        let discordPresenceDebounceTimer = null;
+        let discordPresenceLastSignature = '';
+        let discordPresenceDisabled = false;
+
+        function truncateDiscordPresenceText(value, maxLength = 128) {
+            const text = String(value || '').trim();
+            if (!text) return '';
+            if (text.length <= maxLength) return text;
+            return text.slice(0, maxLength);
+        }
+
+        function buildDiscordPresencePayload() {
+            const activeTab = activeTabId && tabs[activeTabId] ? tabs[activeTabId] : null;
+            const displayName = activeTab ? String(activeTab.name || 'Untitled') : 'Untitled';
+            const languageId = activeTab ? resolveMonacoLanguageId(getTabLanguageId(activeTab)) : 'plaintext';
+            const runtimeLabel = executionMode === 'local' ? 'Local Runtime' : 'Browser Runtime';
+            let details = 'Using Voltus IDE';
+            let state = runtimeLabel;
+
+            if (currentPrimaryView === 'home') {
+                details = 'Browsing dashboard';
+            } else if (currentPrimaryView === 'settings') {
+                details = 'Adjusting settings';
+            } else if (currentPrimaryView === 'html') {
+                details = 'Previewing output';
+                state = activeTab ? `${displayName} (${languageId})` : runtimeLabel;
+            } else {
+                details = activeTab ? `Editing ${displayName}` : 'In editor';
+                state = activeTab ? `${languageId} - ${runtimeLabel}` : runtimeLabel;
+            }
+
+            return {
+                details: truncateDiscordPresenceText(details, 128),
+                state: truncateDiscordPresenceText(state, 128),
+                startTimestamp: discordPresenceSessionStartedAt
+            };
+        }
+
+        function queueDiscordPresenceUpdate(force = false) {
+            if (discordPresenceDisabled) return;
+            if (!window.discordRpc || typeof window.discordRpc.updatePresence !== 'function') return;
+
+            const payload = buildDiscordPresencePayload();
+            const signature = JSON.stringify(payload);
+            if (!force && signature === discordPresenceLastSignature) return;
+
+            if (discordPresenceDebounceTimer) {
+                clearTimeout(discordPresenceDebounceTimer);
+            }
+
+            discordPresenceDebounceTimer = setTimeout(async () => {
+                discordPresenceDebounceTimer = null;
+                try {
+                    const status = await window.discordRpc.updatePresence(payload);
+                    if (status && status.enabled === false) {
+                        discordPresenceDisabled = true;
+                        return;
+                    }
+                    if (!status || status.applied || status.connected || status.connecting) {
+                        discordPresenceLastSignature = signature;
+                    }
+                } catch {
+                    // Ignore transient Discord RPC transport failures.
+                }
+            }, DISCORD_PRESENCE_DEBOUNCE_MS);
+        }
 
         function openTabById(tabId) {
             if (!tabId || !tabs[tabId] || !tabs[tabId].tabElement) return;
@@ -7164,6 +7232,7 @@ console.log('Dark mode applied!');`
             }
 
             updateTerminalPrompt();
+            queueDiscordPresenceUpdate();
         }
 
         function normalizeBreakpointLines(lines) {
