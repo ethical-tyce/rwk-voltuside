@@ -1286,17 +1286,52 @@ ipcMain.handle('runtime:run-shell', async (_event, command, options = {}) => {
 
     const cwd = await resolveRuntimeCwd(options && options.cwd);
     const timeoutMs = normalizeTimeout(options && options.timeoutMs, 45000);
+    const requestedShellRaw = options && typeof options.shell === 'string'
+        ? options.shell.trim().toLowerCase()
+        : '';
     assertRuntimeExecutionAllowed('shell', cwd);
-    const attempts = process.platform === 'win32'
-        ? [
-            { command: 'powershell', args: ['-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-Command', script] },
-            { command: 'pwsh', args: ['-NoProfile', '-NonInteractive', '-Command', script] },
-            { command: 'cmd', args: ['/d', '/s', '/c', script] }
-        ]
-        : [
-            { command: 'bash', args: ['-lc', script] },
-            { command: 'sh', args: ['-lc', script] }
+    const attempts = (() => {
+        if (process.platform !== 'win32') {
+            return [
+                { command: 'bash', args: ['-lc', script] },
+                { command: 'sh', args: ['-lc', script] }
+            ];
+        }
+
+        const windowsShells = {
+            powershell: [
+                { command: 'powershell', args: ['-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-Command', script] },
+                { command: 'pwsh', args: ['-NoProfile', '-NonInteractive', '-Command', script] }
+            ],
+            pwsh: [
+                { command: 'pwsh', args: ['-NoProfile', '-NonInteractive', '-Command', script] },
+                { command: 'powershell', args: ['-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-Command', script] }
+            ],
+            cmd: [
+                { command: 'cmd', args: ['/d', '/s', '/c', script] }
+            ]
+        };
+
+        const aliases = {
+            'command prompt': 'cmd',
+            commandprompt: 'cmd',
+            command_prompt: 'cmd',
+            ps: 'powershell'
+        };
+
+        const normalizedShell = windowsShells[requestedShellRaw]
+            ? requestedShellRaw
+            : (windowsShells[aliases[requestedShellRaw]] ? aliases[requestedShellRaw] : '');
+
+        if (normalizedShell) {
+            return windowsShells[normalizedShell];
+        }
+
+        return [
+            ...windowsShells.powershell,
+            ...windowsShells.cmd
         ];
+    })();
 
     for (const attempt of attempts) {
         try {
