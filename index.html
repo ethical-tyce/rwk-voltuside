@@ -1995,6 +1995,14 @@
                     right var(--primary-view-transition) var(--primary-view-ease);
             }
 
+        #mainContent:not(.console-open) #consoleWrap,
+        #mainContent:not(.console-open) #consoleHandle {
+            display: none !important;
+            opacity: 0 !important;
+            visibility: hidden !important;
+            pointer-events: none !important;
+        }
+
         #consoleTop {
             padding: 8px 10px;
             display: flex;
@@ -4108,6 +4116,7 @@ throw "Chrome executable not found."
         let activeTerminalSessionId = '';
         const terminalSessions = [];
         let problemMatcherEnabled = true;
+        let stopConsoleResizeDrag = null;
         let consoleTabIndicatorFrame = null;
         const windowMinimizeBtn = document.getElementById("windowMinimize");
         const windowMaximizeBtn = document.getElementById("windowMaximize");
@@ -5382,6 +5391,25 @@ console.log('Dark mode applied!');`
                 let isDragging = false;
                 let startY = 0;
                 let startHeight = 0;
+                const stopResizeDrag = () => {
+                    if (!isDragging) {
+                        document.body.classList.remove('console-resizing');
+                        const htmlOutputEl = document.getElementById('htmlOutput');
+                        if (htmlOutputEl) {
+                            htmlOutputEl.style.pointerEvents = 'auto';
+                        }
+                        return;
+                    }
+                    isDragging = false;
+                    document.body.classList.remove('console-resizing');
+                    const htmlOutputEl = document.getElementById('htmlOutput');
+                    if (htmlOutputEl) {
+                        htmlOutputEl.style.pointerEvents = 'auto';
+                    }
+                    syncConsoleHandlePosition();
+                    scheduleEditorLayout();
+                };
+                stopConsoleResizeDrag = stopResizeDrag;
 
                 consoleHandle.addEventListener("mousedown", (e) => {
                     isDragging = true;
@@ -5405,11 +5433,7 @@ console.log('Dark mode applied!');`
 
                 document.addEventListener("mouseup", () => {
                     if (isDragging) {
-                        isDragging = false;
-                        document.body.classList.remove('console-resizing');
-                        document.getElementById('htmlOutput').style.pointerEvents = 'auto';
-                        syncConsoleHandlePosition();
-                        scheduleEditorLayout();
+                        stopResizeDrag();
                     }
                 });
 
@@ -9488,6 +9512,36 @@ console.log('Dark mode applied!');`
             indicatorEl.style.opacity = '1';
         }
 
+        function enforcePreviewConsoleLayer(nextVisible) {
+            const visible = Boolean(nextVisible);
+            const consoleWrapEl = document.getElementById('consoleWrap');
+            const consoleHandleEl = document.getElementById('consoleHandle');
+            const mainContentEl = document.getElementById('mainContent');
+            const htmlOutputEl = document.getElementById('htmlOutput');
+            if (!consoleWrapEl || !consoleHandleEl || !mainContentEl) return;
+
+            if (!visible && typeof stopConsoleResizeDrag === 'function') {
+                stopConsoleResizeDrag();
+            }
+
+            consoleWrapEl.classList.toggle('active', visible);
+            consoleHandleEl.classList.toggle('active', visible);
+            mainContentEl.classList.toggle('console-open', visible);
+
+            consoleWrapEl.hidden = !visible;
+            consoleHandleEl.hidden = !visible;
+            consoleWrapEl.style.display = visible ? '' : 'none';
+            consoleHandleEl.style.display = visible ? '' : 'none';
+            consoleWrapEl.style.pointerEvents = visible ? 'auto' : 'none';
+            consoleHandleEl.style.pointerEvents = visible ? 'auto' : 'none';
+            consoleWrapEl.setAttribute('aria-hidden', visible ? 'false' : 'true');
+            consoleHandleEl.setAttribute('aria-hidden', visible ? 'false' : 'true');
+
+            if (!visible && htmlOutputEl) {
+                htmlOutputEl.style.pointerEvents = 'auto';
+            }
+        }
+
         function setPrimaryView(view) {
             if (primaryViewTransitionTimer) {
                 clearTimeout(primaryViewTransitionTimer);
@@ -9507,9 +9561,7 @@ console.log('Dark mode applied!');`
             const mainContentEl = document.getElementById('mainContent');
 
             htmlOutputLabelEl.classList.remove('active');
-            consoleWrapEl.classList.remove('active');
-            consoleHandleEl.classList.remove('active');
-            mainContentEl.classList.remove('console-open');
+            enforcePreviewConsoleLayer(false);
 
             const viewMap = {
                 home: dashboardEl,
@@ -9561,9 +9613,7 @@ console.log('Dark mode applied!');`
             } else if (view === 'html') {
                 hideImagePreview();
                 document.getElementById('htmlOutputTab').classList.add('active');
-                consoleWrapEl.classList.add('active');
-                consoleHandleEl.classList.add('active');
-                mainContentEl.classList.add('console-open');
+                enforcePreviewConsoleLayer(true);
                 const consoleHeight = Math.max(
                     96,
                     Math.round(consoleWrapEl.offsetHeight || parseFloat(consoleWrapEl.style.height) || 140)
@@ -9571,7 +9621,6 @@ console.log('Dark mode applied!');`
                 consoleHandleEl.style.bottom = consoleHeight + 'px';
                 document.documentElement.style.setProperty('--preview-console-height', `${consoleHeight}px`);
                 bindHtmlOutputProximityTracking();
-                scheduleConsoleTabIndicatorUpdate();
 
                 if (htmlOutputLabelEl.textContent) {
                     htmlOutputLabelEl.classList.add('active');
