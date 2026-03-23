@@ -4046,6 +4046,7 @@ throw "Chrome executable not found."
                 }
             }
             let startupRevealStarted = false;
+            let startupRevealFailsafeTimer = null;
 
             const markTitleIconReady = () => {
                 body.classList.add('title-icon-ready');
@@ -4054,22 +4055,42 @@ throw "Chrome executable not found."
             const startStartupReveal = () => {
                 if (startupRevealStarted) return;
                 startupRevealStarted = true;
+                if (startupRevealFailsafeTimer) {
+                    clearTimeout(startupRevealFailsafeTimer);
+                    startupRevealFailsafeTimer = null;
+                }
                 body.classList.add('startup-intro-running');
 
                 const SPLASH_VISIBLE_MS = 1550;
                 const SPLASH_FADE_REMOVE_MS = 450;
 
                 setTimeout(() => {
-                    splash.classList.add('splash-fade-out');
-                    appContainer.classList.add('expanded');
+                    if (splash) {
+                        splash.classList.add('splash-fade-out');
+                    }
+                    if (appContainer) {
+                        appContainer.classList.add('expanded');
+                    }
                     if (windowChrome) {
                         windowChrome.hidden = false;
                     }
                     body.classList.remove('startup-active');
                     setTimeout(() => {
-                        splash.remove();
+                        if (splash) {
+                            splash.remove();
+                        }
                     }, SPLASH_FADE_REMOVE_MS);
                 }, SPLASH_VISIBLE_MS);
+            };
+
+            const scheduleStartupRevealFailsafe = (delayMs) => {
+                if (startupRevealFailsafeTimer) {
+                    clearTimeout(startupRevealFailsafeTimer);
+                }
+                startupRevealFailsafeTimer = setTimeout(() => {
+                    console.warn('[startup] startup:window-expanded timeout, forcing reveal');
+                    startStartupReveal();
+                }, delayMs);
             };
 
             if (titleIcon) {
@@ -4081,6 +4102,7 @@ throw "Chrome executable not found."
             }
 
             if (typeof window.startupEvents?.onWindowExpanded === 'function') {
+                scheduleStartupRevealFailsafe(2600);
                 const unsubscribeExpanded = window.startupEvents.onWindowExpanded(() => {
                     if (typeof unsubscribeExpanded === 'function') {
                         unsubscribeExpanded();
