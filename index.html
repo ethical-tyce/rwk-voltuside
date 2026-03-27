@@ -2867,6 +2867,62 @@
         /* ---------- SETTINGS PAGE ---------- */
         #settingsView .settings-grid {
             grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+            gap: 10px;
+        }
+
+        #settingsView .settings-topbar {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 10px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        #settingsView .settings-topbar h2 {
+            margin: 0;
+            font-size: 22px;
+            color: #f1f1f1;
+            letter-spacing: 0.01em;
+        }
+
+        #settingsView .settings-topbar p {
+            margin: 0;
+            font-size: 11px;
+            color: #9a9a9a;
+            letter-spacing: 0.02em;
+        }
+
+        #settingsView .settings-section-divider {
+            grid-column: 1 / -1;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 4px;
+            padding-top: 8px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        #settingsView .settings-section-divider.first {
+            margin-top: 0;
+            padding-top: 0;
+            border-top: none;
+        }
+
+        #settingsView .settings-section-divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        #settingsView .settings-section-divider span {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: #b8b8b8;
+            white-space: nowrap;
         }
 
         #settingsView .settings-card {
@@ -3618,8 +3674,9 @@
                         </svg>
                     </div>
                     <div class="sidebar-tab" id="explorerToggle" title="Explorer">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960" width="24" height="24" fill="currentColor">
-                            <path d="M140-220v-520 550-30Zm0 60q-24 0-42-18.5T80-220v-520q0-23 18-41.5t42-18.5h281l60 60h339q23 0 41.5 18.5T880-680v301h-60v-301H456l-60-60H140v520h295v60H140Zm485 99L495-190l130-129 42 42-87 87 87 87-42 42Zm164 0-42-42 87-87-87-87 42-42 130 129L789-61Z"/>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <path d="M3 7a2 2 0 0 1 2-2h5l2 2h7a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                            <path d="M3 10h18"></path>
                         </svg>
                     </div>
                     <div class="sidebar-tab" id="client" data-view="settings" title="Settings">
@@ -3772,10 +3829,14 @@
                         </div>
                     </div>
                     <div id="settingsView" class="primary-view">
-                        <h2>Settings</h2>
+                        <div class="settings-topbar">
+                            <h2>Settings</h2>
+                            <p>Editor, execution, automation, terminal, security, and window controls.</p>
+                        </div>
                         <div class="dashboard-grid settings-grid">
+                            <div class="settings-section-divider first"><span>Editor</span></div>
                             <div class="dashboard-card settings-card">
-                                <div class="dashboard-card-label">Editor</div>
+                                <div class="dashboard-card-label">Display</div>
                                 <h3 class="settings-setting-name">Font Size</h3>
                                 <select class="settings-select" id="fontSize">
                                     <option value="12" selected>12px</option>
@@ -3785,17 +3846,19 @@
                                 </select>
                             </div>
                             <div class="dashboard-card settings-card">
-                                <div class="dashboard-card-label">Editor</div>
+                                <div class="dashboard-card-label">Toggle</div>
                                 <h3 class="settings-setting-name">Show Minimap</h3>
                                 <div class="settings-toggle active" id="toggleMinimap"></div>
                             </div>
                             <div class="dashboard-card settings-card">
-                                <div class="dashboard-card-label">Editor</div>
+                                <div class="dashboard-card-label">Toggle</div>
                                 <h3 class="settings-setting-name">Word Wrap</h3>
                                 <div class="settings-toggle" id="toggleWordWrap"></div>
                             </div>
+
+                            <div class="settings-section-divider"><span>Execution</span></div>
                             <div class="dashboard-card settings-card">
-                                <div class="dashboard-card-label">Execution</div>
+                                <div class="dashboard-card-label">Mode</div>
                                 <h3 class="settings-setting-name">Execution Mode</h3>
                                 <select class="settings-select" id="executionMode">
                                     <option value="browser" selected>Browser Execution</option>
@@ -3803,51 +3866,59 @@
                                 </select>
                             </div>
                             <div class="dashboard-card settings-card">
-                                <div class="dashboard-card-label">Execution</div>
+                                <div class="dashboard-card-label">Toggle</div>
                                 <h3 class="settings-setting-name">Run as Project</h3>
                                 <div class="settings-toggle" id="toggleRunAsProject"></div>
                             </div>
+
+                            <div class="settings-section-divider"><span>Automation</span></div>
                             <div class="dashboard-card settings-card">
-                                <div class="dashboard-card-label">Window</div>
-                                <h3 class="settings-setting-name">Always On Top</h3>
-                                <div class="settings-toggle active" id="toggleAlwaysOnTop"></div>
-                            </div>
-                            <div class="dashboard-card settings-card">
-                                <div class="dashboard-card-label">Terminal</div>
-                                <h3 class="settings-setting-name">Auto-detect folder directory in Terminal</h3>
-                                <div class="settings-toggle active" id="toggleTerminalFolderAutoDetect"></div>
-                            </div>
-                            <div class="dashboard-card settings-card">
-                                <div class="dashboard-card-label">Security</div>
-                                <h3 class="settings-setting-name">Allow Local Shell Execution</h3>
-                                <div class="settings-toggle" id="toggleAllowShellExecution"></div>
-                            </div>
-                            <div class="dashboard-card settings-card">
-                                <div class="dashboard-card-label">Security</div>
-                                <h3 class="settings-setting-name">Allow Local Python Execution</h3>
-                                <div class="settings-toggle" id="toggleAllowPythonExecution"></div>
-                            </div>
-                            <div class="dashboard-card settings-card">
-                                <div class="dashboard-card-label">Security</div>
-                                <h3 class="settings-setting-name">Allow Runtime Outside Workspace</h3>
-                                <div class="settings-toggle" id="toggleAllowAnyCwd"></div>
-                            </div>
-                            <div class="dashboard-card settings-card">
-                                <div class="dashboard-card-label">Automation</div>
+                                <div class="dashboard-card-label">Toggle</div>
                                 <h3 class="settings-setting-name">Run on Save (Local Mode)</h3>
                                 <div class="settings-toggle" id="toggleRunOnSave"></div>
                             </div>
                             <div class="dashboard-card settings-card">
-                                <div class="dashboard-card-label">Automation</div>
+                                <div class="dashboard-card-label">Task</div>
                                 <h3 class="settings-setting-name">Run Saved Task on Save</h3>
                                 <select class="settings-select" id="runOnSaveTaskSelect">
                                     <option value="">Execute Active File</option>
                                 </select>
                             </div>
+
+                            <div class="settings-section-divider"><span>Terminal</span></div>
+                            <div class="dashboard-card settings-card">
+                                <div class="dashboard-card-label">Toggle</div>
+                                <h3 class="settings-setting-name">Auto-detect folder directory in Terminal</h3>
+                                <div class="settings-toggle active" id="toggleTerminalFolderAutoDetect"></div>
+                            </div>
                             <div class="dashboard-card settings-card">
                                 <div class="dashboard-card-label">Diagnostics</div>
                                 <h3 class="settings-setting-name">Problem Matcher from Terminal</h3>
                                 <div class="settings-toggle active" id="toggleProblemMatcher"></div>
+                            </div>
+
+                            <div class="settings-section-divider"><span>Security</span></div>
+                            <div class="dashboard-card settings-card">
+                                <div class="dashboard-card-label">Runtime</div>
+                                <h3 class="settings-setting-name">Allow Local Shell Execution</h3>
+                                <div class="settings-toggle" id="toggleAllowShellExecution"></div>
+                            </div>
+                            <div class="dashboard-card settings-card">
+                                <div class="dashboard-card-label">Runtime</div>
+                                <h3 class="settings-setting-name">Allow Local Python Execution</h3>
+                                <div class="settings-toggle" id="toggleAllowPythonExecution"></div>
+                            </div>
+                            <div class="dashboard-card settings-card">
+                                <div class="dashboard-card-label">Runtime</div>
+                                <h3 class="settings-setting-name">Allow Runtime Outside Workspace</h3>
+                                <div class="settings-toggle" id="toggleAllowAnyCwd"></div>
+                            </div>
+
+                            <div class="settings-section-divider"><span>Window</span></div>
+                            <div class="dashboard-card settings-card">
+                                <div class="dashboard-card-label">Toggle</div>
+                                <h3 class="settings-setting-name">Always On Top</h3>
+                                <div class="settings-toggle active" id="toggleAlwaysOnTop"></div>
                             </div>
                         </div>
                     </div>
