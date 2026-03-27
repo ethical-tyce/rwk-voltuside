@@ -3592,10 +3592,7 @@
                 </svg>
             </button>
             <button class="icon-btn" id="taskRunner" title="Task Runner">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                    <path d="M4 6h16M4 12h16M4 18h16"></path>
-                    <path d="M8 6h0M8 12h0M8 18h0"></path>
-                </svg>
+                <svg xmlns="http://www.w3.org/2000/svg" height="40px" viewBox="0 -960 960 960" width="40px" fill="#e3e3e3"><path d="M401.33-240v-66.67h60L577-439.33l-115.67-134H390l-68.67 358.66q-8 45-35 69.84Q259.33-120 217-120t-70-24q-27.67-24-27.67-61.33 0-28.67 15.67-46.17t40.33-17.5q22.34 0 37.17 13.67 14.83 13.66 14.83 35 0 9-3.16 16.66-3.17 7.67-8.84 13.34 2.67 1.33 5.67 2 3 .66 6.33.66 10.34-.33 17.5-10.16 7.17-9.84 10.5-25.84L322-573.33H200V-640h134.33l21-108.67q8.34-42.66 36.5-67Q420-840 460.67-840q42 0 69 24.67 27 24.66 27 61.66 0 28-15.67 45.5t-40.33 17.5q-21.67 0-36.84-13.33-15.16-13.33-15.16-34.33 0-8.34 2.83-16 2.83-7.67 7.17-13.34-1.34-1.33-4-2.33-2.67-1-5.34-1-10.66.67-18 10-7.33 9.33-10.66 24.67L403-640h189v66.67h-42l72.67 83.66L692-573.33h-42.67V-640H840v66.67h-59.33l-115 134 115 132.66H840V-240H649.33v-66.67H692l-70.67-82-72 82H592V-240H401.33Z"/></svg>
             </button>
 
             <button class="icon-btn" id="gitPanel" title="Git Panel">
@@ -5442,7 +5439,7 @@ console.log('Dark mode applied!');`
                         document.body.classList.remove('console-resizing');
                         const htmlOutputEl = document.getElementById('htmlOutput');
                         if (htmlOutputEl) {
-                            htmlOutputEl.style.pointerEvents = 'auto';
+                            htmlOutputEl.style.pointerEvents = currentPrimaryView === 'html' ? 'auto' : 'none';
                         }
                         return;
                     }
@@ -5450,7 +5447,7 @@ console.log('Dark mode applied!');`
                     document.body.classList.remove('console-resizing');
                     const htmlOutputEl = document.getElementById('htmlOutput');
                     if (htmlOutputEl) {
-                        htmlOutputEl.style.pointerEvents = 'auto';
+                        htmlOutputEl.style.pointerEvents = currentPrimaryView === 'html' ? 'auto' : 'none';
                     }
                     syncConsoleHandlePosition();
                     scheduleEditorLayout();
@@ -9584,7 +9581,59 @@ console.log('Dark mode applied!');`
             consoleHandleEl.setAttribute('aria-hidden', visible ? 'false' : 'true');
 
             if (!visible && htmlOutputEl) {
-                htmlOutputEl.style.pointerEvents = 'auto';
+                htmlOutputEl.style.pointerEvents = 'none';
+            }
+        }
+
+        function releasePreviewFrameFocus() {
+            const htmlOutputEl = document.getElementById('htmlOutput');
+            if (!htmlOutputEl) return;
+
+            try {
+                if (htmlOutputEl.contentWindow && typeof htmlOutputEl.contentWindow.blur === 'function') {
+                    htmlOutputEl.contentWindow.blur();
+                }
+            } catch (error) {
+                // Ignore cross-context focus edge cases.
+            }
+
+            if (document.activeElement === htmlOutputEl && typeof htmlOutputEl.blur === 'function') {
+                htmlOutputEl.blur();
+            }
+
+            if (typeof window.focus === 'function') {
+                window.focus();
+            }
+        }
+
+        function focusEditorForTyping() {
+            if (!editor) return;
+
+            const releaseModifierKeys = () => {
+                ['Control', 'Shift', 'Alt', 'Meta'].forEach((keyName) => {
+                    const eventInit = {
+                        key: keyName,
+                        code: keyName,
+                        bubbles: true,
+                        cancelable: false
+                    };
+                    window.dispatchEvent(new KeyboardEvent('keyup', eventInit));
+                    document.dispatchEvent(new KeyboardEvent('keyup', eventInit));
+                });
+            };
+
+            releaseModifierKeys();
+
+            if (typeof editor.focus === 'function') {
+                editor.focus();
+            }
+            const inputArea = document.querySelector('#editor textarea.inputarea');
+            if (inputArea && typeof inputArea.focus === 'function') {
+                try {
+                    inputArea.focus({ preventScroll: true });
+                } catch (error) {
+                    inputArea.focus();
+                }
             }
         }
 
@@ -9642,7 +9691,11 @@ console.log('Dark mode applied!');`
             if (view !== 'editor') {
                 hideImagePreview();
             }
+            if (view !== 'html') {
+                releasePreviewFrameFocus();
+            }
 
+            let shouldFocusEditor = false;
             if (view === 'home') {
                 document.getElementById('homeTab').classList.add('active');
                 updateDashboardMetrics();
@@ -9655,6 +9708,7 @@ console.log('Dark mode applied!');`
                     renderImagePreview(activeTab);
                 } else {
                     hideImagePreview();
+                    shouldFocusEditor = true;
                 }
             } else if (view === 'html') {
                 hideImagePreview();
@@ -9675,6 +9729,10 @@ console.log('Dark mode applied!');`
                 hideImagePreview();
             }
 
+            if (htmlOutputEl) {
+                htmlOutputEl.style.pointerEvents = view === 'html' ? 'auto' : 'none';
+            }
+
             currentPrimaryView = view;
             updateStatusBar();
             updateSidebarActiveIndicator();
@@ -9685,6 +9743,12 @@ console.log('Dark mode applied!');`
                     requestAnimationFrame(() => editor.layout());
                 });
             }
+
+            if (shouldFocusEditor && editor && typeof editor.focus === 'function') {
+                requestAnimationFrame(() => {
+                    requestAnimationFrame(() => focusEditorForTyping());
+                });
+            }
         }
 
         document.getElementById('homeTab').onclick = function () {
@@ -9693,6 +9757,9 @@ console.log('Dark mode applied!');`
 
         document.getElementById('editorTab').onclick = function () {
             setPrimaryView('editor');
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => focusEditorForTyping());
+            });
         };
 
         document.getElementById('htmlOutputTab').onclick = function () {
@@ -9940,7 +10007,7 @@ console.log('Dark mode applied!');`
             document.body.classList.remove('explorer-resizing');
             const htmlOutputEl = document.getElementById('htmlOutput');
             if (htmlOutputEl) {
-                htmlOutputEl.style.pointerEvents = 'auto';
+                htmlOutputEl.style.pointerEvents = currentPrimaryView === 'html' ? 'auto' : 'none';
             }
             const computedWidth = parseFloat(getComputedStyle(explorerPane).width);
             setExplorerWidth(computedWidth, true);
@@ -11299,6 +11366,89 @@ console.log('Dark mode applied!');`
                             console.warn = (...args) => relay('warn', args);
                             console.error = (...args) => relay('error', args);
 
+                            const installNonBlockingAlert = () => {
+                                const ALERT_HOST_ID = '__voltusLocalAlertHost';
+                                window.alert = (message) => {
+                                    const text = String(message ?? '');
+                                    relay('log', ['alert: ' + text]);
+
+                                    const existing = document.getElementById(ALERT_HOST_ID);
+                                    if (existing) existing.remove();
+
+                                    const host = document.createElement('div');
+                                    host.id = ALERT_HOST_ID;
+                                    host.style.cssText = [
+                                        'position:fixed',
+                                        'inset:0',
+                                        'z-index:2147483647',
+                                        'display:flex',
+                                        'align-items:center',
+                                        'justify-content:center',
+                                        'background:rgba(0,0,0,0.48)',
+                                        'font-family:Consolas,monospace'
+                                    ].join(';');
+
+                                    const panel = document.createElement('div');
+                                    panel.style.cssText = [
+                                        'min-width:280px',
+                                        'max-width:min(82vw,560px)',
+                                        'background:#0b0b0b',
+                                        'border:1px solid rgba(255,255,255,0.16)',
+                                        'border-radius:10px',
+                                        'padding:14px 14px 12px',
+                                        'box-shadow:0 18px 42px rgba(0,0,0,0.52)'
+                                    ].join(';');
+
+                                    const title = document.createElement('div');
+                                    title.textContent = 'Alert';
+                                    title.style.cssText = 'color:#dcdcdc;font-size:12px;letter-spacing:0.03em;margin-bottom:8px;text-transform:uppercase;';
+
+                                    const body = document.createElement('pre');
+                                    body.textContent = text || '(empty)';
+                                    body.style.cssText = 'margin:0;color:#bbbbbb;font-size:12px;line-height:1.45;white-space:pre-wrap;word-break:break-word;';
+
+                                    const actionRow = document.createElement('div');
+                                    actionRow.style.cssText = 'display:flex;justify-content:flex-end;margin-top:12px;';
+
+                                    const okBtn = document.createElement('button');
+                                    okBtn.type = 'button';
+                                    okBtn.textContent = 'OK';
+                                    okBtn.style.cssText = [
+                                        'background:#141414',
+                                        'color:#dfdfdf',
+                                        'border:1px solid rgba(255,255,255,0.2)',
+                                        'border-radius:7px',
+                                        'padding:6px 12px',
+                                        'font:inherit',
+                                        'font-size:12px',
+                                        'cursor:pointer'
+                                    ].join(';');
+
+                                    const dismiss = () => {
+                                        if (host.isConnected) host.remove();
+                                    };
+
+                                    host.addEventListener('click', (event) => {
+                                        if (event.target === host) dismiss();
+                                    });
+                                    okBtn.addEventListener('click', dismiss);
+                                    okBtn.addEventListener('keydown', (event) => {
+                                        if (event.key === 'Enter' || event.key === ' ') {
+                                            event.preventDefault();
+                                            dismiss();
+                                        }
+                                    });
+
+                                    actionRow.appendChild(okBtn);
+                                    panel.append(title, body, actionRow);
+                                    host.appendChild(panel);
+                                    document.body.appendChild(host);
+                                    okBtn.focus();
+                                };
+                            };
+
+                            installNonBlockingAlert();
+
                             window.addEventListener('error', (event) => {
                                 relay('error', [event && event.message ? event.message : 'Module load error']);
                             });
@@ -11346,6 +11496,89 @@ console.log('Dark mode applied!');`
                                         console.log = (...args) => relay('log', args);
                                         console.warn = (...args) => relay('warn', args);
                                         console.error = (...args) => relay('error', args);
+
+                                        const installNonBlockingAlert = () => {
+                                            const ALERT_HOST_ID = '__voltusLocalAlertHost';
+                                            window.alert = (message) => {
+                                                const text = String(message ?? '');
+                                                relay('log', ['alert: ' + text]);
+
+                                                const existing = document.getElementById(ALERT_HOST_ID);
+                                                if (existing) existing.remove();
+
+                                                const host = document.createElement('div');
+                                                host.id = ALERT_HOST_ID;
+                                                host.style.cssText = [
+                                                    'position:fixed',
+                                                    'inset:0',
+                                                    'z-index:2147483647',
+                                                    'display:flex',
+                                                    'align-items:center',
+                                                    'justify-content:center',
+                                                    'background:rgba(0,0,0,0.48)',
+                                                    'font-family:Consolas,monospace'
+                                                ].join(';');
+
+                                                const panel = document.createElement('div');
+                                                panel.style.cssText = [
+                                                    'min-width:280px',
+                                                    'max-width:min(82vw,560px)',
+                                                    'background:#0b0b0b',
+                                                    'border:1px solid rgba(255,255,255,0.16)',
+                                                    'border-radius:10px',
+                                                    'padding:14px 14px 12px',
+                                                    'box-shadow:0 18px 42px rgba(0,0,0,0.52)'
+                                                ].join(';');
+
+                                                const title = document.createElement('div');
+                                                title.textContent = 'Alert';
+                                                title.style.cssText = 'color:#dcdcdc;font-size:12px;letter-spacing:0.03em;margin-bottom:8px;text-transform:uppercase;';
+
+                                                const body = document.createElement('pre');
+                                                body.textContent = text || '(empty)';
+                                                body.style.cssText = 'margin:0;color:#bbbbbb;font-size:12px;line-height:1.45;white-space:pre-wrap;word-break:break-word;';
+
+                                                const actionRow = document.createElement('div');
+                                                actionRow.style.cssText = 'display:flex;justify-content:flex-end;margin-top:12px;';
+
+                                                const okBtn = document.createElement('button');
+                                                okBtn.type = 'button';
+                                                okBtn.textContent = 'OK';
+                                                okBtn.style.cssText = [
+                                                    'background:#141414',
+                                                    'color:#dfdfdf',
+                                                    'border:1px solid rgba(255,255,255,0.2)',
+                                                    'border-radius:7px',
+                                                    'padding:6px 12px',
+                                                    'font:inherit',
+                                                    'font-size:12px',
+                                                    'cursor:pointer'
+                                                ].join(';');
+
+                                                const dismiss = () => {
+                                                    if (host.isConnected) host.remove();
+                                                };
+
+                                                host.addEventListener('click', (event) => {
+                                                    if (event.target === host) dismiss();
+                                                });
+                                                okBtn.addEventListener('click', dismiss);
+                                                okBtn.addEventListener('keydown', (event) => {
+                                                    if (event.key === 'Enter' || event.key === ' ') {
+                                                        event.preventDefault();
+                                                        dismiss();
+                                                    }
+                                                });
+
+                                                actionRow.appendChild(okBtn);
+                                                panel.append(title, body, actionRow);
+                                                host.appendChild(panel);
+                                                document.body.appendChild(host);
+                                                okBtn.focus();
+                                            };
+                                        };
+
+                                        installNonBlockingAlert();
 
                                         try {
                                             (0, eval)(userCode);
