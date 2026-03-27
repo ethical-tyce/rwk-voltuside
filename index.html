@@ -92,7 +92,7 @@
             align-items: center;
             justify-content: space-between;
             padding: 1px 12px;
-            background: transparent;
+            background: #060606;
             border-bottom: none;
             -webkit-app-region: drag;
             user-select: none;
@@ -111,7 +111,7 @@
             height: 40px;
             min-height: 35px;
             flex-shrink: 0;
-            background: #000;
+            background: #060606;
             border-bottom: none;
         }
 
@@ -299,7 +299,7 @@
 
         /* Standardized Glass for modal surfaces */
         .modal-content, #modal {
-            background: var(--menu-glass-bg) !important;
+            background: #060606;
             backdrop-filter: blur(var(--menu-glass-blur)) saturate(var(--menu-glass-saturate)) !important;
             -webkit-backdrop-filter: blur(var(--menu-glass-blur)) saturate(var(--menu-glass-saturate)) !important;
             border: 1px solid var(--menu-glass-border) !important;
@@ -342,7 +342,7 @@
             #topbar::after {
                 content: '';
                 position: absolute;
-                right: 324px;
+                right: 409px;
                 top: 0;
                 bottom: 0;
                 width: 10px;
@@ -635,7 +635,7 @@
             padding: 6px 12px;
             border: none;
             cursor: pointer;
-            background: transparent;
+            background: #060606;
             color: #c0c0c0;
             font-size: 16px;
             position: relative;
@@ -2296,17 +2296,39 @@
         }
 
         #clearConsole {
-            width: auto !important;
-            min-width: 66px !important;
+            width: 28px !important;
+            min-width: 28px !important;
             height: 28px !important;
             min-height: 28px !important;
-            padding: 0 12px !important;
-            border-radius: 6px !important;
-            font-size: 11px !important;
-            font-weight: 500;
-            letter-spacing: 0.04em;
-            text-transform: uppercase;
+            padding: 0 !important;
+            margin: 0;
+            border: none !important;
+            border-radius: 0 !important;
+            background: transparent !important;
+            box-shadow: none !important;
+            backdrop-filter: none !important;
+            -webkit-backdrop-filter: none !important;
+            color: #e3e3e3;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
             flex-shrink: 0;
+            cursor: pointer;
+        }
+
+        #clearConsole:hover {
+            color: #ffffff;
+        }
+
+        #clearConsole:active {
+            opacity: 0.9;
+        }
+
+        #clearConsole svg {
+            width: 18px;
+            height: 18px;
+            display: block;
+            pointer-events: none;
         }
 
         .log {
@@ -3852,7 +3874,9 @@
                                 <button id="consoleTerminalTabBtn" class="console-tab-btn" type="button">Terminal</button>
                                 <span id="consoleTabIndicator" aria-hidden="true"></span>
                             </div>
-                            <button id="clearConsole" class="icon-btn">Clear</button>
+                            <button id="clearConsole" type="button" title="Clear Console" aria-label="Clear Console">
+                                <svg xmlns="http://www.w3.org/2000/svg" height="40px" viewBox="0 -960 960 960" width="40px" fill="currentColor" aria-hidden="true" focusable="false"><path d="M682-226.67h198.67V-160H615.33L682-226.67ZM182.67-160l-82.34-84.33q-19.66-19-19.5-46.67.17-27.67 18.5-47l452-484q18.34-19.33 45.88-19.33 27.55 0 46.46 19l203 209.66q19 19 19.66 47 .67 28-18.33 47L508.67-160h-326ZM482-226.67l320.67-342-204-210.66L148-292l64 65.33h270ZM480-480Z"/></svg>
+                            </button>
                         </div>
                         <div id="consolePanels">
                             <div id="console" class="console-panel active"></div>
@@ -11771,3 +11795,6 @@ console.log('Dark mode applied!');`
     </script>
 </body>
 </html>
+
+
+
