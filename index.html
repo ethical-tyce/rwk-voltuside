@@ -2004,15 +2004,16 @@
         }
 
         #consoleTop {
-            padding: 8px 10px;
+            padding: 9px 10px;
             display: flex;
             justify-content: space-between;
             align-items: center;
             gap: 10px;
             color: #9a9a9a;
             font-size: 11px;
-            text-transform: uppercase;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px 10px 0 0;
         }
 
         #consoleTopActions {
@@ -2027,8 +2028,10 @@
             align-items: center;
             gap: 4px;
             position: relative;
-            padding: 0 2px 5px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.14);
+            padding: 2px;
+            border: 1px solid rgba(255, 255, 255, 0.11);
+            background: rgba(0, 0, 0, 0.28);
+            border-radius: 10px;
         }
 
         #consoleTop .console-tab-btn {
@@ -2037,36 +2040,54 @@
             box-shadow: none !important;
             text-shadow: none !important;
             color: #8f8f8f !important;
-            border-radius: 0 !important;
-            padding: 3px 8px 7px !important;
+            border-radius: 8px !important;
+            padding: 5px 10px !important;
             min-height: 0 !important;
-            min-width: 68px;
+            min-width: 96px;
             font-size: 10px !important;
             font-weight: 500 !important;
             text-transform: uppercase;
             letter-spacing: 0.04em;
             cursor: pointer;
             justify-content: center;
-            transition: color 180ms ease !important;
+            gap: 6px;
+            transition: color 180ms ease, background 180ms ease !important;
             transform: none !important;
         }
 
         #consoleTop .console-tab-btn:hover {
             color: #c0c0c0 !important;
+            background: rgba(255, 255, 255, 0.06) !important;
         }
 
         #consoleTop .console-tab-btn.active {
             color: #e1e1e1 !important;
+            background: rgba(255, 255, 255, 0.11) !important;
+        }
+
+        #consoleTop .console-tab-btn svg {
+            width: 14px;
+            height: 14px;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 1.9;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            opacity: 0.82;
+        }
+
+        #consoleTop .console-tab-btn.active svg {
+            opacity: 1;
         }
 
         #consoleTabIndicator {
             position: absolute;
-            bottom: -1px;
+            bottom: 0;
             left: 0;
             width: 0;
             height: 2px;
             border-radius: 999px;
-            background: rgba(235, 235, 235, 0.92);
+            background: rgba(235, 235, 235, 0.82);
             transform: translateX(0);
             opacity: 0;
             transition:
@@ -2393,38 +2414,67 @@
             display: none !important;
         }
 
+        #consoleTopActions #consoleTerminalNewSession,
+        #clearConsole {
+            min-height: 28px !important;
+            border: 1px solid rgba(255, 255, 255, 0.14) !important;
+            border-radius: 8px !important;
+            background: rgba(0, 0, 0, 0.28) !important;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06) !important;
+            color: #d8d8d8;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            cursor: pointer;
+        }
+
+        #consoleTopActions #consoleTerminalNewSession {
+            padding: 0 9px !important;
+            font-size: 11px !important;
+            font-weight: 500;
+            letter-spacing: 0.01em;
+            text-transform: none;
+        }
+
         #clearConsole {
             width: 28px !important;
             min-width: 28px !important;
             height: 28px !important;
-            min-height: 28px !important;
             padding: 0 !important;
             margin: 0;
-            border: none !important;
-            border-radius: 0 !important;
-            background: transparent !important;
-            box-shadow: none !important;
-            backdrop-filter: none !important;
-            -webkit-backdrop-filter: none !important;
-            color: #e3e3e3;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
             flex-shrink: 0;
-            cursor: pointer;
         }
 
+        #consoleTopActions #consoleTerminalNewSession:hover,
         #clearConsole:hover {
             color: #ffffff;
+            background: rgba(255, 255, 255, 0.1) !important;
+            border-color: rgba(255, 255, 255, 0.26) !important;
         }
 
+        #consoleTopActions #consoleTerminalNewSession:active,
         #clearConsole:active {
             opacity: 0.9;
+        }
+
+        #consoleTopActions #consoleTerminalNewSession svg {
+            width: 14px;
+            height: 14px;
+            stroke: currentColor;
+            fill: none;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            stroke-width: 1.9;
+            display: block;
+            pointer-events: none;
         }
 
         #clearConsole svg {
             width: 18px;
             height: 18px;
+            fill: currentColor;
+            stroke: none;
             display: block;
             pointer-events: none;
         }
@@ -4036,12 +4086,35 @@
                     <div id="consoleWrap">
                         <div id="consoleTop">
                             <div id="consoleTabBar">
-                                <button id="consoleOutputTabBtn" class="console-tab-btn active" type="button">Output</button>
-                                <button id="consoleTerminalTabBtn" class="console-tab-btn" type="button">Terminal</button>
+                                <button id="consoleOutputTabBtn" class="console-tab-btn active" type="button">
+                                    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                                        <path d="M4 6h16"></path>
+                                        <path d="M4 12h10"></path>
+                                        <path d="M4 18h13"></path>
+                                    </svg>
+                                    <span>Output</span>
+                                </button>
+                                <button id="consoleTerminalTabBtn" class="console-tab-btn" type="button">
+                                    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                                        <path d="M4 5h16v14H4z"></path>
+                                        <path d="m8 10 2.5 2-2.5 2"></path>
+                                        <path d="M12 14h4"></path>
+                                    </svg>
+                                    <span>Terminal</span>
+                                </button>
                                 <span id="consoleTabIndicator" aria-hidden="true"></span>
                             </div>
                             <div id="consoleTopActions">
-                                <button id="consoleTerminalNewSession" type="button" class="console-session-add" title="New Terminal Session">+ New Shell</button>
+                                <button id="consoleTerminalNewSession" type="button" class="console-session-add" title="New Terminal Session">
+                                    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                                        <path d="M4 5h12v14H4z"></path>
+                                        <path d="m8 10 2 2-2 2"></path>
+                                        <path d="M11 14h2"></path>
+                                        <path d="M19 8v8"></path>
+                                        <path d="M15 12h8"></path>
+                                    </svg>
+                                    <span>New Shell</span>
+                                </button>
                                 <button id="clearConsole" type="button" title="Clear Console" aria-label="Clear Console">
                                     <svg xmlns="http://www.w3.org/2000/svg" height="40px" viewBox="0 -960 960 960" width="40px" fill="currentColor" aria-hidden="true" focusable="false"><path d="M682-226.67h198.67V-160H615.33L682-226.67ZM182.67-160l-82.34-84.33q-19.66-19-19.5-46.67.17-27.67 18.5-47l452-484q18.34-19.33 45.88-19.33 27.55 0 46.46 19l203 209.66q19 19 19.66 47 .67 28-18.33 47L508.67-160h-326ZM482-226.67l320.67-342-204-210.66L148-292l64 65.33h270ZM480-480Z"/></svg>
                                 </button>
