@@ -111,20 +111,29 @@ function normalizeTimeout(inputValue, fallbackMs = 20000) {
     return Math.max(500, Math.min(180000, Math.floor(parsed)));
 }
 
+function getDefaultRuntimeCwd() {
+    const homeDir = typeof os.homedir === 'function' ? String(os.homedir() || '').trim() : '';
+    if (homeDir) {
+        return path.resolve(homeDir);
+    }
+    return path.resolve(process.cwd());
+}
+
 async function resolveRuntimeCwd(inputValue) {
+    const defaultCwd = getDefaultRuntimeCwd();
     const requested = typeof inputValue === 'string' ? inputValue.trim() : '';
-    if (!requested) return process.cwd();
+    if (!requested) return defaultCwd;
 
     const resolved = path.resolve(requested);
     const stat = await fs.stat(resolved).catch(() => null);
     if (stat && stat.isDirectory()) {
         return resolved;
     }
-    return process.cwd();
+    return defaultCwd;
 }
 
 function getRuntimeTrustedRoots() {
-    const roots = new Set([path.resolve(process.cwd())]);
+    const roots = new Set([path.resolve(process.cwd()), getDefaultRuntimeCwd()]);
     for (const root of explorerRoots) {
         if (typeof root === 'string' && root.trim()) {
             roots.add(path.resolve(root));
