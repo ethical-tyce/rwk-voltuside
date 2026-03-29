@@ -68,6 +68,22 @@ contextBridge.exposeInMainWorld('discordRpc', {
 contextBridge.exposeInMainWorld('runtime', {
     runPython: (code, options = {}) => ipcRenderer.invoke('runtime:run-python', code, options),
     runShell: (command, options = {}) => ipcRenderer.invoke('runtime:run-shell', command, options),
+    cmdStart: (options = {}) => ipcRenderer.invoke('runtime:cmd:start', options),
+    cmdWrite: (input = '') => ipcRenderer.invoke('runtime:cmd:write', input),
+    cmdStop: () => ipcRenderer.invoke('runtime:cmd:stop'),
+    cmdStatus: () => ipcRenderer.invoke('runtime:cmd:status'),
+    onCmdData: (callback) => {
+        if (typeof callback !== 'function') return () => { };
+        const handler = (_event, payload) => callback(payload);
+        ipcRenderer.on('runtime:cmd:data', handler);
+        return () => ipcRenderer.removeListener('runtime:cmd:data', handler);
+    },
+    onCmdExit: (callback) => {
+        if (typeof callback !== 'function') return () => { };
+        const handler = (_event, payload) => callback(payload);
+        ipcRenderer.on('runtime:cmd:exit', handler);
+        return () => ipcRenderer.removeListener('runtime:cmd:exit', handler);
+    },
     getPermissions: () => ipcRenderer.invoke('runtime:permissions:get'),
     setPermissions: (options = {}) => ipcRenderer.invoke('runtime:permissions:set', options),
     findInFiles: (options = {}) => ipcRenderer.invoke('runtime:find-in-files', options),

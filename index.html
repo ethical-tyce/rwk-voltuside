@@ -1960,21 +1960,22 @@
 
         /* ---------- CONSOLE ---------- */
         #consoleWrap {
-            height: 140px;
+            height: 132px;
             overflow: hidden;
-            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            border-top: 1px solid rgba(255, 255, 255, 0.07);
             display: flex;
             flex-direction: column;
-            background: #050505;
+            background: #06080d;
             position: absolute;
             left: var(--console-left-offset);
             right: 0;
             bottom: 0;
             z-index: 5;
             opacity: 0;
-            transform: translateY(8px);
+            transform: translateY(6px);
             visibility: hidden;
             pointer-events: none;
+            box-shadow: 0 -10px 28px rgba(0, 0, 0, 0.45);
             transition:
                 opacity 160ms ease,
                 transform 220ms cubic-bezier(0.22, 1, 0.36, 1),
@@ -2004,34 +2005,52 @@
         }
 
         #consoleTop {
-            padding: 9px 10px;
+            padding: 4px 8px;
             display: flex;
-            justify-content: space-between;
             align-items: center;
-            gap: 10px;
-            color: #9a9a9a;
-            font-size: 11px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-            background: rgba(0, 0, 0, 0.3);
-            border-radius: 10px 10px 0 0;
+            gap: 8px;
+            color: #8f8f8f;
+            font-size: 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+            background: #0c0c0c;
+            border-radius: 0;
+            min-height: 30px;
         }
 
-        #consoleTopActions {
+        #consoleTopMain {
+            flex: 1;
+            min-width: 0;
             display: inline-flex;
             align-items: center;
             gap: 6px;
+        }
+
+        #consoleTopActions {
+            display: none;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 6px;
+            min-width: 0;
             flex-shrink: 0;
+            margin-left: auto;
+            padding-left: 8px;
+            border-left: 1px solid rgba(255, 255, 255, 0.1);
+            max-width: 52%;
+        }
+
+        #consoleWrap.terminal-mode #consoleTopActions {
+            display: none;
         }
 
         #consoleTabBar {
-            display: flex;
+            display: inline-flex;
             align-items: center;
-            gap: 4px;
+            gap: 2px;
             position: relative;
-            padding: 2px;
-            border: 1px solid rgba(255, 255, 255, 0.11);
-            background: rgba(0, 0, 0, 0.28);
-            border-radius: 10px;
+            padding: 1px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            background: rgba(255, 255, 255, 0.04);
+            border-radius: 7px;
         }
 
         #consoleTop .console-tab-btn {
@@ -2040,37 +2059,37 @@
             box-shadow: none !important;
             text-shadow: none !important;
             color: #8f8f8f !important;
-            border-radius: 8px !important;
-            padding: 5px 10px !important;
+            border-radius: 6px !important;
+            padding: 3px 8px !important;
             min-height: 0 !important;
-            min-width: 96px;
-            font-size: 10px !important;
+            min-width: 76px;
+            font-size: 9px !important;
             font-weight: 500 !important;
             text-transform: uppercase;
-            letter-spacing: 0.04em;
+            letter-spacing: 0.06em;
             cursor: pointer;
             justify-content: center;
-            gap: 6px;
+            gap: 5px;
             transition: color 180ms ease, background 180ms ease !important;
             transform: none !important;
         }
 
         #consoleTop .console-tab-btn:hover {
-            color: #c0c0c0 !important;
-            background: rgba(255, 255, 255, 0.06) !important;
+            color: #d0d0d0 !important;
+            background: rgba(255, 255, 255, 0.09) !important;
         }
 
         #consoleTop .console-tab-btn.active {
-            color: #e1e1e1 !important;
-            background: rgba(255, 255, 255, 0.11) !important;
+            color: #f0f0f0 !important;
+            background: rgba(255, 255, 255, 0.14) !important;
         }
 
         #consoleTop .console-tab-btn svg {
-            width: 14px;
-            height: 14px;
+            width: 12px;
+            height: 12px;
             stroke: currentColor;
             fill: none;
-            stroke-width: 1.9;
+            stroke-width: 1.8;
             stroke-linecap: round;
             stroke-linejoin: round;
             opacity: 0.82;
@@ -2085,9 +2104,9 @@
             bottom: 0;
             left: 0;
             width: 0;
-            height: 2px;
+            height: 1px;
             border-radius: 999px;
-            background: rgba(235, 235, 235, 0.82);
+            background: rgba(230, 230, 230, 0.88);
             transform: translateX(0);
             opacity: 0;
             transition:
@@ -2106,7 +2125,11 @@
             min-height: 0;
             display: flex;
             position: relative;
-            padding: 8px 10px 10px;
+            padding: 4px 8px 8px;
+        }
+
+        #consoleWrap.terminal-mode #consolePanels {
+            padding: 0;
         }
 
         .console-panel {
@@ -2136,57 +2159,66 @@
         #console {
             flex: 1;
             display: block;
-            padding: 0;
+            padding: 2px 0;
             overflow-y: auto;
             font-family: 'Consolas', monospace;
             font-size: 12px;
-            line-height: 1.35;
+            line-height: 1.25;
+            color: #d4d4d4;
             white-space: pre-wrap;
             word-break: break-word;
         }
 
         #consoleTerminalPanel {
-            display: grid;
+            display: flex;
             flex: 1;
             min-width: 0;
             min-height: 0;
-            grid-template-columns: minmax(0, 1fr) 192px;
-            gap: 10px;
             padding: 0;
-            align-items: stretch;
         }
 
         #consoleTerminalMain {
+            flex: 1;
             min-width: 0;
             min-height: 0;
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            background: rgba(0, 0, 0, 0.26);
+            border: none;
+            border-radius: 0;
+            background: #000000;
             display: flex;
             flex-direction: column;
+            overflow: hidden;
         }
 
         #consoleTerminalOutput {
             flex: 1;
             min-height: 0;
             overflow-y: auto;
-            padding: 8px 10px;
+            padding: 0;
             font-family: 'Consolas', monospace;
             font-size: 12px;
-            line-height: 1.35;
-            color: #b8b8b8;
+            line-height: 1.25;
+            color: #d4d4d4;
             white-space: pre-wrap;
             word-break: break-word;
             cursor: default;
         }
 
+        #consoleTerminalOutput .terminal-stream {
+            margin: 0;
+            white-space: pre-wrap;
+            word-break: break-word;
+            font: inherit;
+            color: inherit;
+        }
+
         #consoleTerminalInputRow {
             display: flex;
-            gap: 6px;
-            align-items: flex-start;
-            min-height: 18px;
-            padding: 0;
-            margin-top: 2px;
-            border: none;
+            gap: 4px;
+            align-items: center;
+            min-height: 16px;
+            padding: 0 0 4px;
+            margin-top: 0;
+            border-top: none;
             background: transparent;
             width: 100%;
         }
@@ -2198,9 +2230,9 @@
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
-            color: #9ab0d2;
+            color: #d4d4d4;
             font-family: 'Consolas', monospace;
-            font-size: 11px;
+            font-size: 12px;
             opacity: 0.95;
         }
 
@@ -2209,15 +2241,15 @@
             min-width: 0;
             background: transparent;
             border: none;
-            color: #d7d7d7;
+            color: #d4d4d4;
             border-radius: 0;
-            min-height: 18px;
-            max-height: 140px;
+            min-height: 16px;
+            max-height: 120px;
             padding: 0;
             font-size: 12px;
             outline: none;
             font-family: 'Consolas', monospace;
-            line-height: 1.3;
+            line-height: 1.2;
             resize: none;
             overflow-y: auto;
             overflow-x: hidden;
@@ -2226,44 +2258,35 @@
         }
 
         #consoleTerminalInput::placeholder {
-            color: rgba(160, 160, 160, 0.45);
-        }
-
-        #consoleTerminalRail {
-            min-width: 0;
-            min-height: 0;
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            background: rgba(255, 255, 255, 0.03);
-            padding: 7px;
-            display: flex;
-            flex-direction: column;
-            gap: 7px;
+            color: rgba(185, 185, 185, 0.36);
         }
 
         #consoleTerminalSessions {
-            flex: 1;
-            min-height: 0;
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-            overflow-y: auto;
-            overflow-x: hidden;
-            scrollbar-width: thin;
+            min-width: 0;
+            display: inline-flex;
+            align-items: center;
+            gap: 0;
+            overflow-x: auto;
+            overflow-y: hidden;
+            scrollbar-width: none;
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.04);
+            max-width: min(48vw, 460px);
+        }
+
+        #consoleTerminalSessions::-webkit-scrollbar {
+            display: none;
         }
 
         .console-session-item {
             display: flex;
             align-items: center;
-            gap: 6px;
             min-width: 0;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            background: rgba(255, 255, 255, 0.03);
-            transition: border-color 150ms ease, background 150ms ease;
+            background: transparent;
         }
 
-        .console-session-item.active {
-            border-color: rgba(255, 255, 255, 0.3);
-            background: rgba(255, 255, 255, 0.11);
+        .console-session-item + .console-session-item {
+            box-shadow: inset 1px 0 0 rgba(255, 255, 255, 0.1);
         }
 
         .console-session-chip {
@@ -2271,9 +2294,9 @@
             min-width: 0;
             border: none;
             background: transparent;
-            color: #c8c8c8;
-            padding: 7px 8px;
-            font-size: 10px;
+            color: #9a9a9a;
+            padding: 4px 9px;
+            font-size: 9px;
             letter-spacing: 0.03em;
             text-transform: uppercase;
             cursor: pointer;
@@ -2282,62 +2305,94 @@
             overflow: hidden;
             text-overflow: ellipsis;
             font-family: 'Consolas', monospace;
+            transition: background 140ms ease, color 140ms ease;
+            outline: none;
+            max-width: 124px;
         }
 
         .console-session-item.active .console-session-chip {
             color: #f2f2f2;
+            background: rgba(255, 255, 255, 0.12);
         }
 
         .console-session-chip:hover {
-            color: #ffffff;
+            color: #dcdcdc;
         }
 
         .console-session-close {
-            width: 20px;
-            min-width: 20px;
-            height: 20px;
-            margin-right: 4px;
+            width: 0;
+            min-width: 0;
+            height: 16px;
+            margin-right: 0;
             border: none;
             background: transparent;
-            color: #adadad;
+            color: #a6a6a6;
             cursor: pointer;
-            font-size: 11px;
+            font-size: 12px;
             line-height: 1;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            border-radius: 2px;
+            border-radius: 4px;
+            opacity: 0;
+            overflow: hidden;
+            pointer-events: none;
+            transition: opacity 140ms ease, width 140ms ease, margin-right 140ms ease, color 140ms ease;
+            padding: 0;
+        }
+
+        .console-session-item:hover .console-session-close,
+        .console-session-item.active .console-session-close {
+            width: 14px;
+            min-width: 14px;
+            margin-right: 4px;
+            opacity: 0.72;
+            pointer-events: auto;
         }
 
         .console-session-close:hover {
-            background: rgba(255, 255, 255, 0.1);
-            color: #f3f3f3;
+            color: #f5f5f5;
+            opacity: 1;
         }
 
         .console-session-close:disabled {
             opacity: 0.35;
             cursor: not-allowed;
             background: transparent;
+            width: 0;
+            min-width: 0;
+            margin-right: 0;
+            pointer-events: none;
         }
 
         .console-session-add {
-            min-height: 26px;
-            border: 1px solid rgba(255, 255, 255, 0.16);
+            width: 22px;
+            min-width: 22px;
+            height: 22px;
+            min-height: 22px;
+            border: none;
+            border-radius: 6px;
             background: rgba(255, 255, 255, 0.06);
-            color: #d8d8d8;
+            color: #a0a0a0;
             cursor: pointer;
             font-size: 10px;
             line-height: 1;
-            letter-spacing: 0.04em;
-            text-transform: uppercase;
-            padding: 7px 9px;
+            letter-spacing: 0;
+            text-transform: none;
+            padding: 0;
             font-family: 'Consolas', monospace;
             text-align: center;
             white-space: nowrap;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            outline: none;
+            transition: color 140ms ease, background 140ms ease;
         }
 
         .console-session-add:hover {
-            background: rgba(255, 255, 255, 0.11);
+            background: rgba(255, 255, 255, 0.12);
             color: #f0f0f0;
         }
 
@@ -2346,7 +2401,7 @@
         }
 
         #consoleWrap.terminal-mode #consoleTerminalNewSession {
-            display: inline-flex;
+            display: none;
         }
 
         .workspace-modal-grid {
@@ -2405,8 +2460,15 @@
         }
 
         @media (max-width: 980px) {
-            #consoleTerminalPanel {
-                grid-template-columns: minmax(0, 1fr) 160px;
+            #consoleTopActions {
+                max-width: 56%;
+                gap: 4px;
+                padding-left: 6px;
+            }
+
+            .console-session-chip {
+                max-width: 88px;
+                padding: 4px 7px;
             }
         }
 
@@ -2414,65 +2476,49 @@
             display: none !important;
         }
 
-        #consoleTopActions #consoleTerminalNewSession,
         #clearConsole {
-            min-height: 28px !important;
-            border: 1px solid rgba(255, 255, 255, 0.14) !important;
-            border-radius: 8px !important;
-            background: rgba(0, 0, 0, 0.28) !important;
-            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06) !important;
-            color: #d8d8d8;
+            width: 22px !important;
+            min-width: 22px !important;
+            height: 22px !important;
+            min-height: 22px !important;
+            border: none !important;
+            border-radius: 6px !important;
+            background: transparent !important;
+            color: #9a9a9a;
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            gap: 6px;
-            cursor: pointer;
-        }
-
-        #consoleTopActions #consoleTerminalNewSession {
-            padding: 0 9px !important;
-            font-size: 11px !important;
-            font-weight: 500;
-            letter-spacing: 0.01em;
-            text-transform: none;
-        }
-
-        #clearConsole {
-            width: 28px !important;
-            min-width: 28px !important;
-            height: 28px !important;
             padding: 0 !important;
             margin: 0;
             flex-shrink: 0;
+            cursor: pointer;
+            transition: color 140ms ease, background 140ms ease;
         }
 
-        #consoleTopActions #consoleTerminalNewSession:hover,
         #clearConsole:hover {
-            color: #ffffff;
-            background: rgba(255, 255, 255, 0.1) !important;
-            border-color: rgba(255, 255, 255, 0.26) !important;
+            color: #f0f0f0;
+            background: rgba(255, 255, 255, 0.08) !important;
         }
 
-        #consoleTopActions #consoleTerminalNewSession:active,
         #clearConsole:active {
             opacity: 0.9;
         }
 
         #consoleTopActions #consoleTerminalNewSession svg {
-            width: 14px;
-            height: 14px;
+            width: 12px;
+            height: 12px;
             stroke: currentColor;
             fill: none;
             stroke-linecap: round;
             stroke-linejoin: round;
-            stroke-width: 1.9;
+            stroke-width: 1.8;
             display: block;
             pointer-events: none;
         }
 
         #clearConsole svg {
-            width: 18px;
-            height: 18px;
+            width: 14px;
+            height: 14px;
             fill: currentColor;
             stroke: none;
             display: block;
@@ -2480,21 +2526,21 @@
         }
 
         .log {
-            color: #909090;
+            color: #d4d4d4;
         }
 
         .warn {
-            color: #b0b0b0;
+            color: #d4d4d4;
         }
 
         .error {
-            color: #c0c0c0;
+            color: #d4d4d4;
         }
 
         .entry {
             display: block;
             width: 100%;
-            margin-bottom: 4px;
+            margin-bottom: 0;
         }
 
         ::-webkit-scrollbar {
@@ -4085,38 +4131,37 @@
 
                     <div id="consoleWrap">
                         <div id="consoleTop">
-                            <div id="consoleTabBar">
-                                <button id="consoleOutputTabBtn" class="console-tab-btn active" type="button">
-                                    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                                        <path d="M4 6h16"></path>
-                                        <path d="M4 12h10"></path>
-                                        <path d="M4 18h13"></path>
-                                    </svg>
-                                    <span>Output</span>
-                                </button>
-                                <button id="consoleTerminalTabBtn" class="console-tab-btn" type="button">
-                                    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                                        <path d="M4 5h16v14H4z"></path>
-                                        <path d="m8 10 2.5 2-2.5 2"></path>
-                                        <path d="M12 14h4"></path>
-                                    </svg>
-                                    <span>Terminal</span>
-                                </button>
-                                <span id="consoleTabIndicator" aria-hidden="true"></span>
-                            </div>
-                            <div id="consoleTopActions">
-                                <button id="consoleTerminalNewSession" type="button" class="console-session-add" title="New Terminal Session">
-                                    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                                        <path d="M4 5h12v14H4z"></path>
-                                        <path d="m8 10 2 2-2 2"></path>
-                                        <path d="M11 14h2"></path>
-                                        <path d="M19 8v8"></path>
-                                        <path d="M15 12h8"></path>
-                                    </svg>
-                                    <span>New Shell</span>
-                                </button>
+                            <div id="consoleTopMain">
+                                <div id="consoleTabBar">
+                                    <button id="consoleOutputTabBtn" class="console-tab-btn active" type="button">
+                                        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                                            <path d="M4 6h16"></path>
+                                            <path d="M4 12h10"></path>
+                                            <path d="M4 18h13"></path>
+                                        </svg>
+                                        <span>Output</span>
+                                    </button>
+                                    <button id="consoleTerminalTabBtn" class="console-tab-btn" type="button">
+                                        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                                            <path d="M4 5h16v14H4z"></path>
+                                            <path d="m8 10 2.5 2-2.5 2"></path>
+                                            <path d="M12 14h4"></path>
+                                        </svg>
+                                        <span>Terminal</span>
+                                    </button>
+                                    <span id="consoleTabIndicator" aria-hidden="true"></span>
+                                </div>
                                 <button id="clearConsole" type="button" title="Clear Console" aria-label="Clear Console">
                                     <svg xmlns="http://www.w3.org/2000/svg" height="40px" viewBox="0 -960 960 960" width="40px" fill="currentColor" aria-hidden="true" focusable="false"><path d="M682-226.67h198.67V-160H615.33L682-226.67ZM182.67-160l-82.34-84.33q-19.66-19-19.5-46.67.17-27.67 18.5-47l452-484q18.34-19.33 45.88-19.33 27.55 0 46.46 19l203 209.66q19 19 19.66 47 .67 28-18.33 47L508.67-160h-326ZM482-226.67l320.67-342-204-210.66L148-292l64 65.33h270ZM480-480Z"/></svg>
+                                </button>
+                            </div>
+                            <div id="consoleTopActions">
+                                <div id="consoleTerminalSessions"></div>
+                                <button id="consoleTerminalNewSession" type="button" class="console-session-add" title="New Terminal Session" aria-label="New Terminal Session">
+                                    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                                        <path d="M12 5v14"></path>
+                                        <path d="M5 12h14"></path>
+                                    </svg>
                                 </button>
                             </div>
                         </div>
@@ -4129,9 +4174,6 @@
                                         <span id="consoleTerminalPrompt" aria-hidden="true"></span>
                                         <textarea id="consoleTerminalInput" spellcheck="false" autocomplete="off" rows="1" placeholder=""></textarea>
                                     </div>
-                                </div>
-                                <div id="consoleTerminalRail">
-                                    <div id="consoleTerminalSessions"></div>
                                 </div>
                             </div>
                         </div>
@@ -4399,7 +4441,11 @@ throw "Chrome executable not found."
         const consoleTerminalNewSessionBtn = document.getElementById("consoleTerminalNewSession");
         const consoleWrapRootEl = document.getElementById("consoleWrap");
         let activeConsoleTab = 'output';
-        let consoleTerminalRunning = false;
+        let cmdTerminalRunning = false;
+        let cmdTerminalStarting = false;
+        let cmdTerminalFailed = false;
+        let detachCmdDataListener = null;
+        let detachCmdExitListener = null;
         let terminalLastCwd = '';
         const TERMINAL_SESSION_STORAGE_KEY = 'voltus.terminal.sessions.v1';
         const TERMINAL_SESSION_VERSION = 1;
@@ -4591,19 +4637,18 @@ console.log('Dark mode applied!');`
             consoleEl.scrollTop = consoleEl.scrollHeight;
         }
 
-        function buildTerminalSessionName(index) {
-            return `Shell ${Math.max(1, Number(index) || 1)}`;
+        function buildTerminalSessionName() {
+            return 'cmd.exe';
         }
 
         function createTerminalSession(name = '') {
-            const nextIndex = terminalSessions.length + 1;
             return {
                 id: `term-${Date.now()}-${Math.random().toString(16).slice(2, 8)}`,
-                name: String(name || buildTerminalSessionName(nextIndex)),
+                name: String(name || buildTerminalSessionName()),
                 cwd: '',
                 history: [],
                 historyIndex: 0,
-                lines: []
+                buffer: ''
             };
         }
 
@@ -4617,88 +4662,72 @@ console.log('Dark mode applied!');`
             let session = getTerminalSessionById(activeTerminalSessionId);
             if (!session) {
                 if (!terminalSessions.length) {
-                    terminalSessions.push(createTerminalSession('Main'));
+                    terminalSessions.push(createTerminalSession('cmd.exe'));
                 }
                 session = terminalSessions[0];
                 activeTerminalSessionId = session.id;
             }
+            session.name = 'cmd.exe';
             return session;
         }
 
         function persistTerminalSessions() {
             try {
+                const session = getActiveTerminalSession();
                 const payload = {
                     version: TERMINAL_SESSION_VERSION,
-                    activeTerminalSessionId,
-                    sessions: terminalSessions.slice(0, 8).map((session) => ({
+                    activeTerminalSessionId: String(session.id || ''),
+                    sessions: [{
                         id: String(session.id || ''),
-                        name: String(session.name || 'Shell'),
+                        name: 'cmd.exe',
                         cwd: String(session.cwd || ''),
                         history: Array.isArray(session.history) ? session.history.slice(-120) : [],
-                        lines: Array.isArray(session.lines) ? session.lines.slice(-300) : []
-                    }))
+                        buffer: String(session.buffer || '')
+                    }]
                 };
                 localStorage.setItem(TERMINAL_SESSION_STORAGE_KEY, JSON.stringify(payload));
             } catch { }
         }
 
         function hydrateTerminalSessions() {
-            let restored = false;
+            terminalSessions.length = 0;
+            activeTerminalSessionId = '';
+            const next = createTerminalSession('cmd.exe');
             try {
                 const raw = localStorage.getItem(TERMINAL_SESSION_STORAGE_KEY);
-                if (!raw) throw new Error('empty');
-                const parsed = JSON.parse(raw);
-                if (!parsed || parsed.version !== TERMINAL_SESSION_VERSION || !Array.isArray(parsed.sessions)) {
-                    throw new Error('invalid');
+                if (raw) {
+                    const parsed = JSON.parse(raw);
+                    if (parsed && parsed.version === TERMINAL_SESSION_VERSION && Array.isArray(parsed.sessions) && parsed.sessions.length) {
+                        const sessionValue = parsed.sessions[0] || {};
+                        next.cwd = String(sessionValue && sessionValue.cwd ? sessionValue.cwd : '');
+                        next.history = Array.isArray(sessionValue && sessionValue.history)
+                            ? sessionValue.history.map((value) => String(value || '')).filter(Boolean).slice(-120)
+                            : [];
+                        next.historyIndex = next.history.length;
+                        next.buffer = typeof (sessionValue && sessionValue.buffer) === 'string'
+                            ? sessionValue.buffer
+                            : (Array.isArray(sessionValue && sessionValue.lines)
+                                ? sessionValue.lines
+                                    .map((entry) => String(entry && entry.text ? entry.text : ''))
+                                    .join('\n')
+                                : '');
+                    }
                 }
-
-                parsed.sessions.slice(0, 8).forEach((sessionValue, idx) => {
-                    const next = createTerminalSession(buildTerminalSessionName(idx + 1));
-                    next.id = String(sessionValue && sessionValue.id ? sessionValue.id : next.id);
-                    next.name = String(sessionValue && sessionValue.name ? sessionValue.name : next.name);
-                    next.cwd = String(sessionValue && sessionValue.cwd ? sessionValue.cwd : '');
-                    next.history = Array.isArray(sessionValue && sessionValue.history)
-                        ? sessionValue.history.map((value) => String(value || '')).filter(Boolean).slice(-120)
-                        : [];
-                    next.historyIndex = next.history.length;
-                    next.lines = Array.isArray(sessionValue && sessionValue.lines)
-                        ? sessionValue.lines
-                            .map((entry) => ({
-                                type: String(entry && entry.type ? entry.type : 'log'),
-                                text: String(entry && entry.text ? entry.text : '')
-                            }))
-                            .slice(-300)
-                        : [];
-                    terminalSessions.push(next);
-                });
-
-                activeTerminalSessionId = String(parsed.activeTerminalSessionId || '');
-                restored = terminalSessions.length > 0;
             } catch {
-                terminalSessions.length = 0;
-                activeTerminalSessionId = '';
             }
-
-            if (!restored) {
-                terminalSessions.push(createTerminalSession('Main'));
-                activeTerminalSessionId = terminalSessions[0].id;
-            }
+            next.name = 'cmd.exe';
+            terminalSessions.push(next);
+            activeTerminalSessionId = next.id;
         }
 
         function renderActiveTerminalOutput() {
             if (!consoleTerminalOutputEl) return;
             const session = getActiveTerminalSession();
             consoleTerminalOutputEl.innerHTML = '';
-            const fragment = document.createDocumentFragment();
-
-            session.lines.forEach((entry) => {
-                const row = document.createElement('div');
-                row.className = `entry ${String(entry && entry.type ? entry.type : 'log')}`;
-                row.textContent = String(entry && entry.text ? entry.text : '');
-                fragment.appendChild(row);
-            });
-
-            consoleTerminalOutputEl.appendChild(fragment);
+            const stream = document.createElement('pre');
+            stream.className = 'terminal-stream';
+            stream.textContent = String(session.buffer || '');
+            consoleTerminalOutputEl.appendChild(stream);
             if (consoleTerminalInputRowEl) {
                 consoleTerminalOutputEl.appendChild(consoleTerminalInputRowEl);
             }
@@ -4707,99 +4736,47 @@ console.log('Dark mode applied!');`
         }
 
         function closeTerminalSession(sessionId) {
-            const targetId = String(sessionId || '');
-            if (!targetId) return;
-            if (consoleTerminalRunning) return;
-
-            if (terminalSessions.length <= 1) {
-                return;
-            }
-
-            const removeIndex = terminalSessions.findIndex((item) => item && item.id === targetId);
-            if (removeIndex < 0) return;
-            const removedWasActive = targetId === activeTerminalSessionId;
-            terminalSessions.splice(removeIndex, 1);
-
-            if (removedWasActive) {
-                const fallbackIndex = Math.max(0, removeIndex - 1);
-                const fallback = terminalSessions[fallbackIndex] || terminalSessions[0];
-                activeTerminalSessionId = fallback ? String(fallback.id || '') : '';
-            }
-
-            renderTerminalSessionTabs();
-            renderActiveTerminalOutput();
-            updateTerminalPrompt();
-            persistTerminalSessions();
+            void sessionId;
+            return;
         }
 
         function renderTerminalSessionTabs() {
             if (!consoleTerminalSessionsEl) return;
             consoleTerminalSessionsEl.innerHTML = '';
-            terminalSessions.forEach((session) => {
-                const item = document.createElement('div');
-                const isActive = session.id === activeTerminalSessionId;
-                item.className = 'console-session-item' + (isActive ? ' active' : '');
+        }
 
-                const btn = document.createElement('button');
-                btn.type = 'button';
-                btn.className = 'console-session-chip';
-                btn.textContent = String(session.name || 'Shell');
-                btn.title = session.cwd || session.name || 'Shell';
-                btn.onclick = () => {
-                    activeTerminalSessionId = session.id;
-                    const active = getActiveTerminalSession();
-                    active.historyIndex = Array.isArray(active.history) ? active.history.length : 0;
-                    renderTerminalSessionTabs();
-                    renderActiveTerminalOutput();
-                    updateTerminalPrompt();
-                    persistTerminalSessions();
-                    if (consoleTerminalInputEl && activeConsoleTab === 'terminal') {
-                        consoleTerminalInputEl.focus();
-                    }
-                };
+        function trimTerminalSessionBuffer(session) {
+            if (!session) return;
+            const raw = String(session.buffer || '');
+            const lines = raw.split('\n');
+            if (lines.length <= TERMINAL_MAX_LINES_PER_SESSION) return;
+            session.buffer = lines.slice(lines.length - TERMINAL_MAX_LINES_PER_SESSION).join('\n');
+        }
 
-                const closeBtn = document.createElement('button');
-                closeBtn.type = 'button';
-                closeBtn.className = 'console-session-close';
-                closeBtn.textContent = 'x';
-                closeBtn.title = `Close ${String(session.name || 'Shell')}`;
-                closeBtn.setAttribute('aria-label', `Close ${String(session.name || 'Shell')}`);
-                closeBtn.disabled = terminalSessions.length <= 1 || consoleTerminalRunning;
-                closeBtn.onclick = (event) => {
-                    event.stopPropagation();
-                    closeTerminalSession(session.id);
-                };
-
-                item.appendChild(btn);
-                item.appendChild(closeBtn);
-                consoleTerminalSessionsEl.appendChild(item);
-            });
+        function refreshTerminalStreamInView() {
+            if (!consoleTerminalOutputEl) return;
+            const session = getActiveTerminalSession();
+            const stream = consoleTerminalOutputEl.querySelector('.terminal-stream');
+            if (stream) {
+                stream.textContent = String(session.buffer || '');
+                consoleTerminalOutputEl.scrollTop = consoleTerminalOutputEl.scrollHeight;
+            } else {
+                renderActiveTerminalOutput();
+            }
         }
 
         function appendTerminalLine(type, text) {
             const session = getActiveTerminalSession();
-            const line = {
-                type: String(type || 'log'),
-                text: `[${new Date().toLocaleTimeString()}] ${String(text || '')}`
-            };
-            session.lines.push(line);
-            if (session.lines.length > TERMINAL_MAX_LINES_PER_SESSION) {
-                session.lines.splice(0, session.lines.length - TERMINAL_MAX_LINES_PER_SESSION);
-            }
+            const lineType = String(type || 'log');
+            const normalized = String(text || '');
+            session.buffer = String(session.buffer || '') + normalized + '\n';
+            trimTerminalSessionBuffer(session);
 
             if (activeConsoleTab === 'terminal' && activeTerminalSessionId === session.id && consoleTerminalOutputEl) {
-                const row = document.createElement('div');
-                row.className = `entry ${line.type}`;
-                row.textContent = line.text;
-                if (consoleTerminalInputRowEl && consoleTerminalInputRowEl.parentElement === consoleTerminalOutputEl) {
-                    consoleTerminalOutputEl.insertBefore(row, consoleTerminalInputRowEl);
-                } else {
-                    consoleTerminalOutputEl.appendChild(row);
-                }
-                consoleTerminalOutputEl.scrollTop = consoleTerminalOutputEl.scrollHeight;
+                refreshTerminalStreamInView();
             }
 
-            if (problemMatcherEnabled && (line.type === 'error' || line.type === 'warn') && typeof collectRuntimeProblemFromLine === 'function') {
+            if (problemMatcherEnabled && (lineType === 'error' || lineType === 'warn') && typeof collectRuntimeProblemFromLine === 'function') {
                 collectRuntimeProblemFromLine(String(text || ''), session.cwd || getPreferredRuntimeCwd());
             }
         }
@@ -4809,12 +4786,75 @@ console.log('Dark mode applied!');`
             persistTerminalSessions();
         }
 
+        function parseCmdPromptLine(value) {
+            const line = String(value || '').replace(/\s+$/g, '');
+            const match = line.match(/^([A-Za-z]:\\.*)>\s*$/);
+            if (!match) return '';
+            const cwd = String(match[1] || '').trim();
+            return cwd.replace(/[\\/]+$/g, '') || cwd;
+        }
+
+        function appendTerminalChunk(chunkText) {
+            const session = getActiveTerminalSession();
+            const normalizedChunk = String(chunkText || '')
+                .replace(/\r\n/g, '\n')
+                .replace(/\r/g, '');
+            if (!normalizedChunk) return;
+
+            const sourceLines = normalizedChunk.split('\n');
+            const keptLines = [];
+            for (const rawLine of sourceLines) {
+                const line = String(rawLine || '');
+                const promptCwd = parseCmdPromptLine(line);
+                if (promptCwd) {
+                    session.cwd = promptCwd;
+                    terminalLastCwd = promptCwd;
+                    continue;
+                }
+                keptLines.push(line);
+            }
+
+            const trailingPromptCwd = sourceLines.length
+                ? parseCmdPromptLine(sourceLines[sourceLines.length - 1])
+                : '';
+            let filteredChunk = keptLines.join('\n');
+            if (trailingPromptCwd && filteredChunk && !filteredChunk.endsWith('\n')) {
+                filteredChunk += '\n';
+            }
+
+            if (filteredChunk) {
+                session.buffer = String(session.buffer || '') + filteredChunk;
+                trimTerminalSessionBuffer(session);
+            }
+
+            if (problemMatcherEnabled && typeof collectRuntimeProblemFromLine === 'function') {
+                filteredChunk.split('\n').forEach((line) => {
+                    if (!line) return;
+                    collectRuntimeProblemFromLine(line, session.cwd || getPreferredRuntimeCwd());
+                });
+            }
+
+            if (activeConsoleTab === 'terminal') {
+                refreshTerminalStreamInView();
+            }
+            persistTerminalSessions();
+        }
+
         function getTerminalPromptPrefix() {
             const session = getActiveTerminalSession();
+            const currentBuffer = String(session.buffer || '');
+            const lastLine = currentBuffer.split('\n').pop() || '';
+            const trimmedLastLine = lastLine.trim();
+            if (/^[A-Za-z]:\\.*>$/.test(trimmedLastLine)) {
+                const cwdFromPrompt = trimmedLastLine.slice(0, -1);
+                session.cwd = cwdFromPrompt;
+                terminalLastCwd = cwdFromPrompt;
+                return trimmedLastLine;
+            }
             const cwd = String(getPreferredRuntimeCwd() || session.cwd || terminalLastCwd || '').trim();
             const normalized = cwd.replace(/[\\/]+$/, '');
-            if (!normalized) return '[unknown-cwd]>';
-            return `[${normalized}]>`;
+            if (!normalized) return 'C:\\>';
+            return `${normalized}>`;
         }
 
         async function ensureTerminalCwdResolved() {
@@ -4831,12 +4871,12 @@ console.log('Dark mode applied!');`
                 return session.cwd;
             }
 
-            if (!window.runtime || typeof window.runtime.runShell !== 'function') {
+            if (!window.runtime || typeof window.runtime.cmdStatus !== 'function') {
                 return session.cwd;
             }
 
             try {
-                const probe = await window.runtime.runShell('', { timeoutMs: 5000 });
+                const probe = await window.runtime.cmdStatus();
                 const detected = String(probe && probe.cwd ? probe.cwd : '').trim();
                 if (detected) {
                     session.cwd = detected;
@@ -4847,11 +4887,74 @@ console.log('Dark mode applied!');`
             return session.cwd;
         }
 
+        function bindCmdTerminalStreams() {
+            if (!window.runtime) return;
+            if (!detachCmdDataListener && typeof window.runtime.onCmdData === 'function') {
+                detachCmdDataListener = window.runtime.onCmdData((payload) => {
+                    const data = payload && Object.prototype.hasOwnProperty.call(payload, 'data')
+                        ? String(payload.data || '')
+                        : '';
+                    if (!data) return;
+                    appendTerminalChunk(data);
+                    updateTerminalPrompt();
+                });
+            }
+            if (!detachCmdExitListener && typeof window.runtime.onCmdExit === 'function') {
+                detachCmdExitListener = window.runtime.onCmdExit((payload) => {
+                    cmdTerminalRunning = false;
+                    cmdTerminalStarting = false;
+                    const reason = String(payload && payload.reason ? payload.reason : 'exit');
+                    if (reason === 'error') {
+                        const message = String(payload && payload.error ? payload.error : 'cmd.exe terminated unexpectedly.');
+                        pushTerminalLine('error', message);
+                    }
+                    updateTerminalPrompt();
+                });
+            }
+        }
+
+        async function startCmdTerminalSession() {
+            if (cmdTerminalRunning || cmdTerminalStarting) return true;
+            if (!window.runtime || typeof window.runtime.cmdStart !== 'function') {
+                if (!cmdTerminalFailed) {
+                    showToast('Persistent CMD terminal API unavailable');
+                    cmdTerminalFailed = true;
+                }
+                return false;
+            }
+
+            cmdTerminalStarting = true;
+            try {
+                bindCmdTerminalStreams();
+                const session = getActiveTerminalSession();
+                const preferredCwd = String(getPreferredRuntimeCwd() || session.cwd || terminalLastCwd || '').trim();
+                const result = await window.runtime.cmdStart({ cwd: preferredCwd });
+                cmdTerminalRunning = Boolean(result && result.running);
+                cmdTerminalFailed = false;
+                const resolvedCwd = String(result && result.cwd ? result.cwd : '').trim();
+                if (resolvedCwd) {
+                    session.cwd = resolvedCwd;
+                    terminalLastCwd = resolvedCwd;
+                }
+                updateTerminalPrompt();
+                return cmdTerminalRunning;
+            } catch (error) {
+                cmdTerminalRunning = false;
+                cmdTerminalFailed = true;
+                const message = error && error.message ? error.message : String(error);
+                pushTerminalLine('error', message);
+                return false;
+            } finally {
+                cmdTerminalStarting = false;
+            }
+        }
+
         function updateTerminalPrompt() {
             if (!consoleTerminalPromptEl) return;
             const session = getActiveTerminalSession();
-            const cwd = String(getPreferredRuntimeCwd() || session.cwd || terminalLastCwd || '').trim();
             const prompt = getTerminalPromptPrefix();
+            const promptCwd = prompt.endsWith('>') ? prompt.slice(0, -1) : '';
+            const cwd = String(promptCwd || session.cwd || terminalLastCwd || getPreferredRuntimeCwd() || '').trim();
             consoleTerminalPromptEl.textContent = prompt;
             consoleTerminalPromptEl.title = cwd || prompt;
         }
@@ -4874,9 +4977,8 @@ console.log('Dark mode applied!');`
                 consoleTabIndicator.classList.remove('ready');
             }
             if (nextTab === 'terminal') {
-                void ensureTerminalCwdResolved().finally(() => {
-                    updateTerminalPrompt();
-                });
+                void ensureTerminalCwdResolved();
+                void startCmdTerminalSession();
                 updateTerminalPrompt();
                 if (consoleTerminalInputEl) {
                     requestAnimationFrame(() => {
@@ -4918,7 +5020,7 @@ console.log('Dark mode applied!');`
         function syncTerminalInputHeight() {
             if (!consoleTerminalInputEl) return;
             consoleTerminalInputEl.style.height = 'auto';
-            const measured = Math.max(18, Math.min(140, Number(consoleTerminalInputEl.scrollHeight) || 18));
+            const measured = Math.max(16, Math.min(120, Number(consoleTerminalInputEl.scrollHeight) || 16));
             consoleTerminalInputEl.style.height = `${measured}px`;
             if (consoleTerminalOutputEl && consoleTerminalInputRowEl && consoleTerminalInputRowEl.parentElement === consoleTerminalOutputEl) {
                 consoleTerminalOutputEl.scrollTop = consoleTerminalOutputEl.scrollHeight;
@@ -4926,71 +5028,44 @@ console.log('Dark mode applied!');`
         }
 
         async function runConsoleTerminalCommand() {
-            if (!consoleTerminalInputEl || consoleTerminalRunning) return;
+            if (!consoleTerminalInputEl) return;
             const session = getActiveTerminalSession();
-            const command = String(consoleTerminalInputEl.value || '').trim();
-            if (!command) return;
+            const commandRaw = String(consoleTerminalInputEl.value || '');
+            const command = commandRaw.trim();
 
-            if (!window.runtime || typeof window.runtime.runShell !== 'function') {
+            if (!window.runtime || typeof window.runtime.cmdWrite !== 'function') {
                 showToast('Terminal API unavailable');
                 return;
             }
 
-            const cwd = String(getPreferredRuntimeCwd() || session.cwd || terminalLastCwd || '').trim();
-            if (cwd) {
-                session.cwd = cwd;
-                terminalLastCwd = cwd;
-                updateTerminalPrompt();
-            }
+            const started = await startCmdTerminalSession();
+            if (!started) return;
+
             if (!Array.isArray(session.history)) {
                 session.history = [];
             }
-            session.history.push(command);
-            if (session.history.length > 120) {
-                session.history.shift();
+            if (command) {
+                session.history.push(command);
+                if (session.history.length > 120) {
+                    session.history.shift();
+                }
             }
             session.historyIndex = session.history.length;
             consoleTerminalInputEl.value = '';
             syncTerminalInputHeight();
-            consoleTerminalRunning = true;
-            renderTerminalSessionTabs();
-            consoleTerminalInputEl.disabled = true;
-            clearRuntimeProblems();
-
-            pushTerminalLine('log', `${getTerminalPromptPrefix()} ${command}`);
+            const promptPrefix = getTerminalPromptPrefix();
+            appendTerminalLine('log', `${promptPrefix}${commandRaw}`);
 
             try {
-                const result = await window.runtime.runShell(command, { cwd, timeoutMs: 60000 });
-                if (result && result.cwd) {
-                    session.cwd = String(result.cwd);
-                    terminalLastCwd = session.cwd;
-                    updateTerminalPrompt();
-                }
-
-                const stdout = String(result && result.stdout ? result.stdout : '');
-                const stderr = String(result && result.stderr ? result.stderr : '');
-                const exitCode = Number.isFinite(Number(result && result.exitCode))
-                    ? Number(result.exitCode)
-                    : 0;
-
-                stdout.replace(/\r\n/g, '\n').split('\n').forEach((line) => {
-                    if (!line) return;
-                    pushTerminalLine('log', line);
-                });
-                stderr.replace(/\r\n/g, '\n').split('\n').forEach((line) => {
-                    if (!line) return;
-                    pushTerminalLine('error', line);
-                });
-                pushTerminalLine(exitCode === 0 ? 'log' : 'warn', `(exit ${exitCode})`);
+                await window.runtime.cmdWrite(commandRaw + '\r\n');
             } catch (error) {
                 pushTerminalLine('error', error && error.message ? error.message : String(error));
-            } finally {
-                consoleTerminalRunning = false;
-                renderTerminalSessionTabs();
-                consoleTerminalInputEl.disabled = false;
-                consoleTerminalInputEl.focus();
-                persistTerminalSessions();
+                cmdTerminalRunning = false;
             }
+            if (consoleTerminalInputEl) {
+                consoleTerminalInputEl.focus();
+            }
+            persistTerminalSessions();
         }
 
         function showToast(message) {
@@ -5034,7 +5109,7 @@ console.log('Dark mode applied!');`
         document.getElementById("clearConsole").onclick = () => {
             if (activeConsoleTab === 'terminal') {
                 const session = getActiveTerminalSession();
-                session.lines = [];
+                session.buffer = '';
                 renderActiveTerminalOutput();
                 clearRuntimeProblems();
                 persistTerminalSessions();
@@ -5102,31 +5177,33 @@ console.log('Dark mode applied!');`
             });
         }
         hydrateTerminalSessions();
+        bindCmdTerminalStreams();
         renderTerminalSessionTabs();
         renderActiveTerminalOutput();
         if (consoleTerminalNewSessionBtn) {
-            consoleTerminalNewSessionBtn.onclick = () => {
-                if (terminalSessions.length >= 8) {
-                    showToast('Terminal session limit reached (8)');
-                    return;
-                }
-                const next = createTerminalSession();
-                terminalSessions.push(next);
-                activeTerminalSessionId = next.id;
-                renderTerminalSessionTabs();
-                renderActiveTerminalOutput();
-                updateTerminalPrompt();
-                persistTerminalSessions();
-                if (consoleTerminalInputEl) {
-                    consoleTerminalInputEl.focus();
-                    syncTerminalInputHeight();
-                }
-            };
+            consoleTerminalNewSessionBtn.style.display = 'none';
+            consoleTerminalNewSessionBtn.disabled = true;
+            consoleTerminalNewSessionBtn.onclick = null;
         }
-        void ensureTerminalCwdResolved().finally(() => {
+        void (async () => {
+            await ensureTerminalCwdResolved();
+            if (window.runtime && typeof window.runtime.cmdStatus === 'function') {
+                try {
+                    const status = await window.runtime.cmdStatus();
+                    cmdTerminalRunning = Boolean(status && status.running);
+                    const detectedCwd = String(status && status.cwd ? status.cwd : '').trim();
+                    if (detectedCwd) {
+                        const session = getActiveTerminalSession();
+                        session.cwd = detectedCwd;
+                        terminalLastCwd = detectedCwd;
+                    }
+                } catch {
+                    cmdTerminalRunning = false;
+                }
+            }
             updateTerminalPrompt();
             syncTerminalInputHeight();
-        });
+        })();
         setConsoleTab('output');
 
         let editor;
@@ -10117,6 +10194,17 @@ console.log('Dark mode applied!');`
             persistTabSession();
             persistExplorerSession();
             persistTerminalSessions();
+            if (typeof detachCmdDataListener === 'function') {
+                detachCmdDataListener();
+                detachCmdDataListener = null;
+            }
+            if (typeof detachCmdExitListener === 'function') {
+                detachCmdExitListener();
+                detachCmdExitListener = null;
+            }
+            if (window.runtime && typeof window.runtime.cmdStop === 'function') {
+                void window.runtime.cmdStop();
+            }
         });
 
         const explorerToggle = document.getElementById('explorerToggle');

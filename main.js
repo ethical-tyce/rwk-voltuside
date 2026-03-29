@@ -41,6 +41,9 @@ const runtimeExecutionPolicy = {
     allowPython: false,
     allowAnyCwd: false
 };
+const CMD_CHANNEL_DATA = 'runtime:cmd:data';
+const CMD_CHANNEL_EXIT = 'runtime:cmd:exit';
+let cmdSession = null;
 const IMAGE_MIME_TYPES = {
     '.png': 'image/png',
     '.jpg': 'image/jpeg',
@@ -401,6 +404,35 @@ function runProcess(command, args = [], options = {}) {
             });
         });
     });
+}
+
+function emitCmdSessionTo(sender, channel, payload = {}) {
+    if (!sender || sender.isDestroyed()) return;
+    try {
+        sender.send(channel, payload);
+    } catch {
+        // Ignore renderer send failures during shutdown.
+    }
+}
+
+function stopCmdSession(reason = 'stopped') {
+    if (!cmdSession) return;
+    cmdSession.stopping = true;
+    cmdSession.stopReason = String(reason || 'stopped');
+    try {
+        if (cmdSession.child && !cmdSession.child.killed) {
+            cmdSession.child.kill();
+            return;
+        }
+    } catch {
+        // Ignore process kill errors during shutdown.
+    }
+    const sender = cmdSession.sender;
+    const code = typeof cmdSession.exitCode === 'number' ? cmdSession.exitCode : null;
+    const signal = cmdSession.signal || null;
+    const finalReason = cmdSession.stopReason || String(reason || 'stopped');
+    cmdSession = null;
+    emitCmdSessionTo(sender, CMD_CHANNEL_EXIT, { code, signal, reason: finalReason });
 }
 
 function parseGitStatusOutput(rawValue) {
@@ -887,6 +919,10 @@ function createWindow() {
 
     //win.webContents.openDevTools();
 
+    win.on('closed', () => {
+        stopCmdSession('window-closed');
+        win = null;
+    });
 }
 
 app.whenReady().then(() => {
@@ -1360,6 +1396,128 @@ ipcMain.handle('runtime:run-shell', async (_event, command, options = {}) => {
     throw new Error('No supported shell found on this system.');
 });
 
+ipcMain.handle('runtime:cmd:start', async (event, options = {}) => {
+    if (process.platform !== 'win32') {
+        throw new Error('Persistent cmd terminal is only available on Windows.');
+    }
+
+    const cwd = await resolveRuntimeCwd(options && options.cwd);
+    assertRuntimeExecutionAllowed('shell', cwd);
+
+    if (cmdSession && cmdSession.child && !cmdSession.child.killed) {
+        cmdSession.sender = event.sender;
+        return {
+            ok: true,
+            running: true,
+            reused: true,
+            cwd: cmdSession.cwd,
+            pid: cmdSession.child.pid || null
+        };
+    }
+
+    const cmdExecutable = String(process.env.ComSpec || '').trim() || 'cmd.exe';
+    const child = spawn(cmdExecutable, ['/q', '/d', '/k'], {
+        cwd,
+        windowsHide: true,
+        env: process.env,
+        stdio: 'pipe'
+    });
+
+    cmdSession = {
+        child,
+        sender: event.sender,
+        cwd,
+        stopping: false,
+        stopReason: '',
+        exitCode: null,
+        signal: null
+    };
+
+    child.stdout.on('data', (chunk) => {
+        if (!cmdSession || cmdSession.child !== child) return;
+        emitCmdSessionTo(cmdSession.sender, CMD_CHANNEL_DATA, { data: String(chunk || '') });
+    });
+
+    child.stderr.on('data', (chunk) => {
+        if (!cmdSession || cmdSession.child !== child) return;
+        emitCmdSessionTo(cmdSession.sender, CMD_CHANNEL_DATA, { data: String(chunk || '') });
+    });
+
+    child.on('error', (error) => {
+        if (!cmdSession || cmdSession.child !== child) return;
+        const sender = cmdSession.sender;
+        cmdSession = null;
+        emitCmdSessionTo(sender, CMD_CHANNEL_EXIT, {
+            code: null,
+            signal: null,
+            reason: 'error',
+            error: String(error && error.message ? error.message : error || 'Unknown cmd terminal error')
+        });
+    });
+
+    child.on('close', (exitCode, signal) => {
+        if (!cmdSession || cmdSession.child !== child) return;
+        const sender = cmdSession.sender;
+        const reason = cmdSession.stopReason || 'exit';
+        cmdSession.exitCode = typeof exitCode === 'number' ? exitCode : null;
+        cmdSession.signal = signal || null;
+        const code = cmdSession.exitCode;
+        const closeSignal = cmdSession.signal;
+        cmdSession = null;
+        emitCmdSessionTo(sender, CMD_CHANNEL_EXIT, { code, signal: closeSignal, reason });
+    });
+
+    return {
+        ok: true,
+        running: true,
+        reused: false,
+        cwd,
+        pid: child.pid || null
+    };
+});
+
+ipcMain.handle('runtime:cmd:write', async (_event, input = '') => {
+    if (!cmdSession || !cmdSession.child || cmdSession.child.killed) {
+        throw new Error('cmd.exe session is not running.');
+    }
+
+    assertRuntimeExecutionAllowed('shell', cmdSession.cwd || process.cwd());
+    const data = typeof input === 'string' ? input : String(input || '');
+    if (!data) {
+        return { ok: true, written: 0 };
+    }
+
+    await new Promise((resolve, reject) => {
+        cmdSession.child.stdin.write(data, (error) => {
+            if (error) {
+                reject(error);
+                return;
+            }
+            resolve();
+        });
+    });
+
+    return { ok: true, written: Buffer.byteLength(data) };
+});
+
+ipcMain.handle('runtime:cmd:stop', () => {
+    if (!cmdSession) {
+        return { ok: true, running: false };
+    }
+    stopCmdSession('requested');
+    return { ok: true, running: false };
+});
+
+ipcMain.handle('runtime:cmd:status', () => {
+    const running = Boolean(cmdSession && cmdSession.child && !cmdSession.child.killed);
+    return {
+        ok: true,
+        running,
+        cwd: running ? cmdSession.cwd : '',
+        pid: running ? (cmdSession.child.pid || null) : null
+    };
+});
+
 ipcMain.handle('runtime:open-devtools', () => {
     if (!win || win.isDestroyed() || !win.webContents) return false;
     if (!win.webContents.isDevToolsOpened()) {
@@ -1383,6 +1541,9 @@ ipcMain.handle('runtime:permissions:set', (_event, options = {}) => {
     }
     if (options && Object.prototype.hasOwnProperty.call(options, 'allowAnyCwd')) {
         runtimeExecutionPolicy.allowAnyCwd = Boolean(options.allowAnyCwd);
+    }
+    if (!runtimeExecutionPolicy.allowShell) {
+        stopCmdSession('permissions');
     }
     return getRuntimePolicyState();
 });
@@ -1764,6 +1925,7 @@ app.on('activate', () => {
 });
 
 app.on('before-quit', () => {
+    stopCmdSession('app-quit');
     stopExtensionBridge();
     void stopDiscordRpc();
 });
