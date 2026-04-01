@@ -4,6 +4,12 @@ const fs = require('fs/promises');
 const os = require('os');
 const { spawn } = require('child_process');
 const DiscordRPC = require('discord-rpc');
+let nodePty = null;
+try {
+    nodePty = require('node-pty');
+} catch {
+    nodePty = null;
+}
 
 let win;
 let extensionWss = null;
@@ -420,8 +426,8 @@ function stopCmdSession(reason = 'stopped') {
     cmdSession.stopping = true;
     cmdSession.stopReason = String(reason || 'stopped');
     try {
-        if (cmdSession.child && !cmdSession.child.killed) {
-            cmdSession.child.kill();
+        if (cmdSession.ptyProcess) {
+            cmdSession.ptyProcess.kill();
             return;
         }
     } catch {
@@ -831,8 +837,8 @@ function stopExtensionBridge() {
 }
 
 function createWindow() {
-    const START_WIDTH = 850;
-    const START_HEIGHT = 468;
+    const START_WIDTH = 750;
+    const START_HEIGHT = 413;
     const TARGET_WIDTH = 1000;
     const TARGET_HEIGHT = 550;
     const ANIM_DURATION_MS = 450;
@@ -1400,31 +1406,40 @@ ipcMain.handle('runtime:cmd:start', async (event, options = {}) => {
     if (process.platform !== 'win32') {
         throw new Error('Persistent cmd terminal is only available on Windows.');
     }
+    if (!nodePty || typeof nodePty.spawn !== 'function') {
+        throw new Error('node-pty is not available. Reinstall dependencies and restart Voltus.');
+    }
 
     const cwd = await resolveRuntimeCwd(options && options.cwd);
     assertRuntimeExecutionAllowed('shell', cwd);
+    const colsRaw = Number(options && options.cols);
+    const rowsRaw = Number(options && options.rows);
+    const cols = Number.isFinite(colsRaw) ? Math.max(20, Math.min(500, Math.floor(colsRaw))) : 120;
+    const rows = Number.isFinite(rowsRaw) ? Math.max(5, Math.min(400, Math.floor(rowsRaw))) : 30;
 
-    if (cmdSession && cmdSession.child && !cmdSession.child.killed) {
+    if (cmdSession && cmdSession.ptyProcess) {
         cmdSession.sender = event.sender;
         return {
             ok: true,
             running: true,
             reused: true,
             cwd: cmdSession.cwd,
-            pid: cmdSession.child.pid || null
+            pid: cmdSession.ptyProcess.pid || null
         };
     }
 
     const cmdExecutable = String(process.env.ComSpec || '').trim() || 'cmd.exe';
-    const child = spawn(cmdExecutable, ['/q', '/d', '/k'], {
+    const ptyProcess = nodePty.spawn(cmdExecutable, ['/d'], {
+        name: 'xterm-256color',
         cwd,
-        windowsHide: true,
+        cols,
+        rows,
         env: process.env,
-        stdio: 'pipe'
+        useConpty: true
     });
 
     cmdSession = {
-        child,
+        ptyProcess,
         sender: event.sender,
         cwd,
         stopping: false,
@@ -1433,34 +1448,17 @@ ipcMain.handle('runtime:cmd:start', async (event, options = {}) => {
         signal: null
     };
 
-    child.stdout.on('data', (chunk) => {
-        if (!cmdSession || cmdSession.child !== child) return;
+    ptyProcess.onData((chunk) => {
+        if (!cmdSession || cmdSession.ptyProcess !== ptyProcess) return;
         emitCmdSessionTo(cmdSession.sender, CMD_CHANNEL_DATA, { data: String(chunk || '') });
     });
 
-    child.stderr.on('data', (chunk) => {
-        if (!cmdSession || cmdSession.child !== child) return;
-        emitCmdSessionTo(cmdSession.sender, CMD_CHANNEL_DATA, { data: String(chunk || '') });
-    });
-
-    child.on('error', (error) => {
-        if (!cmdSession || cmdSession.child !== child) return;
-        const sender = cmdSession.sender;
-        cmdSession = null;
-        emitCmdSessionTo(sender, CMD_CHANNEL_EXIT, {
-            code: null,
-            signal: null,
-            reason: 'error',
-            error: String(error && error.message ? error.message : error || 'Unknown cmd terminal error')
-        });
-    });
-
-    child.on('close', (exitCode, signal) => {
-        if (!cmdSession || cmdSession.child !== child) return;
+    ptyProcess.onExit(({ exitCode, signal }) => {
+        if (!cmdSession || cmdSession.ptyProcess !== ptyProcess) return;
         const sender = cmdSession.sender;
         const reason = cmdSession.stopReason || 'exit';
         cmdSession.exitCode = typeof exitCode === 'number' ? exitCode : null;
-        cmdSession.signal = signal || null;
+        cmdSession.signal = typeof signal === 'number' ? String(signal) : (signal || null);
         const code = cmdSession.exitCode;
         const closeSignal = cmdSession.signal;
         cmdSession = null;
@@ -1472,12 +1470,12 @@ ipcMain.handle('runtime:cmd:start', async (event, options = {}) => {
         running: true,
         reused: false,
         cwd,
-        pid: child.pid || null
+        pid: ptyProcess.pid || null
     };
 });
 
 ipcMain.handle('runtime:cmd:write', async (_event, input = '') => {
-    if (!cmdSession || !cmdSession.child || cmdSession.child.killed) {
+    if (!cmdSession || !cmdSession.ptyProcess) {
         throw new Error('cmd.exe session is not running.');
     }
 
@@ -1487,15 +1485,7 @@ ipcMain.handle('runtime:cmd:write', async (_event, input = '') => {
         return { ok: true, written: 0 };
     }
 
-    await new Promise((resolve, reject) => {
-        cmdSession.child.stdin.write(data, (error) => {
-            if (error) {
-                reject(error);
-                return;
-            }
-            resolve();
-        });
-    });
+    cmdSession.ptyProcess.write(data);
 
     return { ok: true, written: Buffer.byteLength(data) };
 });
@@ -1509,12 +1499,33 @@ ipcMain.handle('runtime:cmd:stop', () => {
 });
 
 ipcMain.handle('runtime:cmd:status', () => {
-    const running = Boolean(cmdSession && cmdSession.child && !cmdSession.child.killed);
+    const running = Boolean(cmdSession && cmdSession.ptyProcess);
     return {
         ok: true,
         running,
         cwd: running ? cmdSession.cwd : '',
-        pid: running ? (cmdSession.child.pid || null) : null
+        pid: running ? (cmdSession.ptyProcess.pid || null) : null
+    };
+});
+
+ipcMain.handle('runtime:cmd:resize', (_event, options = {}) => {
+    if (!cmdSession || !cmdSession.ptyProcess) {
+        return { ok: true, running: false };
+    }
+    const colsRaw = Number(options && options.cols);
+    const rowsRaw = Number(options && options.rows);
+    const cols = Number.isFinite(colsRaw) ? Math.max(20, Math.min(500, Math.floor(colsRaw))) : 120;
+    const rows = Number.isFinite(rowsRaw) ? Math.max(5, Math.min(400, Math.floor(rowsRaw))) : 30;
+    try {
+        cmdSession.ptyProcess.resize(cols, rows);
+    } catch {
+        // Ignore resize errors; session continues running.
+    }
+    return {
+        ok: true,
+        running: true,
+        cols,
+        rows
     };
 });
 

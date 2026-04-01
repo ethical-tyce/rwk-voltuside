@@ -72,6 +72,7 @@ contextBridge.exposeInMainWorld('runtime', {
     cmdWrite: (input = '') => ipcRenderer.invoke('runtime:cmd:write', input),
     cmdStop: () => ipcRenderer.invoke('runtime:cmd:stop'),
     cmdStatus: () => ipcRenderer.invoke('runtime:cmd:status'),
+    cmdResize: (options = {}) => ipcRenderer.invoke('runtime:cmd:resize', options),
     onCmdData: (callback) => {
         if (typeof callback !== 'function') return () => { };
         const handler = (_event, payload) => callback(payload);

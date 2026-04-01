@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Voltus IDE</title>
+    <link rel="stylesheet" href="node_modules/xterm/css/xterm.css">
 
     <style>
         html {
@@ -77,6 +78,16 @@
         #editor *,
         .monaco-editor,
         .monaco-editor * {
+            -webkit-user-select: text;
+            user-select: text;
+        }
+
+        /* Console/terminal output must remain selectable like a native terminal. */
+        #console,
+        #console *,
+        #consoleTerminalOutput,
+        #consoleTerminalOutput .terminal-stream,
+        #consoleTerminalOutput .terminal-stream * {
             -webkit-user-select: text;
             user-select: text;
         }
@@ -2194,6 +2205,7 @@
             min-height: 0;
             overflow-y: auto;
             padding: 0;
+            position: relative;
             font-family: 'Consolas', monospace;
             font-size: 12px;
             line-height: 1.25;
@@ -2211,8 +2223,60 @@
             color: inherit;
         }
 
+        #consoleTerminalOutput .xterm {
+            height: 100%;
+        }
+
+        #consoleSelectionCopyBtn {
+            position: fixed;
+            top: 0;
+            left: 0;
+            transform: translate(-9999px, -9999px);
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            height: 22px;
+            padding: 0 7px;
+            border: 1px solid #3f3f3f;
+            border-radius: 6px;
+            background: #0e0e0e;
+            color: #d8d8d8;
+            font-family: 'Consolas', monospace;
+            font-size: 11px;
+            line-height: 1;
+            opacity: 0;
+            pointer-events: none;
+            cursor: pointer;
+            z-index: 1400;
+            box-shadow: 0 6px 14px rgba(0, 0, 0, 0.45);
+            transition: opacity 110ms ease, border-color 110ms ease, background-color 110ms ease;
+        }
+
+        #consoleSelectionCopyBtn.visible {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        #consoleSelectionCopyBtn:hover {
+            border-color: #6b6b6b;
+            background: #151515;
+        }
+
+        #consoleSelectionCopyBtn svg {
+            width: 12px;
+            height: 12px;
+            stroke: currentColor;
+            stroke-width: 1.8;
+            fill: none;
+            opacity: 0.92;
+        }
+
+        #consoleSelectionCopyBtn span {
+            letter-spacing: 0.01em;
+        }
+
         #consoleTerminalInputRow {
-            display: flex;
+            display: none;
             gap: 4px;
             align-items: center;
             min-height: 16px;
@@ -2221,6 +2285,14 @@
             border-top: none;
             background: transparent;
             width: 100%;
+        }
+
+        body.cmd-fallback #consoleTerminalInputRow {
+            display: flex;
+        }
+
+        body:not(.cmd-fallback) #consoleTerminalOutput {
+            overflow: hidden !important;
         }
 
         #consoleTerminalPrompt {
@@ -4215,6 +4287,8 @@
     </div>
     <div id="explorerContextMenu" hidden></div>
 
+    <script src="node_modules/xterm/lib/xterm.js"></script>
+    <script src="node_modules/@xterm/addon-fit/lib/addon-fit.js"></script>
     <script src="node_modules/monaco-editor/min/vs/loader.js"></script>
     <script>
         window.addEventListener('DOMContentLoaded', () => {
@@ -4440,12 +4514,21 @@ throw "Chrome executable not found."
         const consoleTerminalSessionsEl = document.getElementById("consoleTerminalSessions");
         const consoleTerminalNewSessionBtn = document.getElementById("consoleTerminalNewSession");
         const consoleWrapRootEl = document.getElementById("consoleWrap");
+        let consoleSelectionCopyBtnEl = null;
+        let consoleSelectionCopyText = '';
+        let consoleSelectionPointerX = 0;
+        let consoleSelectionPointerY = 0;
+        let consoleSelectionMouseDown = false;
         let activeConsoleTab = 'output';
         let cmdTerminalRunning = false;
         let cmdTerminalStarting = false;
         let cmdTerminalFailed = false;
         let detachCmdDataListener = null;
         let detachCmdExitListener = null;
+        let cmdXterm = null;
+        let cmdFitAddon = null;
+        let cmdResizeFrame = null;
+        let cmdFallbackMode = false;
         let terminalLastCwd = '';
         const TERMINAL_SESSION_STORAGE_KEY = 'voltus.terminal.sessions.v1';
         const TERMINAL_SESSION_VERSION = 1;
@@ -4704,13 +4787,8 @@ console.log('Dark mode applied!');`
                             ? sessionValue.history.map((value) => String(value || '')).filter(Boolean).slice(-120)
                             : [];
                         next.historyIndex = next.history.length;
-                        next.buffer = typeof (sessionValue && sessionValue.buffer) === 'string'
-                            ? sessionValue.buffer
-                            : (Array.isArray(sessionValue && sessionValue.lines)
-                                ? sessionValue.lines
-                                    .map((entry) => String(entry && entry.text ? entry.text : ''))
-                                    .join('\n')
-                                : '');
+                        // Always start with a clean terminal transcript on app launch.
+                        next.buffer = '';
                     }
                 }
             } catch {
@@ -4723,16 +4801,20 @@ console.log('Dark mode applied!');`
         function renderActiveTerminalOutput() {
             if (!consoleTerminalOutputEl) return;
             const session = getActiveTerminalSession();
+            if (cmdXterm) {
+                cmdXterm.reset();
+                if (session.buffer) {
+                    cmdXterm.write(String(session.buffer));
+                }
+                scheduleCmdTerminalResize();
+                return;
+            }
             consoleTerminalOutputEl.innerHTML = '';
             const stream = document.createElement('pre');
             stream.className = 'terminal-stream';
             stream.textContent = String(session.buffer || '');
             consoleTerminalOutputEl.appendChild(stream);
-            if (consoleTerminalInputRowEl) {
-                consoleTerminalOutputEl.appendChild(consoleTerminalInputRowEl);
-            }
             consoleTerminalOutputEl.scrollTop = consoleTerminalOutputEl.scrollHeight;
-            syncTerminalInputHeight();
         }
 
         function closeTerminalSession(sessionId) {
@@ -4743,6 +4825,150 @@ console.log('Dark mode applied!');`
         function renderTerminalSessionTabs() {
             if (!consoleTerminalSessionsEl) return;
             consoleTerminalSessionsEl.innerHTML = '';
+        }
+
+        function scheduleCmdTerminalResize() {
+            if (cmdResizeFrame !== null) {
+                cancelAnimationFrame(cmdResizeFrame);
+            }
+            cmdResizeFrame = requestAnimationFrame(() => {
+                cmdResizeFrame = null;
+                void syncCmdTerminalViewport();
+            });
+        }
+
+        async function syncCmdTerminalViewport() {
+            if (!cmdXterm) return;
+            if (cmdFitAddon && typeof cmdFitAddon.fit === 'function') {
+                cmdFitAddon.fit();
+            }
+            if (!cmdTerminalRunning) return;
+            if (!window.runtime || typeof window.runtime.cmdResize !== 'function') return;
+            try {
+                await window.runtime.cmdResize({
+                    cols: Math.max(20, Number(cmdXterm.cols) || 120),
+                    rows: Math.max(5, Number(cmdXterm.rows) || 30)
+                });
+            } catch { }
+        }
+
+        function setCmdFallbackMode(enabled) {
+            cmdFallbackMode = Boolean(enabled);
+            document.body.classList.toggle('cmd-fallback', cmdFallbackMode);
+        }
+
+        function initializeCmdXterm() {
+            if (cmdXterm || !consoleTerminalOutputEl) return;
+            let terminalCtor = null;
+            if (typeof window.Terminal === 'function') {
+                terminalCtor = window.Terminal;
+            } else if (window.Terminal && typeof window.Terminal.Terminal === 'function') {
+                terminalCtor = window.Terminal.Terminal;
+            }
+
+            const fitCtor = typeof window.FitAddon === 'function'
+                ? window.FitAddon
+                : (window.FitAddon && typeof window.FitAddon.FitAddon === 'function'
+                    ? window.FitAddon.FitAddon
+                    : null);
+
+            if (!terminalCtor) {
+                setCmdFallbackMode(true);
+                pushTerminalLine('error', 'xterm renderer unavailable; using legacy terminal input.');
+                return;
+            }
+
+            try {
+                cmdXterm = new terminalCtor({
+                    allowTransparency: false,
+                    convertEol: false,
+                    cursorBlink: true,
+                    cursorStyle: 'block',
+                    fontFamily: 'Consolas, monospace',
+                    fontSize: 12,
+                    lineHeight: 1.2,
+                    scrollback: 5000,
+                    theme: {
+                        background: '#000000',
+                        foreground: '#d4d4d4',
+                        cursor: '#d4d4d4',
+                        selectionBackground: 'rgba(255,255,255,0.22)'
+                    }
+                });
+
+                if (fitCtor) {
+                    cmdFitAddon = new fitCtor();
+                    cmdXterm.loadAddon(cmdFitAddon);
+                }
+
+                consoleTerminalOutputEl.innerHTML = '';
+                cmdXterm.open(consoleTerminalOutputEl);
+                setCmdFallbackMode(false);
+                scheduleCmdTerminalResize();
+
+                const session = getActiveTerminalSession();
+                if (session.buffer) {
+                    cmdXterm.write(String(session.buffer));
+                }
+
+                cmdXterm.onData((data) => {
+                    if (!window.runtime || typeof window.runtime.cmdWrite !== 'function') return;
+                    void startCmdTerminalSession().then((started) => {
+                        if (!started) return;
+                        window.runtime.cmdWrite(String(data || '')).catch(() => {
+                            cmdTerminalRunning = false;
+                        });
+                    });
+                });
+
+                cmdXterm.onResize(({ cols, rows }) => {
+                    if (!window.runtime || typeof window.runtime.cmdResize !== 'function') return;
+                    if (!cmdTerminalRunning) return;
+                    void window.runtime.cmdResize({ cols, rows }).catch(() => { });
+                });
+
+                if (typeof cmdXterm.onSelectionChange === 'function') {
+                    cmdXterm.onSelectionChange(() => {
+                        scheduleConsoleSelectionCopyButtonRefresh();
+                    });
+                }
+
+                if (typeof cmdXterm.attachCustomKeyEventHandler === 'function') {
+                    cmdXterm.attachCustomKeyEventHandler((event) => {
+                        if (!event || event.type !== 'keydown') return true;
+                        const key = String(event.key || '').toLowerCase();
+
+                        if (event.ctrlKey && !event.altKey && !event.metaKey && !event.shiftKey && key === 'a') {
+                            event.preventDefault();
+                            if (typeof cmdXterm.selectAll === 'function') {
+                                cmdXterm.selectAll();
+                            }
+                            scheduleConsoleSelectionCopyButtonRefresh();
+                            return false;
+                        }
+
+                        const copyShortcut = event.ctrlKey && !event.altKey && !event.metaKey
+                            && ((event.shiftKey && key === 'c') || (!event.shiftKey && key === 'c'));
+                        if (copyShortcut && typeof cmdXterm.hasSelection === 'function' && cmdXterm.hasSelection()) {
+                            event.preventDefault();
+                            const selected = typeof cmdXterm.getSelection === 'function'
+                                ? String(cmdXterm.getSelection() || '')
+                                : '';
+                            if (selected) {
+                                void copyConsoleSelectionText(selected);
+                            }
+                            return false;
+                        }
+
+                        return true;
+                    });
+                }
+            } catch (error) {
+                cmdXterm = null;
+                cmdFitAddon = null;
+                setCmdFallbackMode(true);
+                pushTerminalLine('error', error && error.message ? error.message : String(error));
+            }
         }
 
         function trimTerminalSessionBuffer(session) {
@@ -4794,47 +5020,48 @@ console.log('Dark mode applied!');`
             return cwd.replace(/[\\/]+$/g, '') || cwd;
         }
 
+        function stripAnsiSequences(value) {
+            const text = String(value || '');
+            if (!text) return '';
+            return text
+                // CSI sequences
+                .replace(/\x1b\[[0-?]*[ -/]*[@-~]/g, '')
+                // OSC hyperlinks/titles etc
+                .replace(/\x1b\][^\x07]*(\x07|\x1b\\)/g, '')
+                // Any remaining single-char ESC sequence
+                .replace(/\x1b[@-_]/g, '');
+        }
+
         function appendTerminalChunk(chunkText) {
             const session = getActiveTerminalSession();
-            const normalizedChunk = String(chunkText || '')
-                .replace(/\r\n/g, '\n')
-                .replace(/\r/g, '');
-            if (!normalizedChunk) return;
+            const rawChunk = String(chunkText || '');
+            if (!rawChunk) return;
 
-            const sourceLines = normalizedChunk.split('\n');
-            const keptLines = [];
-            for (const rawLine of sourceLines) {
-                const line = String(rawLine || '');
+            const storeChunk = (cmdFallbackMode && !cmdXterm)
+                ? stripAnsiSequences(rawChunk)
+                : rawChunk;
+            session.buffer = String(session.buffer || '') + storeChunk;
+            trimTerminalSessionBuffer(session);
+
+            const normalizedForParse = storeChunk.replace(/\r\n/g, '\n').replace(/\r/g, '');
+            normalizedForParse.split('\n').forEach((line) => {
                 const promptCwd = parseCmdPromptLine(line);
                 if (promptCwd) {
                     session.cwd = promptCwd;
                     terminalLastCwd = promptCwd;
-                    continue;
                 }
-                keptLines.push(line);
-            }
-
-            const trailingPromptCwd = sourceLines.length
-                ? parseCmdPromptLine(sourceLines[sourceLines.length - 1])
-                : '';
-            let filteredChunk = keptLines.join('\n');
-            if (trailingPromptCwd && filteredChunk && !filteredChunk.endsWith('\n')) {
-                filteredChunk += '\n';
-            }
-
-            if (filteredChunk) {
-                session.buffer = String(session.buffer || '') + filteredChunk;
-                trimTerminalSessionBuffer(session);
-            }
+            });
 
             if (problemMatcherEnabled && typeof collectRuntimeProblemFromLine === 'function') {
-                filteredChunk.split('\n').forEach((line) => {
+                normalizedForParse.split('\n').forEach((line) => {
                     if (!line) return;
                     collectRuntimeProblemFromLine(line, session.cwd || getPreferredRuntimeCwd());
                 });
             }
 
-            if (activeConsoleTab === 'terminal') {
+            if (cmdXterm) {
+                cmdXterm.write(rawChunk);
+            } else if (activeConsoleTab === 'terminal') {
                 refreshTerminalStreamInView();
             }
             persistTerminalSessions();
@@ -4925,10 +5152,15 @@ console.log('Dark mode applied!');`
 
             cmdTerminalStarting = true;
             try {
+                initializeCmdXterm();
                 bindCmdTerminalStreams();
                 const session = getActiveTerminalSession();
                 const preferredCwd = String(getPreferredRuntimeCwd() || session.cwd || terminalLastCwd || '').trim();
-                const result = await window.runtime.cmdStart({ cwd: preferredCwd });
+                const result = await window.runtime.cmdStart({
+                    cwd: preferredCwd,
+                    cols: cmdXterm ? Number(cmdXterm.cols) || 120 : 120,
+                    rows: cmdXterm ? Number(cmdXterm.rows) || 30 : 30
+                });
                 cmdTerminalRunning = Boolean(result && result.running);
                 cmdTerminalFailed = false;
                 const resolvedCwd = String(result && result.cwd ? result.cwd : '').trim();
@@ -4936,6 +5168,7 @@ console.log('Dark mode applied!');`
                     session.cwd = resolvedCwd;
                     terminalLastCwd = resolvedCwd;
                 }
+                scheduleCmdTerminalResize();
                 updateTerminalPrompt();
                 return cmdTerminalRunning;
             } catch (error) {
@@ -4959,9 +5192,200 @@ console.log('Dark mode applied!');`
             consoleTerminalPromptEl.title = cwd || prompt;
         }
 
+        function ensureConsoleSelectionCopyButton() {
+            if (consoleSelectionCopyBtnEl && document.body.contains(consoleSelectionCopyBtnEl)) {
+                return consoleSelectionCopyBtnEl;
+            }
+            const button = document.createElement('button');
+            button.id = 'consoleSelectionCopyBtn';
+            button.type = 'button';
+            button.title = 'Copy selection';
+            button.setAttribute('aria-label', 'Copy selection');
+            button.innerHTML = `
+                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                    <rect x="9" y="9" width="10" height="10" rx="1.8"></rect>
+                    <rect x="5" y="5" width="10" height="10" rx="1.8"></rect>
+                </svg>
+                <span>Copy</span>
+            `;
+            button.addEventListener('mousedown', (event) => {
+                event.preventDefault();
+            });
+            button.addEventListener('click', () => {
+                const selectedText = getConsoleSelectionText() || consoleSelectionCopyText;
+                if (!selectedText) {
+                    hideConsoleSelectionCopyButton();
+                    return;
+                }
+                void copyConsoleSelectionText(selectedText);
+            });
+            document.body.appendChild(button);
+            consoleSelectionCopyBtnEl = button;
+            return button;
+        }
+
+        function hideConsoleSelectionCopyButton() {
+            consoleSelectionCopyText = '';
+            if (!consoleSelectionCopyBtnEl) return;
+            consoleSelectionCopyBtnEl.classList.remove('visible');
+            consoleSelectionCopyBtnEl.style.transform = 'translate(-9999px, -9999px)';
+        }
+
+        function rememberConsoleSelectionPointer(event) {
+            if (!event) return;
+            const x = Number(event.clientX);
+            const y = Number(event.clientY);
+            if (!Number.isFinite(x) || !Number.isFinite(y)) return;
+            consoleSelectionPointerX = x;
+            consoleSelectionPointerY = y;
+        }
+
+        function isNodeInsideElement(node, containerEl) {
+            if (!node || !containerEl) return false;
+            if (node === containerEl) return true;
+            const elementNode = node.nodeType === Node.ELEMENT_NODE
+                ? node
+                : node.parentElement;
+            return Boolean(elementNode && containerEl.contains(elementNode));
+        }
+
+        function getConsoleSelectionText() {
+            if (activeConsoleTab === 'terminal' && cmdXterm && typeof cmdXterm.hasSelection === 'function' && cmdXterm.hasSelection()) {
+                return typeof cmdXterm.getSelection === 'function'
+                    ? String(cmdXterm.getSelection() || '')
+                    : '';
+            }
+
+            if (!window.getSelection) return '';
+            const selection = window.getSelection();
+            if (!selection || selection.isCollapsed || selection.rangeCount < 1) return '';
+            const range = selection.getRangeAt(0);
+            const rootNode = range ? range.commonAncestorContainer : null;
+            const inOutputConsole = isNodeInsideElement(rootNode, consoleEl);
+            const inTerminalConsole = isNodeInsideElement(rootNode, consoleTerminalOutputEl);
+            if (!inOutputConsole && !inTerminalConsole) return '';
+            return String(selection.toString() || '');
+        }
+
+        function getConsoleSelectionAnchorPoint() {
+            if (Number.isFinite(consoleSelectionPointerX) && Number.isFinite(consoleSelectionPointerY)
+                && (consoleSelectionPointerX > 0 || consoleSelectionPointerY > 0)) {
+                return { x: consoleSelectionPointerX, y: consoleSelectionPointerY };
+            }
+
+            const target = activeConsoleTab === 'terminal'
+                ? consoleTerminalOutputEl
+                : consoleEl;
+            if (target) {
+                const rect = target.getBoundingClientRect();
+                return {
+                    x: rect.left + Math.min(120, Math.max(24, rect.width * 0.25)),
+                    y: rect.top + 18
+                };
+            }
+
+            return { x: 24, y: 24 };
+        }
+
+        function positionConsoleSelectionCopyButton(anchorX, anchorY) {
+            const button = ensureConsoleSelectionCopyButton();
+            button.classList.add('visible');
+            button.style.transform = `translate(${Math.round(anchorX + 12)}px, ${Math.round(anchorY + 12)}px)`;
+
+            const margin = 8;
+            const rect = button.getBoundingClientRect();
+            let left = anchorX + 12;
+            let top = anchorY + 12;
+
+            if (left + rect.width > window.innerWidth - margin) {
+                left = anchorX - rect.width - 10;
+            }
+            if (top + rect.height > window.innerHeight - margin) {
+                top = anchorY - rect.height - 10;
+            }
+
+            left = Math.max(margin, Math.min(left, window.innerWidth - rect.width - margin));
+            top = Math.max(margin, Math.min(top, window.innerHeight - rect.height - margin));
+            button.style.transform = `translate(${Math.round(left)}px, ${Math.round(top)}px)`;
+        }
+
+        function refreshConsoleSelectionCopyButton() {
+            if (consoleSelectionMouseDown) {
+                hideConsoleSelectionCopyButton();
+                return;
+            }
+            const selectedText = getConsoleSelectionText();
+            if (!selectedText) {
+                hideConsoleSelectionCopyButton();
+                return;
+            }
+            consoleSelectionCopyText = selectedText;
+            const anchor = getConsoleSelectionAnchorPoint();
+            positionConsoleSelectionCopyButton(anchor.x, anchor.y);
+        }
+
+        function scheduleConsoleSelectionCopyButtonRefresh() {
+            requestAnimationFrame(() => {
+                refreshConsoleSelectionCopyButton();
+            });
+        }
+
+        async function writeTextToClipboard(text) {
+            const value = String(text || '');
+            if (!value) return false;
+
+            if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+                try {
+                    await navigator.clipboard.writeText(value);
+                    return true;
+                } catch { }
+            }
+
+            try {
+                const helper = document.createElement('textarea');
+                helper.value = value;
+                helper.setAttribute('readonly', '');
+                helper.style.position = 'fixed';
+                helper.style.left = '-10000px';
+                helper.style.top = '-10000px';
+                helper.style.opacity = '0';
+                helper.style.pointerEvents = 'none';
+                document.body.appendChild(helper);
+                helper.focus();
+                helper.select();
+                helper.setSelectionRange(0, helper.value.length);
+                const copied = document.execCommand('copy');
+                helper.remove();
+                return Boolean(copied);
+            } catch {
+                return false;
+            }
+        }
+
+        async function copyConsoleSelectionText(text) {
+            const content = String(text || '');
+            if (!content) {
+                hideConsoleSelectionCopyButton();
+                return;
+            }
+            const normalizedContent = content.replace(/\r?\n/g, '\r\n');
+            const copied = await writeTextToClipboard(normalizedContent);
+            if (copied) {
+                showToast('Console selection copied');
+                hideConsoleSelectionCopyButton();
+                if (cmdXterm && typeof cmdXterm.clearSelection === 'function') {
+                    cmdXterm.clearSelection();
+                }
+                return;
+            }
+
+            showToast('Could not copy selection');
+        }
+
         function setConsoleTab(tabName) {
             const nextTab = tabName === 'terminal' ? 'terminal' : 'output';
             activeConsoleTab = nextTab;
+            hideConsoleSelectionCopyButton();
 
             if (consoleOutputTabBtn) consoleOutputTabBtn.classList.toggle('active', nextTab === 'output');
             if (consoleTerminalTabBtn) consoleTerminalTabBtn.classList.toggle('active', nextTab === 'terminal');
@@ -4980,7 +5404,13 @@ console.log('Dark mode applied!');`
                 void ensureTerminalCwdResolved();
                 void startCmdTerminalSession();
                 updateTerminalPrompt();
-                if (consoleTerminalInputEl) {
+                scheduleCmdTerminalResize();
+                if (cmdXterm) {
+                    requestAnimationFrame(() => {
+                        cmdXterm.focus();
+                    });
+                }
+                if (consoleTerminalInputEl && !cmdXterm && cmdFallbackMode) {
                     requestAnimationFrame(() => {
                         consoleTerminalInputEl.focus();
                     });
@@ -5028,6 +5458,7 @@ console.log('Dark mode applied!');`
         }
 
         async function runConsoleTerminalCommand() {
+            if (cmdXterm) return;
             if (!consoleTerminalInputEl) return;
             const session = getActiveTerminalSession();
             const commandRaw = String(consoleTerminalInputEl.value || '');
@@ -5053,8 +5484,6 @@ console.log('Dark mode applied!');`
             session.historyIndex = session.history.length;
             consoleTerminalInputEl.value = '';
             syncTerminalInputHeight();
-            const promptPrefix = getTerminalPromptPrefix();
-            appendTerminalLine('log', `${promptPrefix}${commandRaw}`);
 
             try {
                 await window.runtime.cmdWrite(commandRaw + '\r\n');
@@ -5078,16 +5507,16 @@ console.log('Dark mode applied!');`
                 toastContainer.removeChild(toastContainer.firstChild);
             }
 
-            // Determine icon based on message content
-            let icon = '\u2705';
-            if (message.toLowerCase().includes('save')) icon = '\u{1F4BE}';
-            else if (message.toLowerCase().includes('load')) icon = '\u{1F4C2}';
-            else if (message.toLowerCase().includes('open')) icon = '\u{1F4C1}';
-            else if (message.toLowerCase().includes('clear')) icon = '\u{1F5D1}\uFE0F';
-            else if (message.toLowerCase().includes('switched') || message.toLowerCase().includes('mode')) icon = '\u{1F504}';
-            else if (message.toLowerCase().includes('sent')) icon = '\u{1F4E4}';
-            else if (message.toLowerCase().includes('no code')) icon = '\u26A0\uFE0F';
-            else if (message.toLowerCase().includes('no browser')) icon = '\u274C';
+            // Keep toast markers plain ASCII to avoid font/encoding artifacts.
+            let icon = '[OK]';
+            if (message.toLowerCase().includes('save')) icon = '[SAVE]';
+            else if (message.toLowerCase().includes('load')) icon = '[LOAD]';
+            else if (message.toLowerCase().includes('open')) icon = '[OPEN]';
+            else if (message.toLowerCase().includes('clear')) icon = '[CLR]';
+            else if (message.toLowerCase().includes('switched') || message.toLowerCase().includes('mode')) icon = '[MODE]';
+            else if (message.toLowerCase().includes('sent')) icon = '[SEND]';
+            else if (message.toLowerCase().includes('no code')) icon = '[WARN]';
+            else if (message.toLowerCase().includes('no browser')) icon = '[ERR]';
 
             toast.innerHTML = `<span class="toast-icon">${icon}</span><span>${message}</span>`;
             toastContainer.appendChild(toast);
@@ -5110,7 +5539,14 @@ console.log('Dark mode applied!');`
             if (activeConsoleTab === 'terminal') {
                 const session = getActiveTerminalSession();
                 session.buffer = '';
-                renderActiveTerminalOutput();
+                if (cmdXterm) {
+                    cmdXterm.reset();
+                    if (cmdTerminalRunning && window.runtime && typeof window.runtime.cmdWrite === 'function') {
+                        void window.runtime.cmdWrite('cls\r');
+                    }
+                } else {
+                    renderActiveTerminalOutput();
+                }
                 clearRuntimeProblems();
                 persistTerminalSessions();
                 return;
@@ -5160,23 +5596,91 @@ console.log('Dark mode applied!');`
                 syncTerminalInputHeight();
             });
         }
-        if (consoleTerminalOutputEl) {
-            consoleTerminalOutputEl.addEventListener('mousedown', (event) => {
-                if (event.button !== 0 || activeConsoleTab !== 'terminal') return;
-                if (!consoleTerminalInputEl) return;
-                event.preventDefault();
-                consoleTerminalInputEl.focus();
+        if (consoleEl) {
+            consoleEl.addEventListener('mousedown', (event) => {
+                rememberConsoleSelectionPointer(event);
+                if (event.button === 0) {
+                    consoleSelectionMouseDown = true;
+                }
+            });
+            consoleEl.addEventListener('mouseup', (event) => {
+                rememberConsoleSelectionPointer(event);
+                scheduleConsoleSelectionCopyButtonRefresh();
+            });
+            consoleEl.addEventListener('keyup', () => {
+                scheduleConsoleSelectionCopyButtonRefresh();
+            });
+            consoleEl.addEventListener('scroll', () => {
+                hideConsoleSelectionCopyButton();
             });
         }
-        window.addEventListener('resize', scheduleConsoleTabIndicatorUpdate);
+        if (consoleTerminalOutputEl) {
+            consoleTerminalOutputEl.addEventListener('mousedown', (event) => {
+                rememberConsoleSelectionPointer(event);
+                if (event.button === 0) {
+                    consoleSelectionMouseDown = true;
+                }
+                if (event.button !== 0 || activeConsoleTab !== 'terminal') return;
+            });
+            consoleTerminalOutputEl.addEventListener('mouseup', (event) => {
+                rememberConsoleSelectionPointer(event);
+                scheduleConsoleSelectionCopyButtonRefresh();
+            });
+            consoleTerminalOutputEl.addEventListener('click', () => {
+                if (activeConsoleTab !== 'terminal') return;
+                if (cmdXterm) {
+                    if (typeof cmdXterm.hasSelection === 'function' && cmdXterm.hasSelection()) return;
+                    requestAnimationFrame(() => {
+                        cmdXterm.focus();
+                    });
+                    return;
+                }
+                if (!cmdFallbackMode || !consoleTerminalInputEl) return;
+                const selectedText = window.getSelection ? String(window.getSelection().toString() || '') : '';
+                if (selectedText) return;
+                consoleTerminalInputEl.focus();
+            });
+            consoleTerminalOutputEl.addEventListener('scroll', () => {
+                hideConsoleSelectionCopyButton();
+            });
+        }
+        document.addEventListener('mouseup', () => {
+            if (!consoleSelectionMouseDown) return;
+            consoleSelectionMouseDown = false;
+            scheduleConsoleSelectionCopyButtonRefresh();
+        });
+        document.addEventListener('selectionchange', () => {
+            scheduleConsoleSelectionCopyButtonRefresh();
+        });
+        document.addEventListener('mousedown', (event) => {
+            if (consoleSelectionCopyBtnEl && consoleSelectionCopyBtnEl.contains(event.target)) return;
+            const target = event.target;
+            if (target && typeof target.closest === 'function' && target.closest('#console, #consoleTerminalOutput')) {
+                return;
+            }
+            hideConsoleSelectionCopyButton();
+        });
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape') {
+                hideConsoleSelectionCopyButton();
+            }
+        });
+        window.addEventListener('resize', () => {
+            scheduleConsoleTabIndicatorUpdate();
+            scheduleCmdTerminalResize();
+            hideConsoleSelectionCopyButton();
+        });
         if (consoleWrapRootEl) {
             consoleWrapRootEl.addEventListener('transitionend', (event) => {
                 if (event.propertyName === 'opacity' || event.propertyName === 'transform') {
                     scheduleConsoleTabIndicatorUpdate();
+                    scheduleCmdTerminalResize();
                 }
             });
         }
         hydrateTerminalSessions();
+        persistTerminalSessions();
+        initializeCmdXterm();
         bindCmdTerminalStreams();
         renderTerminalSessionTabs();
         renderActiveTerminalOutput();
@@ -5203,6 +5707,7 @@ console.log('Dark mode applied!');`
             }
             updateTerminalPrompt();
             syncTerminalInputHeight();
+            scheduleCmdTerminalResize();
         })();
         setConsoleTab('output');
 
@@ -7857,18 +8362,25 @@ console.log('Dark mode applied!');`
             if (!terminalLastCwd) {
                 terminalLastCwd = getPreferredRuntimeCwd();
             }
-            if (!consoleTerminalInputEl) return;
-            if (initialCommand) {
-                consoleTerminalInputEl.value = String(initialCommand);
-                consoleTerminalInputEl.setSelectionRange(consoleTerminalInputEl.value.length, consoleTerminalInputEl.value.length);
-                syncTerminalInputHeight();
-            }
-            requestAnimationFrame(() => {
-                if (consoleTerminalInputEl) {
-                    consoleTerminalInputEl.focus();
-                    syncTerminalInputHeight();
+            void (async () => {
+                const started = await startCmdTerminalSession();
+                if (!started) return;
+                if (initialCommand && window.runtime && typeof window.runtime.cmdWrite === 'function') {
+                    await window.runtime.cmdWrite(String(initialCommand));
                 }
-            });
+                if (cmdXterm) {
+                    requestAnimationFrame(() => {
+                        cmdXterm.focus();
+                    });
+                    return;
+                }
+                if (consoleTerminalInputEl && cmdFallbackMode) {
+                    requestAnimationFrame(() => {
+                        consoleTerminalInputEl.focus();
+                        syncTerminalInputHeight();
+                    });
+                }
+            })();
         }
 
         function clearDragOverState() {
@@ -10194,6 +10706,11 @@ console.log('Dark mode applied!');`
             persistTabSession();
             persistExplorerSession();
             persistTerminalSessions();
+            hideConsoleSelectionCopyButton();
+            if (consoleSelectionCopyBtnEl) {
+                consoleSelectionCopyBtnEl.remove();
+                consoleSelectionCopyBtnEl = null;
+            }
             if (typeof detachCmdDataListener === 'function') {
                 detachCmdDataListener();
                 detachCmdDataListener = null;
@@ -10201,6 +10718,11 @@ console.log('Dark mode applied!');`
             if (typeof detachCmdExitListener === 'function') {
                 detachCmdExitListener();
                 detachCmdExitListener = null;
+            }
+            if (cmdXterm) {
+                cmdXterm.dispose();
+                cmdXterm = null;
+                cmdFitAddon = null;
             }
             if (window.runtime && typeof window.runtime.cmdStop === 'function') {
                 void window.runtime.cmdStop();
