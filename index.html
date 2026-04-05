@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en" style="background:#000;">
 <head>
     <meta charset="UTF-8">
@@ -61,7 +61,7 @@
             height: 100vh;
             background: #0a0a0a;
             color: #a0a0a0;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
             display: flex;
             flex-direction: column;
             overflow: hidden;
@@ -1115,7 +1115,7 @@
             text-transform: uppercase;
             white-space: nowrap;
             line-height: 1;
-            font-family: 'Segoe UI', sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
         }
 
         .explorer-meta {
@@ -1125,7 +1125,7 @@
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-            font-family: 'Segoe UI', sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
         }
 
         .explorer-actions {
@@ -1218,7 +1218,7 @@
             letter-spacing: 0.14em;
             text-transform: uppercase;
             line-height: 1;
-            font-family: 'Segoe UI', sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
         }
 
         #explorerPath {
@@ -1233,7 +1233,7 @@
             text-overflow: ellipsis;
             font-size: 11px;
             line-height: 1.1;
-            font-family: 'Consolas', monospace;
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
         }
 
         #explorerTree {
@@ -1356,7 +1356,7 @@
             text-align: center;
             font-size: 8px;
             line-height: 1;
-            font-family: 'Cascadia Mono', 'Consolas', monospace;
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
         }
 
         .explorer-item.is-dir:hover .explorer-caret,
@@ -1380,7 +1380,7 @@
             text-transform: uppercase;
             flex-shrink: 0;
             padding-top: 0;
-            font-family: 'Cascadia Mono', 'Consolas', monospace;
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
         }
 
         .explorer-icon[data-kind="dir"] {
@@ -1631,7 +1631,7 @@
 
         .ide-workbench-pre {
             margin: 0;
-            font-family: Consolas, monospace;
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
             font-size: 11px;
             line-height: 1.4;
             white-space: pre-wrap;
@@ -2038,19 +2038,24 @@
 
         #consoleTopActions {
             display: none;
-            align-items: center;
-            justify-content: flex-end;
-            gap: 6px;
-            min-width: 0;
+            align-items: stretch;
+            justify-content: flex-start;
+            flex-direction: column;
+            gap: 2px;
+            min-width: 108px;
             flex-shrink: 0;
-            margin-left: auto;
+            margin-left: 0;
             padding-left: 8px;
-            border-left: 1px solid rgba(255, 255, 255, 0.1);
-            max-width: 52%;
+            border-left: 1px solid rgba(255, 255, 255, 0.14);
+            max-width: 108px;
+            width: 108px;
+            background: #000000;
+            padding-top: 4px;
+            padding-bottom: 4px;
         }
 
         #consoleWrap.terminal-mode #consoleTopActions {
-            display: none;
+            display: flex;
         }
 
         #consoleTabBar {
@@ -2070,7 +2075,7 @@
             box-shadow: none !important;
             text-shadow: none !important;
             color: #8f8f8f !important;
-            border-radius: 6px !important;
+            border-radius: 999px !important;
             padding: 3px 8px !important;
             min-height: 0 !important;
             min-width: 76px;
@@ -2172,7 +2177,7 @@
             display: block;
             padding: 2px 0;
             overflow-y: auto;
-            font-family: 'Consolas', monospace;
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
             font-size: 12px;
             line-height: 1.25;
             color: #d4d4d4;
@@ -2186,6 +2191,7 @@
             min-width: 0;
             min-height: 0;
             padding: 0;
+            align-items: stretch;
         }
 
         #consoleTerminalMain {
@@ -2206,7 +2212,7 @@
             overflow-y: auto;
             padding: 0;
             position: relative;
-            font-family: 'Consolas', monospace;
+            font-family: Consolas, "Courier New", monospace;
             font-size: 12px;
             line-height: 1.25;
             color: #d4d4d4;
@@ -2241,7 +2247,7 @@
             border-radius: 6px;
             background: #0e0e0e;
             color: #d8d8d8;
-            font-family: 'Consolas', monospace;
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
             font-size: 11px;
             line-height: 1;
             opacity: 0;
@@ -2303,7 +2309,7 @@
             text-overflow: ellipsis;
             white-space: nowrap;
             color: #d4d4d4;
-            font-family: 'Consolas', monospace;
+            font-family: Consolas, "Courier New", monospace;
             font-size: 12px;
             opacity: 0.95;
         }
@@ -2320,7 +2326,7 @@
             padding: 0;
             font-size: 12px;
             outline: none;
-            font-family: 'Consolas', monospace;
+            font-family: Consolas, "Courier New", monospace;
             line-height: 1.2;
             resize: none;
             overflow-y: auto;
@@ -2335,30 +2341,98 @@
 
         #consoleTerminalSessions {
             min-width: 0;
-            display: inline-flex;
-            align-items: center;
+            display: flex;
+            flex-direction: column;
+            align-items: stretch;
             gap: 0;
-            overflow-x: auto;
-            overflow-y: hidden;
+            overflow-x: hidden;
+            overflow-y: auto;
             scrollbar-width: none;
-            border-radius: 6px;
-            background: rgba(255, 255, 255, 0.04);
-            max-width: min(48vw, 460px);
+            border-radius: 0;
+            background: transparent;
+            width: 100%;
+            max-width: none;
+            max-height: none;
+            flex: 1 1 auto;
+            order: 2;
         }
 
         #consoleTerminalSessions::-webkit-scrollbar {
             display: none;
         }
 
+        #consoleNewSessionMenu {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            order: 1;
+            margin-top: 2px;
+            margin-bottom: 4px;
+        }
+
+        #consoleNewSessionMenu[hidden] {
+            display: none !important;
+        }
+
+        .console-shell-option {
+            width: 100%;
+            min-height: 20px;
+            border: none;
+            border-radius: 999px;
+            background: transparent;
+            color: #a0a0a0;
+            cursor: pointer;
+            font-size: 9px;
+            letter-spacing: 0.03em;
+            line-height: 1;
+            padding: 0 8px;
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            text-align: left;
+            text-transform: uppercase;
+            transition: color 140ms ease, background 140ms ease;
+        }
+
+        .console-shell-option:hover {
+            color: #f0f0f0;
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .console-shell-option-icon {
+            width: 12px;
+            height: 12px;
+            min-width: 12px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0.92;
+            pointer-events: none;
+        }
+
+        .console-shell-option-icon svg {
+            width: 100%;
+            height: 100%;
+            fill: currentColor;
+        }
+
+        .console-shell-option-label {
+            pointer-events: none;
+        }
+
         .console-session-item {
             display: flex;
             align-items: center;
+            gap: 4px;
             min-width: 0;
             background: transparent;
+            width: 100%;
         }
 
         .console-session-item + .console-session-item {
-            box-shadow: inset 1px 0 0 rgba(255, 255, 255, 0.1);
+            box-shadow: none;
         }
 
         .console-session-chip {
@@ -2367,104 +2441,151 @@
             border: none;
             background: transparent;
             color: #9a9a9a;
-            padding: 4px 9px;
+            padding: 3px 8px;
             font-size: 9px;
             letter-spacing: 0.03em;
             text-transform: uppercase;
             cursor: pointer;
-            text-align: left;
+            text-align: center;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-            font-family: 'Consolas', monospace;
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
             transition: background 140ms ease, color 140ms ease;
             outline: none;
-            max-width: 124px;
+            max-width: none;
+            border-radius: 999px;
+            min-height: 20px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: flex-start;
+            gap: 0;
+        }
+
+        .console-session-chip-body {
+            min-width: 0;
+            width: 100%;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .console-session-shell-icon {
+            width: 12px;
+            height: 12px;
+            min-width: 12px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0.9;
+        }
+
+        .console-session-shell-icon svg {
+            width: 100%;
+            height: 100%;
+            fill: currentColor;
+        }
+
+        .console-session-shell-label {
+            min-width: 0;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
 
         .console-session-item.active .console-session-chip {
             color: #f2f2f2;
-            background: rgba(255, 255, 255, 0.12);
+            background: rgba(255, 255, 255, 0.1);
         }
 
         .console-session-chip:hover {
             color: #dcdcdc;
         }
 
-        .console-session-close {
-            width: 0;
-            min-width: 0;
+        .console-session-menu-trigger {
+            width: 16px;
+            min-width: 16px;
             height: 16px;
-            margin-right: 0;
             border: none;
             background: transparent;
             color: #a6a6a6;
             cursor: pointer;
-            font-size: 12px;
+            font-size: 14px;
             line-height: 1;
             display: inline-flex;
             align-items: center;
             justify-content: center;
             border-radius: 4px;
             opacity: 0;
-            overflow: hidden;
             pointer-events: none;
-            transition: opacity 140ms ease, width 140ms ease, margin-right 140ms ease, color 140ms ease;
+            transition: color 140ms ease, background 140ms ease, opacity 140ms ease;
             padding: 0;
         }
 
-        .console-session-item:hover .console-session-close,
-        .console-session-item.active .console-session-close {
-            width: 14px;
-            min-width: 14px;
-            margin-right: 4px;
-            opacity: 0.72;
+        .console-session-item:hover .console-session-menu-trigger,
+        .console-session-item.active .console-session-menu-trigger,
+        .console-session-menu-trigger.open {
+            opacity: 1;
             pointer-events: auto;
         }
 
-        .console-session-close:hover {
+        .console-session-menu-trigger:hover {
             color: #f5f5f5;
-            opacity: 1;
+            background: rgba(255, 255, 255, 0.12);
         }
 
-        .console-session-close:disabled {
+        .console-session-menu-trigger:disabled {
             opacity: 0.35;
             cursor: not-allowed;
             background: transparent;
-            width: 0;
-            min-width: 0;
-            margin-right: 0;
             pointer-events: none;
         }
 
         .console-session-add {
-            width: 22px;
-            min-width: 22px;
+            width: 100%;
+            min-width: 0;
             height: 22px;
             min-height: 22px;
             border: none;
-            border-radius: 6px;
-            background: rgba(255, 255, 255, 0.06);
+            border-radius: 999px;
+            background: transparent;
             color: #a0a0a0;
             cursor: pointer;
-            font-size: 10px;
+            font-size: 9px;
             line-height: 1;
-            letter-spacing: 0;
+            letter-spacing: 0.03em;
             text-transform: none;
-            padding: 0;
-            font-family: 'Consolas', monospace;
-            text-align: center;
+            padding: 0 8px;
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+            text-align: left;
             white-space: nowrap;
             display: inline-flex;
             align-items: center;
-            justify-content: center;
+            justify-content: space-between;
+            gap: 6px;
             flex-shrink: 0;
             outline: none;
             transition: color 140ms ease, background 140ms ease;
+            order: 0;
+            align-self: stretch;
+        }
+
+        .console-session-add-label {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            pointer-events: none;
+        }
+
+        .console-session-add-plus {
+            flex: 0 0 auto;
+            font-size: 12px;
+            line-height: 1;
+            pointer-events: none;
         }
 
         .console-session-add:hover {
-            background: rgba(255, 255, 255, 0.12);
+            background: rgba(255, 255, 255, 0.08);
             color: #f0f0f0;
         }
 
@@ -2473,7 +2594,91 @@
         }
 
         #consoleWrap.terminal-mode #consoleTerminalNewSession {
+            display: inline-flex;
+        }
+
+        #consoleSessionActionMenu {
+            position: fixed;
+            z-index: 26020;
+            width: 116px;
+            min-width: 116px;
+            max-width: 116px;
+            padding: 4px;
+            border-radius: 9px;
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            background: rgba(10, 10, 10, 0.93);
+            box-shadow: 0 14px 32px rgba(0, 0, 0, 0.55);
+            backdrop-filter: blur(12px) saturate(160%);
+            -webkit-backdrop-filter: blur(12px) saturate(160%);
+            opacity: 0;
+            transform: translateY(4px) scale(0.985);
+            transition: opacity 150ms ease, transform 150ms ease;
+        }
+
+        #consoleSessionActionMenu.is-open {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+
+        #consoleSessionActionMenu.is-closing {
+            opacity: 0;
+            transform: translateY(4px) scale(0.985);
+        }
+
+        #consoleSessionActionMenu[hidden] {
             display: none;
+        }
+
+        .console-session-menu-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            width: 100%;
+            border: 1px solid transparent;
+            background: transparent;
+            color: rgba(224, 224, 224, 0.9);
+            text-align: left;
+            white-space: nowrap;
+            font-size: 11px;
+            border-radius: 6px;
+            padding: 5px 7px;
+            cursor: pointer;
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+
+        .console-session-menu-item:hover {
+            background: rgba(255, 255, 255, 0.09);
+            border-color: rgba(255, 255, 255, 0.18);
+            color: #ffffff;
+        }
+
+        .console-session-menu-item.danger {
+            color: #f2b6b6;
+        }
+
+        .console-session-menu-item.danger:hover {
+            color: #ffd4d4;
+            background: rgba(255, 92, 92, 0.16);
+            border-color: rgba(255, 128, 128, 0.25);
+        }
+
+        .console-session-menu-item:disabled {
+            opacity: 0.45;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+
+        .console-session-menu-item-icon {
+            width: 10px;
+            min-width: 10px;
+            text-align: center;
+            line-height: 1;
+            font-size: 11px;
+            opacity: 0.95;
+        }
+
+        .console-session-menu-item-label {
+            line-height: 1.1;
         }
 
         .workspace-modal-grid {
@@ -2513,7 +2718,7 @@
             color: #c5c5c5;
             padding: 8px 10px;
             text-align: left;
-            font-family: 'Consolas', monospace;
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
             font-size: 11px;
             cursor: pointer;
         }
@@ -2533,14 +2738,14 @@
 
         @media (max-width: 980px) {
             #consoleTopActions {
-                max-width: 56%;
-                gap: 4px;
+                min-width: 94px;
+                width: 94px;
+                max-width: 94px;
                 padding-left: 6px;
             }
 
             .console-session-chip {
-                max-width: 88px;
-                padding: 4px 7px;
+                padding: 3px 6px;
             }
         }
 
@@ -2554,7 +2759,7 @@
             height: 22px !important;
             min-height: 22px !important;
             border: none !important;
-            border-radius: 6px !important;
+            border-radius: 999px !important;
             background: transparent !important;
             color: #9a9a9a;
             display: inline-flex;
@@ -2576,16 +2781,8 @@
             opacity: 0.9;
         }
 
-        #consoleTopActions #consoleTerminalNewSession svg {
-            width: 12px;
-            height: 12px;
-            stroke: currentColor;
-            fill: none;
-            stroke-linecap: round;
-            stroke-linejoin: round;
-            stroke-width: 1.8;
-            display: block;
-            pointer-events: none;
+        #consoleTopActions #consoleTerminalNewSession .console-session-add-plus {
+            color: currentColor;
         }
 
         #clearConsole svg {
@@ -2953,7 +3150,7 @@
         }
 
         .create-type-ext {
-            font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
             font-size: 12px;
             letter-spacing: 0.02em;
         }
@@ -4227,15 +4424,6 @@
                                     <svg xmlns="http://www.w3.org/2000/svg" height="40px" viewBox="0 -960 960 960" width="40px" fill="currentColor" aria-hidden="true" focusable="false"><path d="M682-226.67h198.67V-160H615.33L682-226.67ZM182.67-160l-82.34-84.33q-19.66-19-19.5-46.67.17-27.67 18.5-47l452-484q18.34-19.33 45.88-19.33 27.55 0 46.46 19l203 209.66q19 19 19.66 47 .67 28-18.33 47L508.67-160h-326ZM482-226.67l320.67-342-204-210.66L148-292l64 65.33h270ZM480-480Z"/></svg>
                                 </button>
                             </div>
-                            <div id="consoleTopActions">
-                                <div id="consoleTerminalSessions"></div>
-                                <button id="consoleTerminalNewSession" type="button" class="console-session-add" title="New Terminal Session" aria-label="New Terminal Session">
-                                    <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                                        <path d="M12 5v14"></path>
-                                        <path d="M5 12h14"></path>
-                                    </svg>
-                                </button>
-                            </div>
                         </div>
                         <div id="consolePanels">
                             <div id="console" class="console-panel active"></div>
@@ -4246,6 +4434,31 @@
                                         <span id="consoleTerminalPrompt" aria-hidden="true"></span>
                                         <textarea id="consoleTerminalInput" spellcheck="false" autocomplete="off" rows="1" placeholder=""></textarea>
                                     </div>
+                                </div>
+                                <div id="consoleTopActions">
+                                    <button id="consoleTerminalNewSession" type="button" class="console-session-add" title="New Terminal Session" aria-label="New Terminal Session">
+                                        <span class="console-session-add-label">New Session</span>
+                                        <span class="console-session-add-plus" aria-hidden="true">+</span>
+                                    </button>
+                                    <div id="consoleNewSessionMenu" hidden>
+                                        <button type="button" class="console-shell-option" data-shell="cmd" title="Create CMD Session" aria-label="Create CMD session">
+                                            <span class="console-shell-option-icon" aria-hidden="true">
+                                                <svg viewBox="0 -960 960 960" focusable="false">
+                                                    <path d="M146.67-160q-27 0-46.84-19.83Q80-199.67 80-226.67v-506.66q0-27 19.83-46.84Q119.67-800 146.67-800h666.66q27 0 46.84 19.83Q880-760.33 880-733.33v506.66q0 27-19.83 46.84Q840.33-160 813.33-160H146.67Zm0-66.67h666.66v-424H146.67v424ZM300-288l-46.67-46.67 103-104-104-104L300-589.33l150.67 150.66L300-288Zm186.67 2.67V-352h226.66v66.67H486.67Z"></path>
+                                                </svg>
+                                            </span>
+                                            <span class="console-shell-option-label">CMD</span>
+                                        </button>
+                                        <button type="button" class="console-shell-option" data-shell="pwr" title="Create PowerShell Session" aria-label="Create PWR session">
+                                            <span class="console-shell-option-icon" aria-hidden="true">
+                                                <svg viewBox="0 0 30 23" focusable="false">
+                                                    <path fill-rule="evenodd" clip-rule="evenodd" d="M12.4109 22.2038C11.3303 22.2034 10.2496 22.2047 9.16898 22.206C6.73256 22.2088 4.29613 22.2117 1.85985 22.1957C0.0764278 22.1841 -0.247859 21.7632 0.153602 20.0189C0.659699 17.8192 1.17186 15.6208 1.68402 13.4224C2.54919 9.70878 3.41436 5.99518 4.25028 2.275C4.60712 0.686578 5.37688 -0.0154819 7.07869 0.000258658C11.8633 0.0446492 16.6485 0.0383336 21.4336 0.032018C23.6827 0.0290496 25.9317 0.0260812 28.1807 0.0283778C29.9447 0.0300588 30.2409 0.407374 29.8449 2.19645C28.5592 8.00473 27.2655 13.8113 25.9489 19.6127C25.4562 21.7838 24.8886 22.1981 22.6044 22.2032C20.0486 22.2086 17.4928 22.2069 14.937 22.2052C14.095 22.2047 13.2529 22.2041 12.4109 22.2038ZM15.1794 10.3445L15.1795 10.3447L15.18 10.3453C15.2566 10.4366 15.3312 10.5255 15.4036 10.6105C15.3529 11.1275 15.0204 11.3334 14.7056 11.5283C14.6215 11.5804 14.5386 11.6318 14.4627 11.688C11.879 13.6038 9.28408 15.5046 6.68413 17.3983C5.95716 17.9277 5.30874 18.4904 6.00958 19.4362C6.64486 20.2937 7.3946 20.1484 8.18101 19.5678C11.6797 16.9857 15.1822 14.4085 18.7046 11.859C19.6223 11.195 19.8164 10.5857 18.9832 9.68958C16.8993 7.4492 14.8495 5.17723 12.7997 2.90541L12.7997 2.90538L12.3636 2.42202C11.5753 1.54819 10.731 1.48095 9.87167 2.24047C9.00212 3.00885 9.23288 3.76486 9.95695 4.54333C11.1448 5.82034 12.3093 7.11913 13.4739 8.41793C13.8606 8.84921 14.2473 9.28049 14.6348 9.71098C14.8245 9.9216 15.0069 10.1389 15.1793 10.3445L15.1793 10.3445L15.1794 10.3445ZM15.6611 19.7653C15.9465 19.7624 16.2319 19.7594 16.5172 19.7594C16.5172 19.7565 16.5172 19.7535 16.5173 19.7509C16.8372 19.7509 17.1573 19.7552 17.4774 19.7596C18.2231 19.7697 18.9687 19.7799 19.7111 19.735C20.5533 19.6842 20.9672 19.0749 20.9719 18.2885C20.9759 17.603 20.4902 17.1743 19.8323 17.1615C17.7621 17.121 15.6895 17.109 13.62 17.1645C12.867 17.1848 12.4887 17.7492 12.4795 18.4999C12.47 19.2938 12.9236 19.715 13.6773 19.749C14.3374 19.779 14.9992 19.7722 15.661 19.7653H15.6611H15.6611Z"></path>
+                                                </svg>
+                                            </span>
+                                            <span class="console-shell-option-label">PWR</span>
+                                        </button>
+                                    </div>
+                                    <div id="consoleTerminalSessions"></div>
                                 </div>
                             </div>
                         </div>
@@ -4286,6 +4499,7 @@
         </div>
     </div>
     <div id="explorerContextMenu" hidden></div>
+    <div id="consoleSessionActionMenu" hidden></div>
 
     <script src="node_modules/xterm/lib/xterm.js"></script>
     <script src="node_modules/@xterm/addon-fit/lib/addon-fit.js"></script>
@@ -4513,6 +4727,8 @@ throw "Chrome executable not found."
         const consoleTerminalInputEl = document.getElementById("consoleTerminalInput");
         const consoleTerminalSessionsEl = document.getElementById("consoleTerminalSessions");
         const consoleTerminalNewSessionBtn = document.getElementById("consoleTerminalNewSession");
+        const consoleNewSessionMenuEl = document.getElementById("consoleNewSessionMenu");
+        const consoleSessionActionMenuEl = document.getElementById("consoleSessionActionMenu");
         const consoleWrapRootEl = document.getElementById("consoleWrap");
         let consoleSelectionCopyBtnEl = null;
         let consoleSelectionCopyText = '';
@@ -4538,6 +4754,10 @@ throw "Chrome executable not found."
         let problemMatcherEnabled = true;
         let stopConsoleResizeDrag = null;
         let consoleTabIndicatorFrame = null;
+        let consoleNewSessionMenuOpen = false;
+        let consoleSessionActionMenuSessionId = '';
+        let consoleSessionActionMenuCloseTimer = null;
+        const CONSOLE_SESSION_ACTION_MENU_TRANSITION_MS = 150;
         const windowMinimizeBtn = document.getElementById("windowMinimize");
         const windowMaximizeBtn = document.getElementById("windowMaximize");
         const windowCloseBtn = document.getElementById("windowClose");
@@ -4720,19 +4940,83 @@ console.log('Dark mode applied!');`
             consoleEl.scrollTop = consoleEl.scrollHeight;
         }
 
-        function buildTerminalSessionName() {
-            return 'cmd.exe';
+        function normalizeTerminalShellType(value) {
+            const raw = String(value || '').trim().toLowerCase();
+            if (!raw) return 'cmd';
+            if (raw === 'pwr' || raw === 'powershell' || raw === 'pwsh') return 'pwr';
+            return 'cmd';
         }
 
-        function createTerminalSession(name = '') {
+        function getTerminalShellLabel(shellType) {
+            return normalizeTerminalShellType(shellType) === 'pwr' ? 'PWR' : 'CMD';
+        }
+
+        function inferTerminalShellTypeFromName(nameValue) {
+            const name = String(nameValue || '').trim().toLowerCase();
+            if (name === 'pwr' || name === 'powershell' || name === 'pwsh') return 'pwr';
+            return 'cmd';
+        }
+
+        function buildTerminalSessionName(shellType = 'cmd') {
+            return getTerminalShellLabel(shellType);
+        }
+
+        function buildTerminalShellIconElement(shellType) {
+            const iconWrap = document.createElement('span');
+            iconWrap.className = 'console-session-shell-icon';
+            const normalized = normalizeTerminalShellType(shellType);
+            if (normalized === 'pwr') {
+                iconWrap.innerHTML = `
+                    <svg viewBox="0 0 30 23" aria-hidden="true" focusable="false">
+                        <path fill-rule="evenodd" clip-rule="evenodd" d="M12.4109 22.2038C11.3303 22.2034 10.2496 22.2047 9.16898 22.206C6.73256 22.2088 4.29613 22.2117 1.85985 22.1957C0.0764278 22.1841 -0.247859 21.7632 0.153602 20.0189C0.659699 17.8192 1.17186 15.6208 1.68402 13.4224C2.54919 9.70878 3.41436 5.99518 4.25028 2.275C4.60712 0.686578 5.37688 -0.0154819 7.07869 0.000258658C11.8633 0.0446492 16.6485 0.0383336 21.4336 0.032018C23.6827 0.0290496 25.9317 0.0260812 28.1807 0.0283778C29.9447 0.0300588 30.2409 0.407374 29.8449 2.19645C28.5592 8.00473 27.2655 13.8113 25.9489 19.6127C25.4562 21.7838 24.8886 22.1981 22.6044 22.2032C20.0486 22.2086 17.4928 22.2069 14.937 22.2052C14.095 22.2047 13.2529 22.2041 12.4109 22.2038ZM15.1794 10.3445L15.1795 10.3447L15.18 10.3453C15.2566 10.4366 15.3312 10.5255 15.4036 10.6105C15.3529 11.1275 15.0204 11.3334 14.7056 11.5283C14.6215 11.5804 14.5386 11.6318 14.4627 11.688C11.879 13.6038 9.28408 15.5046 6.68413 17.3983C5.95716 17.9277 5.30874 18.4904 6.00958 19.4362C6.64486 20.2937 7.3946 20.1484 8.18101 19.5678C11.6797 16.9857 15.1822 14.4085 18.7046 11.859C19.6223 11.195 19.8164 10.5857 18.9832 9.68958C16.8993 7.4492 14.8495 5.17723 12.7997 2.90541L12.7997 2.90538L12.3636 2.42202C11.5753 1.54819 10.731 1.48095 9.87167 2.24047C9.00212 3.00885 9.23288 3.76486 9.95695 4.54333C11.1448 5.82034 12.3093 7.11913 13.4739 8.41793C13.8606 8.84921 14.2473 9.28049 14.6348 9.71098C14.8245 9.9216 15.0069 10.1389 15.1793 10.3445L15.1793 10.3445L15.1794 10.3445ZM15.6611 19.7653C15.9465 19.7624 16.2319 19.7594 16.5172 19.7594C16.5172 19.7565 16.5172 19.7535 16.5173 19.7509C16.8372 19.7509 17.1573 19.7552 17.4774 19.7596C18.2231 19.7697 18.9687 19.7799 19.7111 19.735C20.5533 19.6842 20.9672 19.0749 20.9719 18.2885C20.9759 17.603 20.4902 17.1743 19.8323 17.1615C17.7621 17.121 15.6895 17.109 13.62 17.1645C12.867 17.1848 12.4887 17.7492 12.4795 18.4999C12.47 19.2938 12.9236 19.715 13.6773 19.749C14.3374 19.779 14.9992 19.7722 15.661 19.7653H15.6611H15.6611Z"></path>
+                    </svg>
+                `;
+                return iconWrap;
+            }
+            iconWrap.innerHTML = `
+                <svg viewBox="0 -960 960 960" aria-hidden="true" focusable="false">
+                    <path d="M146.67-160q-27 0-46.84-19.83Q80-199.67 80-226.67v-506.66q0-27 19.83-46.84Q119.67-800 146.67-800h666.66q27 0 46.84 19.83Q880-760.33 880-733.33v506.66q0 27-19.83 46.84Q840.33-160 813.33-160H146.67Zm0-66.67h666.66v-424H146.67v424ZM300-288l-46.67-46.67 103-104-104-104L300-589.33l150.67 150.66L300-288Zm186.67 2.67V-352h226.66v66.67H486.67Z"></path>
+                </svg>
+            `;
+            return iconWrap;
+        }
+
+        function buildTerminalPromptPrefix(shellType) {
+            return normalizeTerminalShellType(shellType) === 'pwr' ? 'PS ' : '';
+        }
+
+        function createTerminalSession(name = '', runtimeSessionId = '', shellType = 'cmd') {
+            const normalizedShellType = normalizeTerminalShellType(shellType);
             return {
                 id: `term-${Date.now()}-${Math.random().toString(16).slice(2, 8)}`,
-                name: String(name || buildTerminalSessionName()),
+                name: String(name || buildTerminalSessionName(normalizedShellType)),
+                shellType: normalizedShellType,
+                runtimeSessionId: String(runtimeSessionId || ''),
                 cwd: '',
                 history: [],
                 historyIndex: 0,
-                buffer: ''
+                buffer: '',
+                running: false,
+                starting: false,
+                failed: false
             };
+        }
+
+        function normalizeTerminalSessionName(value) {
+            const compact = String(value || '').replace(/\s+/g, ' ').trim();
+            if (!compact) return '';
+            const lowered = compact.toLowerCase();
+            if (lowered === 'cmd.exe' || lowered === 'cmd' || /^cmd\s+\d+$/.test(lowered)) return 'CMD';
+            if (lowered === 'powershell' || lowered === 'powershell.exe' || lowered === 'pwsh' || lowered === 'pwr' || /^pwr\s+\d+$/.test(lowered)) return 'PWR';
+            return compact.slice(0, 48);
+        }
+
+        function ensureTerminalRuntimeSessionId(session) {
+            if (!session) return '';
+            if (!session.runtimeSessionId) {
+                session.runtimeSessionId = String(session.id || '');
+            }
+            return String(session.runtimeSessionId || '');
         }
 
         function getTerminalSessionById(sessionId) {
@@ -4741,32 +5025,57 @@ console.log('Dark mode applied!');`
             return terminalSessions.find((item) => item && item.id === targetId) || null;
         }
 
+        function getTerminalSessionByRuntimeId(runtimeSessionId) {
+            const targetId = String(runtimeSessionId || '');
+            if (!targetId) return null;
+            return terminalSessions.find((item) => item && String(item.runtimeSessionId || '') === targetId) || null;
+        }
+
+        function syncActiveTerminalStateFlags() {
+            const active = getTerminalSessionById(activeTerminalSessionId) || terminalSessions[0] || null;
+            cmdTerminalRunning = Boolean(active && active.running);
+            cmdTerminalStarting = Boolean(active && active.starting);
+            cmdTerminalFailed = Boolean(active && active.failed);
+        }
+
         function getActiveTerminalSession() {
             let session = getTerminalSessionById(activeTerminalSessionId);
             if (!session) {
                 if (!terminalSessions.length) {
-                    terminalSessions.push(createTerminalSession('cmd.exe'));
+                    terminalSessions.push(createTerminalSession('', '', 'cmd'));
                 }
                 session = terminalSessions[0];
                 activeTerminalSessionId = session.id;
             }
-            session.name = 'cmd.exe';
+            session.shellType = normalizeTerminalShellType(session.shellType || inferTerminalShellTypeFromName(session.name));
+            session.name = normalizeTerminalSessionName(session.name) || buildTerminalSessionName(session.shellType);
+            ensureTerminalRuntimeSessionId(session);
+            syncActiveTerminalStateFlags();
             return session;
+        }
+
+        function getTerminalSessionFromRuntimePayload(runtimeSessionId) {
+            const normalized = String(runtimeSessionId || '').trim();
+            if (!normalized) return getActiveTerminalSession();
+            return getTerminalSessionByRuntimeId(normalized)
+                || getTerminalSessionById(normalized)
+                || null;
         }
 
         function persistTerminalSessions() {
             try {
-                const session = getActiveTerminalSession();
                 const payload = {
                     version: TERMINAL_SESSION_VERSION,
-                    activeTerminalSessionId: String(session.id || ''),
-                    sessions: [{
-                        id: String(session.id || ''),
-                        name: 'cmd.exe',
-                        cwd: String(session.cwd || ''),
-                        history: Array.isArray(session.history) ? session.history.slice(-120) : [],
-                        buffer: String(session.buffer || '')
-                    }]
+                    activeTerminalSessionId: String(activeTerminalSessionId || ''),
+                    sessions: terminalSessions.map((session) => ({
+                        id: String(session && session.id ? session.id : ''),
+                        name: String(session && session.name ? session.name : buildTerminalSessionName('cmd')),
+                        shellType: normalizeTerminalShellType(session && session.shellType ? session.shellType : inferTerminalShellTypeFromName(session && session.name ? session.name : '')),
+                        runtimeSessionId: String(session && session.runtimeSessionId ? session.runtimeSessionId : ''),
+                        cwd: String(session && session.cwd ? session.cwd : ''),
+                        history: Array.isArray(session && session.history) ? session.history.slice(-120) : [],
+                        buffer: String(session && session.buffer ? session.buffer : '')
+                    }))
                 };
                 localStorage.setItem(TERMINAL_SESSION_STORAGE_KEY, JSON.stringify(payload));
             } catch { }
@@ -4775,27 +5084,49 @@ console.log('Dark mode applied!');`
         function hydrateTerminalSessions() {
             terminalSessions.length = 0;
             activeTerminalSessionId = '';
-            const next = createTerminalSession('cmd.exe');
+            const initialSessions = [];
             try {
                 const raw = localStorage.getItem(TERMINAL_SESSION_STORAGE_KEY);
                 if (raw) {
                     const parsed = JSON.parse(raw);
                     if (parsed && parsed.version === TERMINAL_SESSION_VERSION && Array.isArray(parsed.sessions) && parsed.sessions.length) {
-                        const sessionValue = parsed.sessions[0] || {};
-                        next.cwd = String(sessionValue && sessionValue.cwd ? sessionValue.cwd : '');
-                        next.history = Array.isArray(sessionValue && sessionValue.history)
-                            ? sessionValue.history.map((value) => String(value || '')).filter(Boolean).slice(-120)
-                            : [];
-                        next.historyIndex = next.history.length;
-                        // Always start with a clean terminal transcript on app launch.
-                        next.buffer = '';
+                        parsed.sessions.forEach((sessionValue) => {
+                            const sessionShellType = normalizeTerminalShellType(sessionValue && sessionValue.shellType ? sessionValue.shellType : inferTerminalShellTypeFromName(sessionValue && sessionValue.name ? sessionValue.name : ''));
+                            const next = createTerminalSession('', sessionValue && sessionValue.runtimeSessionId ? sessionValue.runtimeSessionId : '', sessionShellType);
+                            next.id = String(sessionValue && sessionValue.id ? sessionValue.id : next.id);
+                            next.name = normalizeTerminalSessionName(sessionValue && sessionValue.name ? sessionValue.name : '') || buildTerminalSessionName(sessionShellType);
+                            next.shellType = sessionShellType;
+                            next.cwd = String(sessionValue && sessionValue.cwd ? sessionValue.cwd : '');
+                            next.history = Array.isArray(sessionValue && sessionValue.history)
+                                ? sessionValue.history.map((value) => String(value || '')).filter(Boolean).slice(-120)
+                                : [];
+                            next.historyIndex = next.history.length;
+                            // Always start with a clean terminal transcript on app launch.
+                            next.buffer = '';
+                            next.running = false;
+                            next.starting = false;
+                            next.failed = false;
+                            ensureTerminalRuntimeSessionId(next);
+                            initialSessions.push(next);
+                        });
+                        activeTerminalSessionId = String(parsed.activeTerminalSessionId || '');
                     }
                 }
             } catch {
             }
-            next.name = 'cmd.exe';
-            terminalSessions.push(next);
-            activeTerminalSessionId = next.id;
+            if (!initialSessions.length) {
+                initialSessions.push(createTerminalSession('', '', 'cmd'));
+            }
+            initialSessions.forEach((session) => {
+                session.shellType = normalizeTerminalShellType(session.shellType || inferTerminalShellTypeFromName(session.name));
+                session.name = normalizeTerminalSessionName(session.name) || buildTerminalSessionName(session.shellType);
+                terminalSessions.push(session);
+            });
+            const activeSession = getTerminalSessionById(activeTerminalSessionId);
+            if (!activeSession) {
+                activeTerminalSessionId = terminalSessions[0].id;
+            }
+            syncActiveTerminalStateFlags();
         }
 
         function renderActiveTerminalOutput() {
@@ -4818,13 +5149,286 @@ console.log('Dark mode applied!');`
         }
 
         function closeTerminalSession(sessionId) {
-            void sessionId;
-            return;
+            const targetId = String(sessionId || '');
+            if (!targetId) return false;
+            if (terminalSessions.length <= 1) return false;
+            const index = terminalSessions.findIndex((item) => item && item.id === targetId);
+            if (index < 0) return false;
+            if (consoleSessionActionMenuSessionId === targetId) {
+                hideConsoleSessionActionMenu(true);
+            }
+
+            const [removed] = terminalSessions.splice(index, 1);
+            if (removed && window.runtime && typeof window.runtime.cmdStop === 'function') {
+                void window.runtime.cmdStop({ sessionId: String(removed.runtimeSessionId || removed.id || '') });
+            }
+
+            if (activeTerminalSessionId === targetId) {
+                const next = terminalSessions[Math.max(0, index - 1)] || terminalSessions[0];
+                activeTerminalSessionId = next ? next.id : '';
+                syncActiveTerminalStateFlags();
+                renderActiveTerminalOutput();
+                updateTerminalPrompt();
+            }
+
+            renderTerminalSessionTabs();
+            persistTerminalSessions();
+            return true;
+        }
+
+        function renameTerminalSession(sessionId) {
+            const session = getTerminalSessionById(sessionId);
+            if (!session) return false;
+            const currentName = normalizeTerminalSessionName(session.name) || buildTerminalSessionName(session.shellType);
+            const nextRaw = prompt('Rename terminal session:', currentName);
+            if (nextRaw === null) return false;
+            const nextName = normalizeTerminalSessionName(nextRaw);
+            if (!nextName) return false;
+            session.name = nextName;
+            renderTerminalSessionTabs();
+            persistTerminalSessions();
+            return true;
+        }
+
+        function handleConsoleSessionMenuAction(actionId, sessionId) {
+            if (actionId === 'rename') {
+                const renamed = renameTerminalSession(sessionId);
+                if (renamed && activeConsoleTab === 'terminal' && cmdXterm) {
+                    requestAnimationFrame(() => {
+                        cmdXterm.focus();
+                    });
+                }
+                return;
+            }
+            if (actionId === 'delete') {
+                const removed = closeTerminalSession(sessionId);
+                if (removed && activeConsoleTab === 'terminal' && cmdXterm) {
+                    requestAnimationFrame(() => {
+                        cmdXterm.focus();
+                    });
+                }
+            }
+        }
+
+        function hideConsoleSessionActionMenu(immediate = false) {
+            if (!consoleSessionActionMenuEl) return;
+            if (consoleSessionActionMenuCloseTimer) {
+                clearTimeout(consoleSessionActionMenuCloseTimer);
+                consoleSessionActionMenuCloseTimer = null;
+            }
+            if (consoleSessionActionMenuEl.hidden || immediate) {
+                consoleSessionActionMenuEl.hidden = true;
+                consoleSessionActionMenuEl.classList.remove('is-open', 'is-closing');
+                consoleSessionActionMenuEl.innerHTML = '';
+                consoleSessionActionMenuSessionId = '';
+                renderTerminalSessionTabs();
+                return;
+            }
+            consoleSessionActionMenuEl.classList.remove('is-open');
+            consoleSessionActionMenuEl.classList.add('is-closing');
+            consoleSessionActionMenuCloseTimer = setTimeout(() => {
+                consoleSessionActionMenuEl.hidden = true;
+                consoleSessionActionMenuEl.classList.remove('is-closing');
+                consoleSessionActionMenuEl.innerHTML = '';
+                consoleSessionActionMenuSessionId = '';
+                consoleSessionActionMenuCloseTimer = null;
+                renderTerminalSessionTabs();
+            }, CONSOLE_SESSION_ACTION_MENU_TRANSITION_MS);
+        }
+
+        function showConsoleSessionActionMenu(triggerEl, sessionId) {
+            if (!consoleSessionActionMenuEl || !triggerEl) return;
+            const targetSession = getTerminalSessionById(sessionId);
+            if (!targetSession) {
+                hideConsoleSessionActionMenu(true);
+                return;
+            }
+            if (consoleSessionActionMenuCloseTimer) {
+                clearTimeout(consoleSessionActionMenuCloseTimer);
+                consoleSessionActionMenuCloseTimer = null;
+            }
+            consoleSessionActionMenuSessionId = String(sessionId || '');
+            const canDelete = terminalSessions.length > 1;
+            const actions = [
+                { id: 'rename', label: 'Rename', icon: '\u270E' },
+                { id: 'delete', label: 'Delete', icon: '\u00D7', danger: true, disabled: !canDelete }
+            ];
+            consoleSessionActionMenuEl.innerHTML = '';
+            actions.forEach((action) => {
+                const item = document.createElement('button');
+                item.type = 'button';
+                item.className = 'console-session-menu-item';
+                if (action.danger) item.classList.add('danger');
+                if (action.disabled) item.disabled = true;
+
+                const icon = document.createElement('span');
+                icon.className = 'console-session-menu-item-icon';
+                icon.textContent = action.icon;
+
+                const label = document.createElement('span');
+                label.className = 'console-session-menu-item-label';
+                label.textContent = action.label;
+
+                item.append(icon, label);
+                item.onclick = (event) => {
+                    event.stopPropagation();
+                    hideConsoleSessionActionMenu();
+                    handleConsoleSessionMenuAction(action.id, consoleSessionActionMenuSessionId);
+                };
+                consoleSessionActionMenuEl.appendChild(item);
+            });
+
+            consoleSessionActionMenuEl.hidden = false;
+            consoleSessionActionMenuEl.classList.remove('is-closing');
+            consoleSessionActionMenuEl.style.left = '6px';
+            consoleSessionActionMenuEl.style.top = '6px';
+
+            const triggerRect = triggerEl.getBoundingClientRect();
+            const menuRect = consoleSessionActionMenuEl.getBoundingClientRect();
+            let posX = triggerRect.left - menuRect.width - 6;
+            if (posX < 6) {
+                posX = triggerRect.right + 6;
+            }
+            const maxX = window.innerWidth - menuRect.width - 6;
+            const maxY = window.innerHeight - menuRect.height - 6;
+            posX = Math.max(6, Math.min(posX, maxX));
+            const posY = Math.max(6, Math.min(triggerRect.top, maxY));
+
+            consoleSessionActionMenuEl.style.left = `${posX}px`;
+            consoleSessionActionMenuEl.style.top = `${posY}px`;
+            requestAnimationFrame(() => {
+                consoleSessionActionMenuEl.classList.add('is-open');
+                renderTerminalSessionTabs();
+            });
+        }
+
+        function isConsoleSessionActionMenuElement(target) {
+            if (!target) return false;
+            if (consoleSessionActionMenuEl && consoleSessionActionMenuEl.contains(target)) return true;
+            if (target && target.closest && target.closest('.console-session-menu-trigger')) return true;
+            return false;
         }
 
         function renderTerminalSessionTabs() {
             if (!consoleTerminalSessionsEl) return;
+            if (consoleSessionActionMenuSessionId && !getTerminalSessionById(consoleSessionActionMenuSessionId)) {
+                if (consoleSessionActionMenuEl) {
+                    consoleSessionActionMenuEl.hidden = true;
+                    consoleSessionActionMenuEl.classList.remove('is-open', 'is-closing');
+                    consoleSessionActionMenuEl.innerHTML = '';
+                }
+                consoleSessionActionMenuSessionId = '';
+                if (consoleSessionActionMenuCloseTimer) {
+                    clearTimeout(consoleSessionActionMenuCloseTimer);
+                    consoleSessionActionMenuCloseTimer = null;
+                }
+            }
             consoleTerminalSessionsEl.innerHTML = '';
+            const fragment = document.createDocumentFragment();
+            terminalSessions.forEach((session) => {
+                if (!session) return;
+                const shellType = normalizeTerminalShellType(session.shellType || inferTerminalShellTypeFromName(session.name));
+                session.shellType = shellType;
+                const wrapper = document.createElement('div');
+                wrapper.className = `console-session-item${session.id === activeTerminalSessionId ? ' active' : ''}`;
+
+                const chip = document.createElement('button');
+                chip.type = 'button';
+                chip.className = 'console-session-chip';
+                const sessionLabel = normalizeTerminalSessionName(session.name) || getTerminalShellLabel(shellType);
+                session.name = sessionLabel;
+                chip.title = String(session.cwd || sessionLabel);
+                const chipBody = document.createElement('span');
+                chipBody.className = 'console-session-chip-body';
+                chipBody.appendChild(buildTerminalShellIconElement(shellType));
+                const chipLabel = document.createElement('span');
+                chipLabel.className = 'console-session-shell-label';
+                chipLabel.textContent = sessionLabel;
+                chipBody.appendChild(chipLabel);
+                chip.appendChild(chipBody);
+                chip.onclick = () => {
+                    if (activeTerminalSessionId === session.id) return;
+                    activeTerminalSessionId = session.id;
+                    syncActiveTerminalStateFlags();
+                    renderTerminalSessionTabs();
+                    renderActiveTerminalOutput();
+                    updateTerminalPrompt();
+                    persistTerminalSessions();
+                    if (activeConsoleTab === 'terminal') {
+                        void ensureTerminalCwdResolved();
+                        void startCmdTerminalSession();
+                        if (cmdXterm) {
+                            requestAnimationFrame(() => {
+                                cmdXterm.focus();
+                            });
+                        }
+                    }
+                };
+
+                const menuBtn = document.createElement('button');
+                menuBtn.type = 'button';
+                menuBtn.className = 'console-session-menu-trigger';
+                menuBtn.title = 'Session Actions';
+                menuBtn.setAttribute('aria-label', 'Session actions');
+                menuBtn.textContent = '\u22EF';
+                const menuOpenForSession = consoleSessionActionMenuSessionId === session.id
+                    && consoleSessionActionMenuEl
+                    && !consoleSessionActionMenuEl.hidden;
+                if (menuOpenForSession) {
+                    menuBtn.classList.add('open');
+                }
+                menuBtn.onclick = (event) => {
+                    event.stopPropagation();
+                    if (menuOpenForSession) {
+                        hideConsoleSessionActionMenu();
+                        return;
+                    }
+                    showConsoleSessionActionMenu(menuBtn, session.id);
+                };
+
+                wrapper.appendChild(chip);
+                wrapper.appendChild(menuBtn);
+                fragment.appendChild(wrapper);
+            });
+            consoleTerminalSessionsEl.appendChild(fragment);
+        }
+
+        function createAndActivateTerminalSession(shellType = 'cmd') {
+            const resolvedShellType = normalizeTerminalShellType(shellType);
+            const session = createTerminalSession('', '', resolvedShellType);
+            session.name = buildTerminalSessionName(resolvedShellType);
+            ensureTerminalRuntimeSessionId(session);
+            terminalSessions.push(session);
+            activeTerminalSessionId = session.id;
+            syncActiveTerminalStateFlags();
+            renderTerminalSessionTabs();
+            renderActiveTerminalOutput();
+            updateTerminalPrompt();
+            persistTerminalSessions();
+            if (activeConsoleTab === 'terminal') {
+                void ensureTerminalCwdResolved();
+                void startCmdTerminalSession();
+                if (cmdXterm) {
+                    requestAnimationFrame(() => {
+                        cmdXterm.focus();
+                    });
+                }
+            }
+        }
+
+        function setConsoleNewSessionMenuOpen(nextOpen) {
+            if (!consoleNewSessionMenuEl) return;
+            const open = Boolean(nextOpen) && activeConsoleTab === 'terminal';
+            consoleNewSessionMenuOpen = open;
+            consoleNewSessionMenuEl.hidden = !open;
+            consoleTerminalNewSessionBtn?.setAttribute('aria-expanded', open ? 'true' : 'false');
+        }
+
+        function isConsoleNewSessionElement(target) {
+            if (!target) return false;
+            if (consoleTerminalNewSessionBtn && consoleTerminalNewSessionBtn.contains(target)) return true;
+            if (consoleNewSessionMenuEl && consoleNewSessionMenuEl.contains(target)) return true;
+            return false;
         }
 
         function scheduleCmdTerminalResize() {
@@ -4842,10 +5446,13 @@ console.log('Dark mode applied!');`
             if (cmdFitAddon && typeof cmdFitAddon.fit === 'function') {
                 cmdFitAddon.fit();
             }
-            if (!cmdTerminalRunning) return;
+            const session = getActiveTerminalSession();
+            if (!session.running) return;
             if (!window.runtime || typeof window.runtime.cmdResize !== 'function') return;
             try {
+                const sessionId = ensureTerminalRuntimeSessionId(session);
                 await window.runtime.cmdResize({
+                    sessionId,
                     cols: Math.max(20, Number(cmdXterm.cols) || 120),
                     rows: Math.max(5, Number(cmdXterm.rows) || 30)
                 });
@@ -4884,7 +5491,7 @@ console.log('Dark mode applied!');`
                     convertEol: false,
                     cursorBlink: true,
                     cursorStyle: 'block',
-                    fontFamily: 'Consolas, monospace',
+                    fontFamily: 'Consolas, "Courier New", monospace',
                     fontSize: 12,
                     lineHeight: 1.2,
                     scrollback: 5000,
@@ -4913,18 +5520,32 @@ console.log('Dark mode applied!');`
 
                 cmdXterm.onData((data) => {
                     if (!window.runtime || typeof window.runtime.cmdWrite !== 'function') return;
+                    const session = getActiveTerminalSession();
                     void startCmdTerminalSession().then((started) => {
                         if (!started) return;
-                        window.runtime.cmdWrite(String(data || '')).catch(() => {
-                            cmdTerminalRunning = false;
+                        const sessionId = ensureTerminalRuntimeSessionId(session);
+                        window.runtime.cmdWrite({
+                            sessionId,
+                            input: String(data || '')
+                        }).catch(() => {
+                            session.running = false;
+                            session.starting = false;
+                            session.failed = true;
+                            syncActiveTerminalStateFlags();
+                            persistTerminalSessions();
                         });
                     });
                 });
 
                 cmdXterm.onResize(({ cols, rows }) => {
                     if (!window.runtime || typeof window.runtime.cmdResize !== 'function') return;
-                    if (!cmdTerminalRunning) return;
-                    void window.runtime.cmdResize({ cols, rows }).catch(() => { });
+                    const session = getActiveTerminalSession();
+                    if (!session.running) return;
+                    void window.runtime.cmdResize({
+                        sessionId: ensureTerminalRuntimeSessionId(session),
+                        cols,
+                        rows
+                    }).catch(() => { });
                 });
 
                 if (typeof cmdXterm.onSelectionChange === 'function') {
@@ -4991,8 +5612,8 @@ console.log('Dark mode applied!');`
             }
         }
 
-        function appendTerminalLine(type, text) {
-            const session = getActiveTerminalSession();
+        function appendTerminalLine(type, text, targetSession = null) {
+            const session = targetSession || getActiveTerminalSession();
             const lineType = String(type || 'log');
             const normalized = String(text || '');
             session.buffer = String(session.buffer || '') + normalized + '\n';
@@ -5007,14 +5628,14 @@ console.log('Dark mode applied!');`
             }
         }
 
-        function pushTerminalLine(type, text) {
-            appendTerminalLine(type, text);
+        function pushTerminalLine(type, text, targetSession = null) {
+            appendTerminalLine(type, text, targetSession);
             persistTerminalSessions();
         }
 
         function parseCmdPromptLine(value) {
             const line = String(value || '').replace(/\s+$/g, '');
-            const match = line.match(/^([A-Za-z]:\\.*)>\s*$/);
+            const match = line.match(/^(?:PS\s+)?([A-Za-z]:\\.*)>\s*$/i);
             if (!match) return '';
             const cwd = String(match[1] || '').trim();
             return cwd.replace(/[\\/]+$/g, '') || cwd;
@@ -5032,8 +5653,8 @@ console.log('Dark mode applied!');`
                 .replace(/\x1b[@-_]/g, '');
         }
 
-        function appendTerminalChunk(chunkText) {
-            const session = getActiveTerminalSession();
+        function appendTerminalChunk(chunkText, targetSession = null) {
+            const session = targetSession || getActiveTerminalSession();
             const rawChunk = String(chunkText || '');
             if (!rawChunk) return;
 
@@ -5059,9 +5680,9 @@ console.log('Dark mode applied!');`
                 });
             }
 
-            if (cmdXterm) {
+            if (cmdXterm && activeConsoleTab === 'terminal' && activeTerminalSessionId === session.id) {
                 cmdXterm.write(rawChunk);
-            } else if (activeConsoleTab === 'terminal') {
+            } else if (activeConsoleTab === 'terminal' && activeTerminalSessionId === session.id) {
                 refreshTerminalStreamInView();
             }
             persistTerminalSessions();
@@ -5072,16 +5693,19 @@ console.log('Dark mode applied!');`
             const currentBuffer = String(session.buffer || '');
             const lastLine = currentBuffer.split('\n').pop() || '';
             const trimmedLastLine = lastLine.trim();
-            if (/^[A-Za-z]:\\.*>$/.test(trimmedLastLine)) {
-                const cwdFromPrompt = trimmedLastLine.slice(0, -1);
+            const shellPromptMatch = trimmedLastLine.match(/^(PS\s+)?([A-Za-z]:\\.*)>\s*$/i);
+            if (shellPromptMatch) {
+                const hasPsPrefix = Boolean(shellPromptMatch[1]);
+                const cwdFromPrompt = String(shellPromptMatch[2] || '').trim();
                 session.cwd = cwdFromPrompt;
                 terminalLastCwd = cwdFromPrompt;
-                return trimmedLastLine;
+                const promptPrefix = hasPsPrefix ? 'PS ' : buildTerminalPromptPrefix(session.shellType);
+                return `${promptPrefix}${cwdFromPrompt}>`;
             }
             const cwd = String(getPreferredRuntimeCwd() || session.cwd || terminalLastCwd || '').trim();
             const normalized = cwd.replace(/[\\/]+$/, '');
-            if (!normalized) return 'C:\\>';
-            return `${normalized}>`;
+            const resolvedCwd = normalized || 'C:\\';
+            return `${buildTerminalPromptPrefix(session.shellType)}${resolvedCwd}>`;
         }
 
         async function ensureTerminalCwdResolved() {
@@ -5103,7 +5727,9 @@ console.log('Dark mode applied!');`
             }
 
             try {
-                const probe = await window.runtime.cmdStatus();
+                const probe = await window.runtime.cmdStatus({
+                    sessionId: ensureTerminalRuntimeSessionId(session)
+                });
                 const detected = String(probe && probe.cwd ? probe.cwd : '').trim();
                 if (detected) {
                     session.cwd = detected;
@@ -5114,71 +5740,156 @@ console.log('Dark mode applied!');`
             return session.cwd;
         }
 
+        function applyCmdStatusToTerminalSessions(statusValue) {
+            const status = statusValue && typeof statusValue === 'object' ? statusValue : {};
+            const runtimeEntries = Array.isArray(status.sessions) ? status.sessions : [];
+            const runtimeById = new Map();
+            runtimeEntries.forEach((entry) => {
+                const runtimeId = String(entry && entry.sessionId ? entry.sessionId : '').trim();
+                if (!runtimeId) return;
+                runtimeById.set(runtimeId, entry);
+            });
+
+            if (!runtimeById.size && status && status.running) {
+                const singleRuntimeId = String(status.sessionId || '').trim();
+                if (singleRuntimeId) {
+                    runtimeById.set(singleRuntimeId, {
+                        sessionId: singleRuntimeId,
+                        shell: String(status.shell || ''),
+                        cwd: String(status.cwd || '')
+                    });
+                }
+            }
+
+            terminalSessions.forEach((session) => {
+                const runtimeId = ensureTerminalRuntimeSessionId(session);
+                const runtimeEntry = runtimeById.get(runtimeId) || null;
+                const isRunning = Boolean(runtimeEntry);
+                session.running = isRunning;
+                session.starting = false;
+                session.failed = false;
+                if (runtimeEntry) {
+                    session.shellType = normalizeTerminalShellType(runtimeEntry.shell || session.shellType);
+                    const detectedCwd = String(runtimeEntry.cwd || '').trim();
+                    if (detectedCwd) {
+                        session.cwd = detectedCwd;
+                        terminalLastCwd = detectedCwd;
+                    }
+                }
+            });
+            syncActiveTerminalStateFlags();
+            persistTerminalSessions();
+        }
+
         function bindCmdTerminalStreams() {
             if (!window.runtime) return;
             if (!detachCmdDataListener && typeof window.runtime.onCmdData === 'function') {
                 detachCmdDataListener = window.runtime.onCmdData((payload) => {
+                    const runtimeSessionId = String(payload && payload.sessionId ? payload.sessionId : '').trim();
                     const data = payload && Object.prototype.hasOwnProperty.call(payload, 'data')
                         ? String(payload.data || '')
                         : '';
                     if (!data) return;
-                    appendTerminalChunk(data);
-                    updateTerminalPrompt();
+                    const session = getTerminalSessionFromRuntimePayload(runtimeSessionId);
+                    if (!session) return;
+                    appendTerminalChunk(data, session);
+                    if (session.id === activeTerminalSessionId) {
+                        syncActiveTerminalStateFlags();
+                        updateTerminalPrompt();
+                    }
                 });
             }
             if (!detachCmdExitListener && typeof window.runtime.onCmdExit === 'function') {
                 detachCmdExitListener = window.runtime.onCmdExit((payload) => {
-                    cmdTerminalRunning = false;
-                    cmdTerminalStarting = false;
+                    const runtimeSessionId = String(payload && payload.sessionId ? payload.sessionId : '').trim();
+                    const session = getTerminalSessionFromRuntimePayload(runtimeSessionId);
+                    if (!session) return;
+                    session.running = false;
+                    session.starting = false;
                     const reason = String(payload && payload.reason ? payload.reason : 'exit');
                     if (reason === 'error') {
-                        const message = String(payload && payload.error ? payload.error : 'cmd.exe terminated unexpectedly.');
-                        pushTerminalLine('error', message);
+                        const shellLabel = getTerminalShellLabel(session.shellType);
+                        const fallbackMessage = `${shellLabel} session terminated unexpectedly.`;
+                        const message = String(payload && payload.error ? payload.error : fallbackMessage);
+                        session.failed = true;
+                        pushTerminalLine('error', message, session);
+                    } else {
+                        session.failed = false;
+                        persistTerminalSessions();
                     }
-                    updateTerminalPrompt();
+                    if (session.id === activeTerminalSessionId) {
+                        syncActiveTerminalStateFlags();
+                        updateTerminalPrompt();
+                    }
                 });
             }
         }
 
         async function startCmdTerminalSession() {
-            if (cmdTerminalRunning || cmdTerminalStarting) return true;
+            const session = getActiveTerminalSession();
+            if (session.running) return true;
+            if (session.startPromise) return session.startPromise;
             if (!window.runtime || typeof window.runtime.cmdStart !== 'function') {
-                if (!cmdTerminalFailed) {
-                    showToast('Persistent CMD terminal API unavailable');
-                    cmdTerminalFailed = true;
+                if (!session.failed) {
+                    showToast('Persistent terminal API unavailable');
+                    session.failed = true;
+                    session.starting = false;
+                    session.running = false;
+                    syncActiveTerminalStateFlags();
                 }
                 return false;
             }
 
-            cmdTerminalStarting = true;
-            try {
+            const launch = async () => {
+                session.starting = true;
+                session.failed = false;
+                syncActiveTerminalStateFlags();
                 initializeCmdXterm();
                 bindCmdTerminalStreams();
-                const session = getActiveTerminalSession();
                 const preferredCwd = String(getPreferredRuntimeCwd() || session.cwd || terminalLastCwd || '').trim();
-                const result = await window.runtime.cmdStart({
-                    cwd: preferredCwd,
-                    cols: cmdXterm ? Number(cmdXterm.cols) || 120 : 120,
-                    rows: cmdXterm ? Number(cmdXterm.rows) || 30 : 30
-                });
-                cmdTerminalRunning = Boolean(result && result.running);
-                cmdTerminalFailed = false;
-                const resolvedCwd = String(result && result.cwd ? result.cwd : '').trim();
-                if (resolvedCwd) {
-                    session.cwd = resolvedCwd;
-                    terminalLastCwd = resolvedCwd;
+                try {
+                    const result = await window.runtime.cmdStart({
+                        sessionId: ensureTerminalRuntimeSessionId(session),
+                        shell: normalizeTerminalShellType(session.shellType),
+                        cwd: preferredCwd,
+                        cols: cmdXterm ? Number(cmdXterm.cols) || 120 : 120,
+                        rows: cmdXterm ? Number(cmdXterm.rows) || 30 : 30
+                    });
+                    const runtimeSessionId = String(result && result.sessionId ? result.sessionId : '').trim();
+                    if (runtimeSessionId) {
+                        session.runtimeSessionId = runtimeSessionId;
+                    }
+                    session.shellType = normalizeTerminalShellType(result && result.shell ? result.shell : session.shellType);
+                    session.running = Boolean(result && result.running);
+                    session.failed = false;
+                    const resolvedCwd = String(result && result.cwd ? result.cwd : '').trim();
+                    if (resolvedCwd) {
+                        session.cwd = resolvedCwd;
+                        terminalLastCwd = resolvedCwd;
+                    }
+                    scheduleCmdTerminalResize();
+                    syncActiveTerminalStateFlags();
+                    updateTerminalPrompt();
+                    persistTerminalSessions();
+                    return session.running;
+                } catch (error) {
+                    session.running = false;
+                    session.failed = true;
+                    const message = error && error.message ? error.message : String(error);
+                    pushTerminalLine('error', message, session);
+                    syncActiveTerminalStateFlags();
+                    return false;
+                } finally {
+                    session.starting = false;
+                    syncActiveTerminalStateFlags();
                 }
-                scheduleCmdTerminalResize();
-                updateTerminalPrompt();
-                return cmdTerminalRunning;
-            } catch (error) {
-                cmdTerminalRunning = false;
-                cmdTerminalFailed = true;
-                const message = error && error.message ? error.message : String(error);
-                pushTerminalLine('error', message);
-                return false;
+            };
+
+            session.startPromise = launch();
+            try {
+                return await session.startPromise;
             } finally {
-                cmdTerminalStarting = false;
+                session.startPromise = null;
             }
         }
 
@@ -5386,6 +6097,10 @@ console.log('Dark mode applied!');`
             const nextTab = tabName === 'terminal' ? 'terminal' : 'output';
             activeConsoleTab = nextTab;
             hideConsoleSelectionCopyButton();
+            if (nextTab !== 'terminal') {
+                setConsoleNewSessionMenuOpen(false);
+                hideConsoleSessionActionMenu(true);
+            }
 
             if (consoleOutputTabBtn) consoleOutputTabBtn.classList.toggle('active', nextTab === 'output');
             if (consoleTerminalTabBtn) consoleTerminalTabBtn.classList.toggle('active', nextTab === 'terminal');
@@ -5486,10 +6201,16 @@ console.log('Dark mode applied!');`
             syncTerminalInputHeight();
 
             try {
-                await window.runtime.cmdWrite(commandRaw + '\r\n');
+                await window.runtime.cmdWrite({
+                    sessionId: ensureTerminalRuntimeSessionId(session),
+                    input: commandRaw + '\r\n'
+                });
             } catch (error) {
-                pushTerminalLine('error', error && error.message ? error.message : String(error));
-                cmdTerminalRunning = false;
+                pushTerminalLine('error', error && error.message ? error.message : String(error), session);
+                session.running = false;
+                session.starting = false;
+                session.failed = true;
+                syncActiveTerminalStateFlags();
             }
             if (consoleTerminalInputEl) {
                 consoleTerminalInputEl.focus();
@@ -5507,16 +6228,16 @@ console.log('Dark mode applied!');`
                 toastContainer.removeChild(toastContainer.firstChild);
             }
 
-            // Keep toast markers plain ASCII to avoid font/encoding artifacts.
-            let icon = '[OK]';
-            if (message.toLowerCase().includes('save')) icon = '[SAVE]';
-            else if (message.toLowerCase().includes('load')) icon = '[LOAD]';
-            else if (message.toLowerCase().includes('open')) icon = '[OPEN]';
-            else if (message.toLowerCase().includes('clear')) icon = '[CLR]';
-            else if (message.toLowerCase().includes('switched') || message.toLowerCase().includes('mode')) icon = '[MODE]';
-            else if (message.toLowerCase().includes('sent')) icon = '[SEND]';
-            else if (message.toLowerCase().includes('no code')) icon = '[WARN]';
-            else if (message.toLowerCase().includes('no browser')) icon = '[ERR]';
+            // Determine icon based on message content.
+            let icon = '\u2705';
+            if (message.toLowerCase().includes('save')) icon = '\u{1F4BE}';
+            else if (message.toLowerCase().includes('load')) icon = '\u{1F4C2}';
+            else if (message.toLowerCase().includes('open')) icon = '\u{1F4C1}';
+            else if (message.toLowerCase().includes('clear')) icon = '\u{1F5D1}\uFE0F';
+            else if (message.toLowerCase().includes('switched') || message.toLowerCase().includes('mode')) icon = '\u{1F504}';
+            else if (message.toLowerCase().includes('sent')) icon = '\u{1F4E4}';
+            else if (message.toLowerCase().includes('no code')) icon = '\u26A0\uFE0F';
+            else if (message.toLowerCase().includes('no browser')) icon = '\u274C';
 
             toast.innerHTML = `<span class="toast-icon">${icon}</span><span>${message}</span>`;
             toastContainer.appendChild(toast);
@@ -5541,8 +6262,11 @@ console.log('Dark mode applied!');`
                 session.buffer = '';
                 if (cmdXterm) {
                     cmdXterm.reset();
-                    if (cmdTerminalRunning && window.runtime && typeof window.runtime.cmdWrite === 'function') {
-                        void window.runtime.cmdWrite('cls\r');
+                    if (session.running && window.runtime && typeof window.runtime.cmdWrite === 'function') {
+                        void window.runtime.cmdWrite({
+                            sessionId: ensureTerminalRuntimeSessionId(session),
+                            input: 'cls\r'
+                        });
                     }
                 } else {
                     renderActiveTerminalOutput();
@@ -5653,8 +6377,17 @@ console.log('Dark mode applied!');`
             scheduleConsoleSelectionCopyButtonRefresh();
         });
         document.addEventListener('mousedown', (event) => {
-            if (consoleSelectionCopyBtnEl && consoleSelectionCopyBtnEl.contains(event.target)) return;
             const target = event.target;
+            if (consoleSessionActionMenuSessionId && !isConsoleSessionActionMenuElement(target)) {
+                hideConsoleSessionActionMenu();
+            }
+            if (consoleNewSessionMenuOpen && !isConsoleNewSessionElement(target)) {
+                setConsoleNewSessionMenuOpen(false);
+            }
+            if (isConsoleSessionActionMenuElement(target)) {
+                return;
+            }
+            if (consoleSelectionCopyBtnEl && consoleSelectionCopyBtnEl.contains(event.target)) return;
             if (target && typeof target.closest === 'function' && target.closest('#console, #consoleTerminalOutput')) {
                 return;
             }
@@ -5663,12 +6396,16 @@ console.log('Dark mode applied!');`
         document.addEventListener('keydown', (event) => {
             if (event.key === 'Escape') {
                 hideConsoleSelectionCopyButton();
+                setConsoleNewSessionMenuOpen(false);
+                hideConsoleSessionActionMenu();
             }
         });
         window.addEventListener('resize', () => {
             scheduleConsoleTabIndicatorUpdate();
             scheduleCmdTerminalResize();
             hideConsoleSelectionCopyButton();
+            setConsoleNewSessionMenuOpen(false);
+            hideConsoleSessionActionMenu();
         });
         if (consoleWrapRootEl) {
             consoleWrapRootEl.addEventListener('transitionend', (event) => {
@@ -5685,24 +6422,32 @@ console.log('Dark mode applied!');`
         renderTerminalSessionTabs();
         renderActiveTerminalOutput();
         if (consoleTerminalNewSessionBtn) {
-            consoleTerminalNewSessionBtn.style.display = 'none';
-            consoleTerminalNewSessionBtn.disabled = true;
-            consoleTerminalNewSessionBtn.onclick = null;
+            consoleTerminalNewSessionBtn.disabled = false;
+            consoleTerminalNewSessionBtn.onclick = (event) => {
+                event.preventDefault();
+                hideConsoleSessionActionMenu();
+                setConsoleNewSessionMenuOpen(!consoleNewSessionMenuOpen);
+            };
+            consoleTerminalNewSessionBtn.setAttribute('aria-expanded', 'false');
+        }
+        if (consoleNewSessionMenuEl) {
+            consoleNewSessionMenuEl.hidden = true;
+            consoleNewSessionMenuEl.querySelectorAll('.console-shell-option[data-shell]').forEach((element) => {
+                element.addEventListener('click', () => {
+                    const shellType = normalizeTerminalShellType(element.getAttribute('data-shell'));
+                    setConsoleNewSessionMenuOpen(false);
+                    createAndActivateTerminalSession(shellType);
+                });
+            });
         }
         void (async () => {
             await ensureTerminalCwdResolved();
             if (window.runtime && typeof window.runtime.cmdStatus === 'function') {
                 try {
                     const status = await window.runtime.cmdStatus();
-                    cmdTerminalRunning = Boolean(status && status.running);
-                    const detectedCwd = String(status && status.cwd ? status.cwd : '').trim();
-                    if (detectedCwd) {
-                        const session = getActiveTerminalSession();
-                        session.cwd = detectedCwd;
-                        terminalLastCwd = detectedCwd;
-                    }
+                    applyCmdStatusToTerminalSessions(status);
                 } catch {
-                    cmdTerminalRunning = false;
+                    syncActiveTerminalStateFlags();
                 }
             }
             updateTerminalPrompt();
@@ -8366,7 +9111,11 @@ console.log('Dark mode applied!');`
                 const started = await startCmdTerminalSession();
                 if (!started) return;
                 if (initialCommand && window.runtime && typeof window.runtime.cmdWrite === 'function') {
-                    await window.runtime.cmdWrite(String(initialCommand));
+                    const session = getActiveTerminalSession();
+                    await window.runtime.cmdWrite({
+                        sessionId: ensureTerminalRuntimeSessionId(session),
+                        input: String(initialCommand)
+                    });
                 }
                 if (cmdXterm) {
                     requestAnimationFrame(() => {
@@ -11525,7 +12274,7 @@ console.log('Dark mode applied!');`
                             <div id="tabListContainer" style="max-height: 42vh; overflow-y: auto;"></div>
                         </div>
 
-                        <div style="margin-top: 15px; font-size: 10px; color: rgba(255,255,255,0.2); font-family: monospace; text-align: center;">
+                        <div style="margin-top: 15px; font-size: 10px; color: rgba(255,255,255,0.2); font-family: -apple-system, BlinkMacSystemFont, sans-serif; text-align: center;">
                             BRIDGE: WS://127.0.0.1:8181
                         </div>
                     </div>
@@ -11637,7 +12386,7 @@ console.log('Dark mode applied!');`
                     left.style.minWidth = '0';
                     left.innerHTML = `
                         <div style="font-size:11px;color:#f0f0f0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${task.name}</div>
-                        <div style="font-family:Consolas,monospace;font-size:10px;color:#9f9f9f;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${task.command}</div>
+                        <div style="font-family:-apple-system,BlinkMacSystemFont,sans-serif;font-size:10px;color:#9f9f9f;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${task.command}</div>
                     `;
 
                     const right = document.createElement('div');
@@ -12300,7 +13049,7 @@ console.log('Dark mode applied!');`
             htmlDoc.write(`
                 <!DOCTYPE html>
                 <html>
-                <body style="background:#000;color:#909090;font-family:monospace;padding:20px;">
+                <body style="background:#000;color:#909090;font-family:-apple-system,BlinkMacSystemFont,sans-serif;padding:20px;">
                     <script>
                         (function() {
                             const relay = (type, args) => {
@@ -12337,7 +13086,7 @@ console.log('Dark mode applied!');`
                                         'align-items:center',
                                         'justify-content:center',
                                         'background:rgba(0,0,0,0.48)',
-                                        'font-family:Consolas,monospace'
+                                        'font-family:-apple-system,BlinkMacSystemFont,sans-serif'
                                     ].join(';');
 
                                     const panel = document.createElement('div');
@@ -12430,7 +13179,7 @@ console.log('Dark mode applied!');`
             htmlDoc.write(`
                             <!DOCTYPE html>
                             <html>
-                            <body style="background:#000;color:#909090;font-family:monospace;padding:20px;">
+                            <body style="background:#000;color:#909090;font-family:-apple-system,BlinkMacSystemFont,sans-serif;padding:20px;">
                                 <script>
                                     (function() {
                                         const userCode = ${serializedCode};
@@ -12468,7 +13217,7 @@ console.log('Dark mode applied!');`
                                                     'align-items:center',
                                                     'justify-content:center',
                                                     'background:rgba(0,0,0,0.48)',
-                                                    'font-family:Consolas,monospace'
+                                                    'font-family:-apple-system,BlinkMacSystemFont,sans-serif'
                                                 ].join(';');
 
                                                 const panel = document.createElement('div');
@@ -12560,7 +13309,7 @@ console.log('Dark mode applied!');`
                 htmlDoc.write(`
                     <!DOCTYPE html>
                     <html>
-                    <body style="margin:0;padding:20px;background:#0d0d0d;color:#b8b8b8;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;">
+                    <body style="margin:0;padding:20px;background:#0d0d0d;color:#b8b8b8;font-family:-apple-system,BlinkMacSystemFont,sans-serif;">
                         <pre style="margin:0;">Python output is shown in the console panel.</pre>
                     </body>
                     </html>
@@ -12697,7 +13446,7 @@ console.log('Dark mode applied!');`
                         <style>
                             body {
                                 margin: 0;
-                                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+                                font-family: -apple-system, BlinkMacSystemFont, sans-serif;
                                 background: #0d0d0d;
                                 color: #d7d7d7;
                             }
@@ -12748,7 +13497,7 @@ console.log('Dark mode applied!');`
             htmlDoc.write(`
                 <!DOCTYPE html>
                 <html>
-                <body style="margin:0;padding:20px;background:#0d0d0d;color:#b8b8b8;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;">
+                <body style="margin:0;padding:20px;background:#0d0d0d;color:#b8b8b8;font-family:-apple-system,BlinkMacSystemFont,sans-serif;">
                     <pre style="margin:0;white-space:pre-wrap;word-break:break-word;">${escapedCode}</pre>
                 </body>
                 </html>
@@ -12831,7 +13580,7 @@ console.log('Dark mode applied!');`
                         topBar.style.alignItems = 'center';
                         topBar.style.justifyContent = 'space-between';
                         topBar.style.padding = '0 10px';
-                        topBar.style.font = '12px -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif';
+                        topBar.style.font = '12px -apple-system, BlinkMacSystemFont, sans-serif';
                         topBar.style.letterSpacing = '0.02em';
                         topBar.textContent = 'Voltus Project Run';
 
@@ -12980,6 +13729,8 @@ console.log('Dark mode applied!');`
     </script>
 </body>
 </html>
+
+
 
 
 

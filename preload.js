@@ -69,9 +69,17 @@ contextBridge.exposeInMainWorld('runtime', {
     runPython: (code, options = {}) => ipcRenderer.invoke('runtime:run-python', code, options),
     runShell: (command, options = {}) => ipcRenderer.invoke('runtime:run-shell', command, options),
     cmdStart: (options = {}) => ipcRenderer.invoke('runtime:cmd:start', options),
-    cmdWrite: (input = '') => ipcRenderer.invoke('runtime:cmd:write', input),
-    cmdStop: () => ipcRenderer.invoke('runtime:cmd:stop'),
-    cmdStatus: () => ipcRenderer.invoke('runtime:cmd:status'),
+    cmdWrite: (inputOrOptions = '', options = {}) => {
+        if (inputOrOptions && typeof inputOrOptions === 'object' && !Array.isArray(inputOrOptions)) {
+            return ipcRenderer.invoke('runtime:cmd:write', inputOrOptions);
+        }
+        return ipcRenderer.invoke('runtime:cmd:write', {
+            input: typeof inputOrOptions === 'string' ? inputOrOptions : String(inputOrOptions || ''),
+            sessionId: options && options.sessionId ? String(options.sessionId) : ''
+        });
+    },
+    cmdStop: (options = {}) => ipcRenderer.invoke('runtime:cmd:stop', options),
+    cmdStatus: (options = {}) => ipcRenderer.invoke('runtime:cmd:status', options),
     cmdResize: (options = {}) => ipcRenderer.invoke('runtime:cmd:resize', options),
     onCmdData: (callback) => {
         if (typeof callback !== 'function') return () => { };

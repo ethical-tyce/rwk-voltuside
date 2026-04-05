@@ -49,7 +49,7 @@ const runtimeExecutionPolicy = {
 };
 const CMD_CHANNEL_DATA = 'runtime:cmd:data';
 const CMD_CHANNEL_EXIT = 'runtime:cmd:exit';
-let cmdSession = null;
+const cmdSessions = new Map();
 const IMAGE_MIME_TYPES = {
     '.png': 'image/png',
     '.jpg': 'image/jpeg',
@@ -421,24 +421,105 @@ function emitCmdSessionTo(sender, channel, payload = {}) {
     }
 }
 
-function stopCmdSession(reason = 'stopped') {
-    if (!cmdSession) return;
-    cmdSession.stopping = true;
-    cmdSession.stopReason = String(reason || 'stopped');
+function normalizeCmdSessionId(value) {
+    const raw = String(value || '').trim();
+    if (!raw) return '';
+    return raw.replace(/[^A-Za-z0-9._:-]/g, '').slice(0, 80);
+}
+
+function createCmdSessionId() {
+    return `cmd-${Date.now()}-${Math.random().toString(16).slice(2, 8)}`;
+}
+
+function normalizePersistentShellType(value) {
+    const raw = String(value || '').trim().toLowerCase();
+    if (raw === 'pwr' || raw === 'powershell' || raw === 'pwsh') {
+        return 'pwr';
+    }
+    return 'cmd';
+}
+
+function getPersistentShellLaunchAttempts(shellType = 'cmd') {
+    const shell = normalizePersistentShellType(shellType);
+    if (shell === 'pwr') {
+        const systemRoot = String(process.env.SystemRoot || '').trim() || 'C:\\Windows';
+        return [
+            {
+                command: path.join(systemRoot, 'System32', 'WindowsPowerShell', 'v1.0', 'powershell.exe'),
+                args: ['-NoLogo']
+            },
+            {
+                command: 'powershell.exe',
+                args: ['-NoLogo']
+            }
+        ];
+    }
+    const cmdExecutable = String(process.env.ComSpec || '').trim() || 'cmd.exe';
+    return [
+        {
+            command: cmdExecutable,
+            args: ['/d']
+        }
+    ];
+}
+
+function getDefaultCmdSession() {
+    const iterator = cmdSessions.values();
+    const first = iterator.next();
+    return first && !first.done ? first.value : null;
+}
+
+function resolveCmdSessionForRequest(sessionId = '', required = true) {
+    const normalizedId = normalizeCmdSessionId(sessionId);
+    if (normalizedId) {
+        const direct = cmdSessions.get(normalizedId) || null;
+        if (direct || !required) return direct;
+        throw new Error('cmd.exe session is not running.');
+    }
+
+    if (cmdSessions.size === 1) {
+        return getDefaultCmdSession();
+    }
+
+    if (!required) {
+        return getDefaultCmdSession();
+    }
+
+    if (cmdSessions.size > 1) {
+        throw new Error('Multiple cmd sessions are running; sessionId is required.');
+    }
+
+    throw new Error('cmd.exe session is not running.');
+}
+
+function stopCmdSession(sessionId = '', reason = 'stopped') {
+    const session = resolveCmdSessionForRequest(sessionId, false);
+    if (!session) return false;
+    const resolvedId = String(session.id || '');
+    session.stopping = true;
+    session.stopReason = String(reason || 'stopped');
     try {
-        if (cmdSession.ptyProcess) {
-            cmdSession.ptyProcess.kill();
-            return;
+        if (session.ptyProcess) {
+            session.ptyProcess.kill();
+            return true;
         }
     } catch {
         // Ignore process kill errors during shutdown.
     }
-    const sender = cmdSession.sender;
-    const code = typeof cmdSession.exitCode === 'number' ? cmdSession.exitCode : null;
-    const signal = cmdSession.signal || null;
-    const finalReason = cmdSession.stopReason || String(reason || 'stopped');
-    cmdSession = null;
-    emitCmdSessionTo(sender, CMD_CHANNEL_EXIT, { code, signal, reason: finalReason });
+    const sender = session.sender;
+    const code = typeof session.exitCode === 'number' ? session.exitCode : null;
+    const signal = session.signal || null;
+    const finalReason = session.stopReason || String(reason || 'stopped');
+    cmdSessions.delete(resolvedId);
+    emitCmdSessionTo(sender, CMD_CHANNEL_EXIT, { sessionId: resolvedId, code, signal, reason: finalReason });
+    return true;
+}
+
+function stopAllCmdSessions(reason = 'stopped') {
+    const sessionIds = [...cmdSessions.keys()];
+    sessionIds.forEach((sessionId) => {
+        stopCmdSession(sessionId, reason);
+    });
 }
 
 function parseGitStatusOutput(rawValue) {
@@ -926,7 +1007,7 @@ function createWindow() {
     //win.webContents.openDevTools();
 
     win.on('closed', () => {
-        stopCmdSession('window-closed');
+        stopAllCmdSessions('window-closed');
         win = null;
     });
 }
@@ -1416,29 +1497,56 @@ ipcMain.handle('runtime:cmd:start', async (event, options = {}) => {
     const rowsRaw = Number(options && options.rows);
     const cols = Number.isFinite(colsRaw) ? Math.max(20, Math.min(500, Math.floor(colsRaw))) : 120;
     const rows = Number.isFinite(rowsRaw) ? Math.max(5, Math.min(400, Math.floor(rowsRaw))) : 30;
+    const requestedSessionId = normalizeCmdSessionId(options && options.sessionId);
+    const sessionId = requestedSessionId || createCmdSessionId();
+    const shell = normalizePersistentShellType(options && options.shell);
 
-    if (cmdSession && cmdSession.ptyProcess) {
-        cmdSession.sender = event.sender;
+    const existingSession = cmdSessions.get(sessionId);
+    if (existingSession && existingSession.ptyProcess) {
+        existingSession.sender = event.sender;
         return {
             ok: true,
             running: true,
             reused: true,
-            cwd: cmdSession.cwd,
-            pid: cmdSession.ptyProcess.pid || null
+            sessionId,
+            shell: normalizePersistentShellType(existingSession.shell),
+            cwd: existingSession.cwd,
+            pid: existingSession.ptyProcess.pid || null
         };
     }
 
-    const cmdExecutable = String(process.env.ComSpec || '').trim() || 'cmd.exe';
-    const ptyProcess = nodePty.spawn(cmdExecutable, ['/d'], {
-        name: 'xterm-256color',
-        cwd,
-        cols,
-        rows,
-        env: process.env,
-        useConpty: true
-    });
+    const shellAttempts = getPersistentShellLaunchAttempts(shell);
+    let ptyProcess = null;
+    let lastShellError = null;
+    for (const attempt of shellAttempts) {
+        try {
+            ptyProcess = nodePty.spawn(attempt.command, attempt.args, {
+                name: 'xterm-256color',
+                cwd,
+                cols,
+                rows,
+                env: process.env,
+                useConpty: true
+            });
+            break;
+        } catch (error) {
+            lastShellError = error;
+            const message = String(error && error.message ? error.message : error || '');
+            const isNotFound = (error && error.code === 'ENOENT')
+                || /not found/i.test(message)
+                || /cannot find/i.test(message);
+            if (!isNotFound) {
+                throw error;
+            }
+        }
+    }
+    if (!ptyProcess) {
+        throw lastShellError || new Error(`Could not start ${shell === 'pwr' ? 'PowerShell' : 'CMD'} session.`);
+    }
 
-    cmdSession = {
+    const session = {
+        id: sessionId,
+        shell,
         ptyProcess,
         sender: event.sender,
         cwd,
@@ -1447,69 +1555,116 @@ ipcMain.handle('runtime:cmd:start', async (event, options = {}) => {
         exitCode: null,
         signal: null
     };
+    cmdSessions.set(sessionId, session);
 
     ptyProcess.onData((chunk) => {
-        if (!cmdSession || cmdSession.ptyProcess !== ptyProcess) return;
-        emitCmdSessionTo(cmdSession.sender, CMD_CHANNEL_DATA, { data: String(chunk || '') });
+        const current = cmdSessions.get(sessionId);
+        if (!current || current.ptyProcess !== ptyProcess) return;
+        emitCmdSessionTo(current.sender, CMD_CHANNEL_DATA, { sessionId, data: String(chunk || '') });
     });
 
     ptyProcess.onExit(({ exitCode, signal }) => {
-        if (!cmdSession || cmdSession.ptyProcess !== ptyProcess) return;
-        const sender = cmdSession.sender;
-        const reason = cmdSession.stopReason || 'exit';
-        cmdSession.exitCode = typeof exitCode === 'number' ? exitCode : null;
-        cmdSession.signal = typeof signal === 'number' ? String(signal) : (signal || null);
-        const code = cmdSession.exitCode;
-        const closeSignal = cmdSession.signal;
-        cmdSession = null;
-        emitCmdSessionTo(sender, CMD_CHANNEL_EXIT, { code, signal: closeSignal, reason });
+        const current = cmdSessions.get(sessionId);
+        if (!current || current.ptyProcess !== ptyProcess) return;
+        const sender = current.sender;
+        const reason = current.stopReason || 'exit';
+        current.exitCode = typeof exitCode === 'number' ? exitCode : null;
+        current.signal = typeof signal === 'number' ? String(signal) : (signal || null);
+        const code = current.exitCode;
+        const closeSignal = current.signal;
+        cmdSessions.delete(sessionId);
+        emitCmdSessionTo(sender, CMD_CHANNEL_EXIT, { sessionId, code, signal: closeSignal, reason });
     });
 
     return {
         ok: true,
         running: true,
         reused: false,
+        sessionId,
+        shell,
         cwd,
         pid: ptyProcess.pid || null
     };
 });
 
-ipcMain.handle('runtime:cmd:write', async (_event, input = '') => {
-    if (!cmdSession || !cmdSession.ptyProcess) {
+ipcMain.handle('runtime:cmd:write', async (_event, payload = '') => {
+    const payloadObject = payload && typeof payload === 'object' && !Array.isArray(payload) ? payload : null;
+    const sessionId = normalizeCmdSessionId(payloadObject && payloadObject.sessionId);
+    const input = payloadObject ? payloadObject.input : payload;
+    const session = resolveCmdSessionForRequest(sessionId, true);
+    if (!session || !session.ptyProcess) {
         throw new Error('cmd.exe session is not running.');
     }
 
-    assertRuntimeExecutionAllowed('shell', cmdSession.cwd || process.cwd());
+    assertRuntimeExecutionAllowed('shell', session.cwd || process.cwd());
     const data = typeof input === 'string' ? input : String(input || '');
     if (!data) {
         return { ok: true, written: 0 };
     }
 
-    cmdSession.ptyProcess.write(data);
+    session.ptyProcess.write(data);
 
-    return { ok: true, written: Buffer.byteLength(data) };
+    return {
+        ok: true,
+        sessionId: session.id,
+        written: Buffer.byteLength(data)
+    };
 });
 
-ipcMain.handle('runtime:cmd:stop', () => {
-    if (!cmdSession) {
+ipcMain.handle('runtime:cmd:stop', (_event, options = {}) => {
+    const sessionId = normalizeCmdSessionId(options && options.sessionId);
+    if (sessionId) {
+        if (!cmdSessions.has(sessionId)) {
+            return { ok: true, running: false, sessionId };
+        }
+        stopCmdSession(sessionId, 'requested');
+        return { ok: true, running: false, sessionId };
+    }
+    if (!cmdSessions.size) {
         return { ok: true, running: false };
     }
-    stopCmdSession('requested');
+    stopAllCmdSessions('requested');
     return { ok: true, running: false };
 });
 
-ipcMain.handle('runtime:cmd:status', () => {
-    const running = Boolean(cmdSession && cmdSession.ptyProcess);
+ipcMain.handle('runtime:cmd:status', (_event, options = {}) => {
+    const requestedSessionId = normalizeCmdSessionId(options && options.sessionId);
+    if (requestedSessionId) {
+        const session = cmdSessions.get(requestedSessionId) || null;
+        const running = Boolean(session && session.ptyProcess);
+        return {
+            ok: true,
+            running,
+            sessionId: requestedSessionId,
+            shell: running ? normalizePersistentShellType(session.shell) : '',
+            cwd: running ? session.cwd : '',
+            pid: running ? (session.ptyProcess.pid || null) : null
+        };
+    }
+
+    const sessions = [...cmdSessions.values()].map((session) => ({
+        sessionId: session.id,
+        shell: normalizePersistentShellType(session.shell),
+        cwd: session.cwd,
+        pid: session.ptyProcess ? (session.ptyProcess.pid || null) : null
+    }));
+    const primary = sessions[0] || null;
+    const running = sessions.length > 0;
     return {
         ok: true,
         running,
-        cwd: running ? cmdSession.cwd : '',
-        pid: running ? (cmdSession.ptyProcess.pid || null) : null
+        sessionId: primary ? primary.sessionId : '',
+        shell: primary ? primary.shell : '',
+        cwd: primary ? primary.cwd : '',
+        pid: primary ? primary.pid : null,
+        sessions
     };
 });
 
 ipcMain.handle('runtime:cmd:resize', (_event, options = {}) => {
-    if (!cmdSession || !cmdSession.ptyProcess) {
+    const sessionId = normalizeCmdSessionId(options && options.sessionId);
+    const session = resolveCmdSessionForRequest(sessionId, false);
+    if (!session || !session.ptyProcess) {
         return { ok: true, running: false };
     }
     const colsRaw = Number(options && options.cols);
@@ -1517,13 +1672,14 @@ ipcMain.handle('runtime:cmd:resize', (_event, options = {}) => {
     const cols = Number.isFinite(colsRaw) ? Math.max(20, Math.min(500, Math.floor(colsRaw))) : 120;
     const rows = Number.isFinite(rowsRaw) ? Math.max(5, Math.min(400, Math.floor(rowsRaw))) : 30;
     try {
-        cmdSession.ptyProcess.resize(cols, rows);
+        session.ptyProcess.resize(cols, rows);
     } catch {
         // Ignore resize errors; session continues running.
     }
     return {
         ok: true,
         running: true,
+        sessionId: session.id,
         cols,
         rows
     };
@@ -1554,7 +1710,7 @@ ipcMain.handle('runtime:permissions:set', (_event, options = {}) => {
         runtimeExecutionPolicy.allowAnyCwd = Boolean(options.allowAnyCwd);
     }
     if (!runtimeExecutionPolicy.allowShell) {
-        stopCmdSession('permissions');
+        stopAllCmdSessions('permissions');
     }
     return getRuntimePolicyState();
 });
@@ -1936,7 +2092,7 @@ app.on('activate', () => {
 });
 
 app.on('before-quit', () => {
-    stopCmdSession('app-quit');
+    stopAllCmdSessions('app-quit');
     stopExtensionBridge();
     void stopDiscordRpc();
 });
