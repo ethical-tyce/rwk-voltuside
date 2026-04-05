@@ -3886,120 +3886,338 @@
             filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.2));
         }
 
-        /* --- SICK STARTUP ANIMATIONS --- */
+        /* --- Startup Splash: polished, lightweight, web-tech --- */
         #startup-splash {
+            --startup-bg: #060606;
+            --startup-panel: rgba(17, 17, 17, 0.82);
+            --startup-border: rgba(205, 205, 205, 0.22);
+            --startup-accent: #d7d7d7;
+            --startup-accent-soft: rgba(215, 215, 215, 0.32);
+            --startup-text-main: #e6e6e6;
+            --startup-text-dim: #a2a2a2;
             position: fixed;
             inset: 0;
-            background: #000;
+            background:
+                radial-gradient(120% 80% at 75% 10%, rgba(255, 255, 255, 0.11), transparent 68%),
+                radial-gradient(110% 70% at 15% 95%, rgba(160, 160, 160, 0.09), transparent 72%),
+                var(--startup-bg);
             z-index: 99999;
             overflow: hidden;
             display: grid;
             place-items: center;
-            transition: opacity 0.45s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: opacity 0.26s cubic-bezier(0.33, 1, 0.68, 1);
+        }
+
+        #startup-splash::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background-image:
+                linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 0, rgba(255, 255, 255, 0.03) 1px, transparent 1px, transparent 12px);
+            opacity: 0.16;
+            pointer-events: none;
+        }
+
+        #startup-splash::after {
+            content: "";
+            position: absolute;
+            width: min(58vw, 680px);
+            height: min(58vw, 680px);
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -45%);
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(220, 220, 220, 0.18) 0%, rgba(220, 220, 220, 0) 72%);
+            filter: blur(6px);
+            pointer-events: none;
         }
 
         .splash-content {
+            position: relative;
+            width: min(430px, calc(100vw - 56px));
+            display: grid;
+            gap: 16px;
+            padding: 22px 22px 18px;
+            border-radius: 14px;
+            border: 1px solid var(--startup-border);
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02)), var(--startup-panel);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(10px) saturate(130%);
+            -webkit-backdrop-filter: blur(10px) saturate(130%);
+            opacity: 0;
+            transform: translateY(12px) scale(0.985);
+            filter: blur(8px);
+        }
+
+        .startup-brand {
             display: flex;
-            flex-direction: column;
             align-items: center;
+            gap: 12px;
+            min-width: 0;
         }
 
         .splash-logo {
-            width: 120px;
-            height: 120px;
-            filter: drop-shadow(0 0 30px rgba(255, 255, 255, 0.1));
+            width: 42px;
+            height: 42px;
+            object-fit: contain;
+            flex-shrink: 0;
             opacity: 0;
-            transform: scale(0.5) translateY(20px);
+            transform: scale(0.88);
+            filter: drop-shadow(0 8px 20px rgba(220, 220, 220, 0.22));
         }
 
-        .splash-loader {
-            margin-top: 5px;
-            height: 2px;
-            width: 100px; /* Set the final width here */
-            background: linear-gradient(90deg, transparent, #fff, transparent);
-            
-            /* Change 1: Start scaled to 0 */
-            transform: scaleX(0); 
-            
-            /* Change 2: Hardware acceleration */
-            will-change: transform; 
-            
+        .startup-brand-text {
+            display: grid;
+            gap: 2px;
+            min-width: 0;
+        }
+
+        .startup-product {
+            font-size: 15px;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--startup-text-main);
+            font-weight: 600;
+        }
+
+        .startup-tagline {
+            font-size: 11px;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            color: var(--startup-text-dim);
+        }
+
+        .startup-rail {
+            position: relative;
+            height: 6px;
+            border-radius: 999px;
+            overflow: hidden;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.03);
+        }
+
+        .startup-progress-fill {
+            position: absolute;
+            inset: 0 auto 0 0;
+            width: 0%;
+            border-radius: inherit;
+            background: linear-gradient(90deg, rgba(208, 208, 208, 0.9), rgba(236, 236, 236, 0.96));
+            box-shadow: 0 0 10px rgba(230, 230, 230, 0.22), inset 0 0 8px rgba(255, 255, 255, 0.2);
+            transition: width 0.2s linear;
+        }
+
+        .startup-progress-fill::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.65) 52%, transparent 100%);
+            transform: translateX(-120%);
+            opacity: 0.5;
+        }
+
+        .startup-update {
+            padding: 11px 12px 10px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            background: rgba(8, 12, 18, 0.58);
             opacity: 0;
+            transform: translateY(8px);
+        }
+
+        .startup-update-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            margin-bottom: 4px;
+        }
+
+        #startupUpdatePhase {
+            font-size: 10px;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            color: var(--startup-accent);
+        }
+
+        #startupUpdatePercent {
+            font-size: 10px;
+            letter-spacing: 0.08em;
+            color: var(--startup-text-dim);
+        }
+
+        #startupUpdateMessage {
+            margin: 0;
+            font-size: 12px;
+            line-height: 1.4;
+            color: var(--startup-text-main);
+        }
+
+        body.startup-intro-running .splash-content {
+            animation: startupPanelIn 0.42s cubic-bezier(0.22, 1, 0.36, 1) both;
         }
 
         body.startup-intro-running .splash-logo {
-            animation: logoEntrance 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0s both;
+            animation: startupLogoIn 0.5s cubic-bezier(0.22, 1, 0.36, 1) 0.08s both;
         }
 
-        body.startup-intro-running .splash-loader {
-            animation: loadBar 0.9s ease-in-out 0s forwards;
+        body.startup-intro-running .startup-progress-fill::after {
+            animation: startupProgressShimmer 1.15s linear infinite;
         }
 
-        /* The "Window Expansion" effect applied to the main app */
+        body.startup-intro-running .startup-update {
+            animation: startupUpdateIn 0.36s cubic-bezier(0.22, 1, 0.36, 1) 0.14s both;
+        }
+
         #app {
-            /* animation: appExpand 3s cubic-bezier(0.16, 1, 0.3, 1) 1.2s forwards; */
             transform-origin: center;
             opacity: 0;
         }
 
         #app.expanded {
-            animation: appExpand 1.0s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+            animation: appExpandSoft 0.68s cubic-bezier(0.33, 1, 0.68, 1) forwards;
         }
 
-        @keyframes logoEntrance {
+        @keyframes startupPanelIn {
             0% {
                 opacity: 0;
-                transform: scale(0.5) translateY(20px);
-                filter: brightness(0) blur(10px);
-            }
-            50% {
-                opacity: 1;
-                filter: brightness(1.5) blur(0px);
+                transform: translateY(12px) scale(0.985);
+                filter: blur(8px);
             }
             100% {
                 opacity: 1;
-                transform: scale(1) translateY(0);
+                transform: translateY(0) scale(1);
+                filter: blur(0);
             }
         }
 
-        @keyframes loadBar {
-            0% { 
-                transform: scaleX(0); 
-                opacity: 0; 
-            }
-            20% { 
-                opacity: 1; 
-            }
-            100% { 
-                transform: scaleX(1); 
-                opacity: 0; 
-            }
-        }
-
-        @keyframes appExpand {
+        @keyframes startupLogoIn {
             0% {
-                transform: scale(0.9);
                 opacity: 0;
-                filter: blur(20px);
-                border-radius: 20px;
+                transform: scale(0.82);
+                filter: brightness(0.8) blur(4px);
             }
-            25% {
+            100% {
                 opacity: 1;
-                transform: scale(0.95);
-                filter:blur(10px)
+                transform: scale(1);
+                filter: brightness(1) blur(0);
+            }
+        }
+
+        @keyframes startupProgressShimmer {
+            0% {
+                transform: translateX(-120%);
+            }
+            100% {
+                transform: translateX(140%);
+            }
+        }
+
+        @keyframes startupUpdateIn {
+            0% {
+                opacity: 0;
+                transform: translateY(8px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes appExpandSoft {
+            0% {
+                transform: scale(0.986);
+                opacity: 0.25;
+                filter: blur(14px) saturate(88%) brightness(0.94);
+                border-radius: 14px;
+            }
+            52% {
+                opacity: 1;
+                filter: blur(5px) saturate(95%) brightness(0.98);
             }
             100% {
                 transform: scale(1);
                 opacity: 1;
-                filter: blur(0px);
-                border-radius: 0px;
+                filter: blur(0) saturate(100%);
+                border-radius: 0;
             }
         }
 
-        /* Class to fade out splash */
         .splash-fade-out {
-            opacity: 0;
+            animation: splashBlurOut 0.44s cubic-bezier(0.33, 1, 0.68, 1) forwards;
             pointer-events: none;
+        }
+
+        .splash-fade-out .splash-content {
+            animation: splashCardOut 0.44s cubic-bezier(0.33, 1, 0.68, 1) forwards;
+        }
+
+        @keyframes splashBlurOut {
+            0% {
+                opacity: 1;
+                filter: blur(0);
+            }
+            62% {
+                opacity: 0.34;
+                filter: blur(5px);
+            }
+            100% {
+                opacity: 0;
+                filter: blur(9px);
+            }
+        }
+
+        @keyframes splashCardOut {
+            0% {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+                filter: blur(0);
+            }
+            62% {
+                opacity: 0.42;
+                transform: translateY(-2px) scale(1.003);
+                filter: blur(4px);
+            }
+            100% {
+                opacity: 0;
+                transform: translateY(-4px) scale(1.008);
+                filter: blur(8px);
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            body.startup-intro-running .splash-content,
+            body.startup-intro-running .splash-logo,
+            body.startup-intro-running .startup-update,
+            #app.expanded,
+            .splash-fade-out,
+            .splash-fade-out .splash-content {
+                animation: none !important;
+            }
+
+            body.startup-intro-running .startup-progress-fill::after {
+                animation: none !important;
+            }
+
+            .splash-content,
+            .splash-logo,
+            .startup-update {
+                opacity: 1;
+                transform: none;
+                filter: none;
+            }
+
+            #app.expanded {
+                opacity: 1;
+                transform: none;
+                filter: none;
+                border-radius: 0;
+            }
+
+            .splash-fade-out {
+                opacity: 0;
+                filter: none;
+            }
         }
     </style>
 </head>
@@ -4008,8 +4226,23 @@
     <!-- STARTUP SPLASH OVERLAY -->
     <div id="startup-splash">
         <div class="splash-content">
-            <img src="icon.png" class="splash-logo" alt="Voltus Logo">
-            <div class="splash-loader"></div>
+            <div class="startup-brand">
+                <img src="icon.png" class="splash-logo" alt="Voltus Logo">
+                <div class="startup-brand-text">
+                    <span class="startup-product">Voltus IDE</span>
+                    <span class="startup-tagline">Web-first engineering</span>
+                </div>
+            </div>
+            <div class="startup-rail" id="startupProgressBar" role="progressbar" aria-label="Startup progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+                <span class="startup-progress-fill" id="startupProgressFill"></span>
+            </div>
+            <div class="startup-update" id="startupUpdateCard">
+                <div class="startup-update-header">
+                    <span id="startupUpdatePhase">Idle</span>
+                    <span id="startupUpdatePercent">0%</span>
+                </div>
+                <p id="startupUpdateMessage">Auto-update integration pending</p>
+            </div>
         </div>
     </div>
 
@@ -4642,6 +4875,157 @@ throw "Chrome executable not found."
                     }
                 }
             }
+            const startupUpdatePhaseEl = document.getElementById('startupUpdatePhase');
+            const startupUpdateMessageEl = document.getElementById('startupUpdateMessage');
+            const startupUpdatePercentEl = document.getElementById('startupUpdatePercent');
+            const startupProgressBarEl = document.getElementById('startupProgressBar');
+            const startupProgressFillEl = document.getElementById('startupProgressFill');
+            const DEFAULT_STARTUP_UPDATE_MESSAGE = 'Auto-update integration pending';
+            const STARTUP_PHASE_LABELS = Object.freeze({
+                idle: 'Idle',
+                checking: 'Checking',
+                available: 'Available',
+                downloading: 'Downloading',
+                installing: 'Installing',
+                ready: 'Ready',
+                error: 'Error'
+            });
+            const STARTUP_PHASES = new Set(Object.keys(STARTUP_PHASE_LABELS));
+            const startupUpdateState = {
+                phase: 'idle',
+                message: DEFAULT_STARTUP_UPDATE_MESSAGE,
+                percent: 0
+            };
+            const startupProgressState = {
+                percent: 0,
+                rafId: null,
+                externalDriven: false
+            };
+
+            const setStartupProgress = (nextPercent, options = {}) => {
+                const numericPercent = Number(nextPercent);
+                if (!Number.isFinite(numericPercent)) {
+                    return startupProgressState.percent;
+                }
+                const clampedPercent = Math.max(0, Math.min(100, Math.round(numericPercent)));
+                startupProgressState.percent = clampedPercent;
+                startupUpdateState.percent = clampedPercent;
+
+                if (startupProgressFillEl) {
+                    if (options && options.immediate) {
+                        startupProgressFillEl.style.transition = 'none';
+                        startupProgressFillEl.style.width = `${clampedPercent}%`;
+                        void startupProgressFillEl.offsetWidth;
+                        startupProgressFillEl.style.transition = '';
+                    } else {
+                        startupProgressFillEl.style.width = `${clampedPercent}%`;
+                    }
+                }
+
+                if (startupProgressBarEl) {
+                    startupProgressBarEl.setAttribute('aria-valuenow', String(clampedPercent));
+                }
+
+                if (startupUpdatePercentEl) {
+                    startupUpdatePercentEl.hidden = false;
+                    startupUpdatePercentEl.textContent = `${clampedPercent}%`;
+                }
+
+                return clampedPercent;
+            };
+
+            const startAutoStartupProgress = (durationMs) => {
+                if (startupProgressState.externalDriven) {
+                    return;
+                }
+                if (startupProgressState.rafId) {
+                    cancelAnimationFrame(startupProgressState.rafId);
+                    startupProgressState.rafId = null;
+                }
+
+                const safeDurationMs = Math.max(450, Number(durationMs) || 900);
+                const startedAt = performance.now();
+                setStartupProgress(2, { immediate: true });
+
+                const tick = (now) => {
+                    if (!splash || !splash.isConnected || startupProgressState.externalDriven) {
+                        startupProgressState.rafId = null;
+                        return;
+                    }
+
+                    const elapsed = now - startedAt;
+                    const t = Math.min(elapsed / safeDurationMs, 1);
+                    const eased = 1 - Math.pow(1 - t, 2.1);
+                    const targetPercent = Math.round(2 + (96 - 2) * eased);
+                    if (targetPercent > startupProgressState.percent) {
+                        setStartupProgress(targetPercent);
+                    }
+
+                    if (t < 1) {
+                        startupProgressState.rafId = requestAnimationFrame(tick);
+                    } else {
+                        startupProgressState.rafId = null;
+                    }
+                };
+
+                startupProgressState.rafId = requestAnimationFrame(tick);
+            };
+
+            const setStartupUpdateState = (nextState = {}) => {
+                if (!splash || !splash.isConnected) {
+                    return false;
+                }
+                if (!nextState || typeof nextState !== 'object') {
+                    nextState = {};
+                }
+
+                if (typeof nextState.phase === 'string') {
+                    const normalizedPhase = nextState.phase.trim().toLowerCase();
+                    startupUpdateState.phase = STARTUP_PHASES.has(normalizedPhase) ? normalizedPhase : 'idle';
+                }
+
+                if (typeof nextState.message === 'string' && nextState.message.trim()) {
+                    startupUpdateState.message = nextState.message.trim();
+                }
+
+                if (Object.prototype.hasOwnProperty.call(nextState, 'percent')) {
+                    startupProgressState.externalDriven = true;
+                    const nextPercent = Number(nextState.percent);
+                    if (Number.isFinite(nextPercent)) {
+                        startupUpdateState.percent = Math.max(0, Math.min(100, Math.round(nextPercent)));
+                    }
+                }
+
+                splash.dataset.updatePhase = startupUpdateState.phase;
+
+                if (startupUpdatePhaseEl) {
+                    startupUpdatePhaseEl.textContent = STARTUP_PHASE_LABELS[startupUpdateState.phase];
+                }
+                if (startupUpdateMessageEl) {
+                    startupUpdateMessageEl.textContent = startupUpdateState.message;
+                }
+                setStartupProgress(startupUpdateState.percent);
+
+                return true;
+            };
+
+            window.startupSplash = Object.freeze({
+                setUpdateState: (state = {}) => setStartupUpdateState(state)
+            });
+
+            setStartupUpdateState({
+                phase: 'idle',
+                message: DEFAULT_STARTUP_UPDATE_MESSAGE
+            });
+            setStartupProgress(0, { immediate: true });
+
+            const INTRO_MS = 420;
+            const HOLD_MS = 920;
+            const OUTRO_MS = 440;
+            const FAILSAFE_MS = 2600;
+            const FALLBACK_REVEAL_DELAY_MS = 560;
+            const SPLASH_VISIBLE_MS = INTRO_MS + HOLD_MS;
+
             let startupRevealStarted = false;
             let startupRevealFailsafeTimer = null;
 
@@ -4657,11 +5041,20 @@ throw "Chrome executable not found."
                     startupRevealFailsafeTimer = null;
                 }
                 body.classList.add('startup-intro-running');
-
-                const SPLASH_VISIBLE_MS = 1550;
-                const SPLASH_FADE_REMOVE_MS = 450;
+                startAutoStartupProgress(SPLASH_VISIBLE_MS - 120);
 
                 setTimeout(() => {
+                    if (startupProgressState.rafId) {
+                        cancelAnimationFrame(startupProgressState.rafId);
+                        startupProgressState.rafId = null;
+                    }
+                    setStartupProgress(100);
+                    if (startupUpdateState.phase !== 'error') {
+                        startupUpdateState.phase = 'ready';
+                        if (startupUpdatePhaseEl) {
+                            startupUpdatePhaseEl.textContent = STARTUP_PHASE_LABELS.ready;
+                        }
+                    }
                     if (splash) {
                         splash.classList.add('splash-fade-out');
                     }
@@ -4673,14 +5066,14 @@ throw "Chrome executable not found."
                     }
                     body.classList.remove('startup-active');
                     setTimeout(() => {
-                        if (splash) {
+                        if (splash && splash.isConnected) {
                             splash.remove();
                         }
-                    }, SPLASH_FADE_REMOVE_MS);
+                    }, OUTRO_MS);
                 }, SPLASH_VISIBLE_MS);
             };
 
-            const scheduleStartupRevealFailsafe = (delayMs) => {
+            const scheduleStartupRevealFailsafe = (delayMs = FAILSAFE_MS) => {
                 if (startupRevealFailsafeTimer) {
                     clearTimeout(startupRevealFailsafeTimer);
                 }
@@ -4699,7 +5092,7 @@ throw "Chrome executable not found."
             }
 
             if (typeof window.startupEvents?.onWindowExpanded === 'function') {
-                scheduleStartupRevealFailsafe(2600);
+                scheduleStartupRevealFailsafe(FAILSAFE_MS);
                 const unsubscribeExpanded = window.startupEvents.onWindowExpanded(() => {
                     if (typeof unsubscribeExpanded === 'function') {
                         unsubscribeExpanded();
@@ -4708,9 +5101,10 @@ throw "Chrome executable not found."
                 });
             } else {
                 // Fallback for non-Electron contexts.
+                scheduleStartupRevealFailsafe(FAILSAFE_MS + FALLBACK_REVEAL_DELAY_MS);
                 setTimeout(() => {
                     startStartupReveal();
-                }, 900);
+                }, FALLBACK_REVEAL_DELAY_MS);
             }
         });
 

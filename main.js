@@ -918,23 +918,20 @@ function stopExtensionBridge() {
 }
 
 function createWindow() {
-    const START_WIDTH = 750;
-    const START_HEIGHT = 413;
-    const TARGET_WIDTH = 1000;
-    const TARGET_HEIGHT = 550;
-    const ANIM_DURATION_MS = 450;
-    const ANIM_INTERVAL_MS = 10;
+    const WINDOW_WIDTH = 1000;
+    const WINDOW_HEIGHT = 550;
+    const MIN_WIDTH = 600;
+    const MIN_HEIGHT = 510;
 
     // Use the .ico asset on Windows for proper taskbar/shell icon rendering.
     const iconPath = path.join(__dirname, process.platform === 'win32' ? 'voltus.ico' : 'icon.png');
 
     win = new BrowserWindow({
-        width: START_WIDTH,
-        height: START_HEIGHT,
-        minWidth: START_WIDTH,
-        minHeight: START_HEIGHT,
+        width: WINDOW_WIDTH,
+        height: WINDOW_HEIGHT,
+        minWidth: MIN_WIDTH,
+        minHeight: MIN_HEIGHT,
         show: false,
-        opacity: 0,
         frame: false,
         roundedCorners: false,
         alwaysOnTop: false,
@@ -955,52 +952,16 @@ function createWindow() {
     // Remove the default menu bar
     Menu.setApplicationMenu(null);
 
-    // Animate the window from small to full size after the renderer is ready.
-    const steps = ANIM_DURATION_MS / ANIM_INTERVAL_MS;
-    let step = 0;
-    win.center();
-    const initialBounds = win.getBounds();
-    const anchorCenterX = initialBounds.x + Math.round(initialBounds.width / 2);
-    const anchorCenterY = initialBounds.y + Math.round(initialBounds.height / 2);
-
-    const startGrowAnimation = () => {
+    const revealWindow = () => {
         if (!win || win.isDestroyed()) return;
+        win.center();
         win.show();
-        win.setOpacity(1);
-
-        const grow = setInterval(() => {
-            if (!win || win.isDestroyed()) {
-                clearInterval(grow);
-                return;
-            }
-
-            step++;
-            const progress = Math.min(step / steps, 1);
-            const easedProgress = 1 - Math.pow(1 - progress, 2); // stronger ease-out (faster start)
-            const width = Math.round(START_WIDTH + (TARGET_WIDTH - START_WIDTH) * easedProgress);
-            const height = Math.round(START_HEIGHT + (TARGET_HEIGHT - START_HEIGHT) * easedProgress);
-            const x = anchorCenterX - Math.round(width / 2);
-            const y = anchorCenterY - Math.round(height / 2);
-            win.setBounds({ x, y, width, height }, false);
-
-            if (step >= steps) {
-                clearInterval(grow);
-                win.setMinimumSize(600, 510);
-                win.webContents.send('startup:window-expanded');
-            }
-        }, ANIM_INTERVAL_MS);
+        win.webContents.send('startup:window-expanded');
     };
 
     win.webContents.on('did-finish-load', () => {
         emitBridgeStatus();
-        setTimeout(() => {
-            win.setOpacity(0);
-            win.show();
-            setTimeout(() => {
-                win.setOpacity(1);
-                startGrowAnimation();
-            }, 40);
-        }, 80);
+        revealWindow();
     });
     
 
