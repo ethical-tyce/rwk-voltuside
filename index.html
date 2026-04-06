@@ -10227,22 +10227,9 @@ console.log('Dark mode applied!');`
         function updatePreviewConsoleGeometry(explorerWidthOverride = null) {
             const editorWrap = document.getElementById('editorWrap');
             if (!editorWrap) return;
-
-            const explorerPane = document.getElementById('explorerPane');
-            const explorerResizeHandle = document.getElementById('explorerResizeHandle');
-
-            const sidebarWidth = cachedLeftSidebarWidth;
-            const paneOpen = Boolean(explorerPane && !explorerPane.classList.contains('collapsed'));
-            const paneWidth = paneOpen
-                ? (Number.isFinite(Number(explorerWidthOverride))
-                    ? Number(explorerWidthOverride)
-                    : explorerPane.getBoundingClientRect().width)
-                : 0;
-            const resizeHandleWidth = paneOpen && explorerResizeHandle && !explorerResizeHandle.classList.contains('hidden')
-                ? EXPLORER_RESIZE_HANDLE_WIDTH
-                : 0;
-
-            const offset = Math.max(0, Math.round(sidebarWidth + paneWidth + resizeHandleWidth));
+            // Console and resize handle are absolutely positioned inside #mainContent,
+            // so they should always start at the container's left edge.
+            const offset = 0;
             if (offset === lastConsoleOffsetPx) return;
             lastConsoleOffsetPx = offset;
             editorWrap.style.setProperty('--console-left-offset', `${offset}px`);
