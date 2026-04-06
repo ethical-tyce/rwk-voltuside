@@ -2045,6 +2045,7 @@
             min-width: 108px;
             flex-shrink: 0;
             margin-left: 0;
+            margin-right: 6px;
             padding-left: 8px;
             border-left: 1px solid rgba(255, 255, 255, 0.14);
             max-width: 108px;
@@ -2538,10 +2539,21 @@
             align-items: center;
             justify-content: center;
             border-radius: 4px;
-            opacity: 0;
-            pointer-events: none;
+            opacity: 0.72;
+            pointer-events: auto;
             transition: color 140ms ease, background 140ms ease, opacity 140ms ease;
             padding: 0;
+        }
+
+        .console-session-menu-trigger svg {
+            width: 12px;
+            height: 12px;
+            fill: none;
+            stroke: currentColor;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            pointer-events: none;
         }
 
         .console-session-item:hover .console-session-menu-trigger,
@@ -5662,30 +5674,7 @@ console.log('Dark mode applied!');`
             return true;
         }
 
-        function renameTerminalSession(sessionId) {
-            const session = getTerminalSessionById(sessionId);
-            if (!session) return false;
-            const currentName = normalizeTerminalSessionName(session.name) || buildTerminalSessionName(session.shellType);
-            const nextRaw = prompt('Rename terminal session:', currentName);
-            if (nextRaw === null) return false;
-            const nextName = normalizeTerminalSessionName(nextRaw);
-            if (!nextName) return false;
-            session.name = nextName;
-            renderTerminalSessionTabs();
-            persistTerminalSessions();
-            return true;
-        }
-
         function handleConsoleSessionMenuAction(actionId, sessionId) {
-            if (actionId === 'rename') {
-                const renamed = renameTerminalSession(sessionId);
-                if (renamed && activeConsoleTab === 'terminal' && cmdXterm) {
-                    requestAnimationFrame(() => {
-                        cmdXterm.focus();
-                    });
-                }
-                return;
-            }
             if (actionId === 'delete') {
                 const removed = closeTerminalSession(sessionId);
                 if (removed && activeConsoleTab === 'terminal' && cmdXterm) {
@@ -5736,7 +5725,6 @@ console.log('Dark mode applied!');`
             consoleSessionActionMenuSessionId = String(sessionId || '');
             const canDelete = terminalSessions.length > 1;
             const actions = [
-                { id: 'rename', label: 'Rename', icon: '\u270E' },
                 { id: 'delete', label: 'Delete', icon: '\u00D7', danger: true, disabled: !canDelete }
             ];
             consoleSessionActionMenuEl.innerHTML = '';
@@ -5855,22 +5843,18 @@ console.log('Dark mode applied!');`
                 const menuBtn = document.createElement('button');
                 menuBtn.type = 'button';
                 menuBtn.className = 'console-session-menu-trigger';
-                menuBtn.title = 'Session Actions';
-                menuBtn.setAttribute('aria-label', 'Session actions');
-                menuBtn.textContent = '\u22EF';
-                const menuOpenForSession = consoleSessionActionMenuSessionId === session.id
-                    && consoleSessionActionMenuEl
-                    && !consoleSessionActionMenuEl.hidden;
-                if (menuOpenForSession) {
-                    menuBtn.classList.add('open');
-                }
+                menuBtn.title = 'Delete Session';
+                menuBtn.setAttribute('aria-label', 'Delete session');
+                menuBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true" focusable="false"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><path d="M10 11v6M14 11v6"></path><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"></path></svg>';
+                menuBtn.disabled = terminalSessions.length <= 1;
                 menuBtn.onclick = (event) => {
                     event.stopPropagation();
-                    if (menuOpenForSession) {
-                        hideConsoleSessionActionMenu();
-                        return;
+                    const removed = closeTerminalSession(session.id);
+                    if (removed && activeConsoleTab === 'terminal' && cmdXterm) {
+                        requestAnimationFrame(() => {
+                            cmdXterm.focus();
+                        });
                     }
-                    showConsoleSessionActionMenu(menuBtn, session.id);
                 };
 
                 wrapper.appendChild(chip);
