@@ -59,6 +59,18 @@ contextBridge.exposeInMainWorld('appInfo', {
     openExternal: (url) => ipcRenderer.invoke('app:open-external', url)
 });
 
+contextBridge.exposeInMainWorld('autoUpdater', {
+    getState: () => ipcRenderer.invoke('updater:get-state'),
+    checkForUpdates: () => ipcRenderer.invoke('updater:check'),
+    quitAndInstall: () => ipcRenderer.invoke('updater:quit-and-install'),
+    onStateChange: (callback) => {
+        if (typeof callback !== 'function') return () => { };
+        const handler = (_event, state) => callback(state);
+        ipcRenderer.on('updater:state', handler);
+        return () => ipcRenderer.removeListener('updater:state', handler);
+    }
+});
+
 contextBridge.exposeInMainWorld('discordRpc', {
     getStatus: () => ipcRenderer.invoke('discord-rpc:status'),
     updatePresence: (payload = {}) => ipcRenderer.invoke('discord-rpc:update', payload),

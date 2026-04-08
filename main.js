@@ -4,6 +4,13 @@ const fs = require('fs/promises');
 const os = require('os');
 const { spawn } = require('child_process');
 const DiscordRPC = require('discord-rpc');
+let electronUpdaterModule = null;
+try {
+    electronUpdaterModule = require('electron-updater');
+} catch {
+    electronUpdaterModule = null;
+}
+const autoUpdater = electronUpdaterModule ? electronUpdaterModule.autoUpdater : null;
 let nodePty = null;
 try {
     nodePty = require('node-pty');
@@ -79,6 +86,23 @@ let discordRpcReconnectTimer = null;
 let discordRpcActivity = null;
 const discordRpcSessionStartedAt = Date.now();
 let discordRpcWarnedMissingClientId = false;
+const UPDATE_CHANNEL_STATE = 'updater:state';
+const UPDATE_CHECK_INTERVAL_MS = 6 * 60 * 60 * 1000;
+const updaterState = {
+    enabled: false,
+    phase: 'idle',
+    message: 'Updater not initialized.',
+    checking: false,
+    available: false,
+    downloading: false,
+    downloaded: false,
+    percent: null,
+    currentVersion: app.getVersion(),
+    releaseVersion: '',
+    error: ''
+};
+let updaterCheckTimer = null;
+let updaterListenersRegistered = false;
 
 function isPathInsideRoot(targetPath, rootPath) {
     const relative = path.relative(rootPath, targetPath);
@@ -852,6 +876,294 @@ async function stopDiscordRpc() {
     destroyDiscordRpcClient(client);
 }
 
+function getUpdaterState() {
+    return {
+        ...updaterState
+    };
+}
+
+function emitUpdaterState() {
+    if (!win || win.isDestroyed()) return;
+    win.webContents.send(UPDATE_CHANNEL_STATE, getUpdaterState());
+}
+
+function setUpdaterState(nextState = {}) {
+    if (!nextState || typeof nextState !== 'object') return getUpdaterState();
+
+    if (Object.prototype.hasOwnProperty.call(nextState, 'enabled')) {
+        updaterState.enabled = Boolean(nextState.enabled);
+    }
+    if (typeof nextState.phase === 'string' && nextState.phase.trim()) {
+        updaterState.phase = nextState.phase.trim().toLowerCase();
+    }
+    if (typeof nextState.message === 'string' && nextState.message.trim()) {
+        updaterState.message = nextState.message.trim();
+    }
+    if (Object.prototype.hasOwnProperty.call(nextState, 'checking')) {
+        updaterState.checking = Boolean(nextState.checking);
+    }
+    if (Object.prototype.hasOwnProperty.call(nextState, 'available')) {
+        updaterState.available = Boolean(nextState.available);
+    }
+    if (Object.prototype.hasOwnProperty.call(nextState, 'downloading')) {
+        updaterState.downloading = Boolean(nextState.downloading);
+    }
+    if (Object.prototype.hasOwnProperty.call(nextState, 'downloaded')) {
+        updaterState.downloaded = Boolean(nextState.downloaded);
+    }
+    if (Object.prototype.hasOwnProperty.call(nextState, 'percent')) {
+        const numericPercent = Number(nextState.percent);
+        updaterState.percent = Number.isFinite(numericPercent)
+            ? Math.max(0, Math.min(100, Math.round(numericPercent)))
+            : null;
+    }
+    if (Object.prototype.hasOwnProperty.call(nextState, 'currentVersion')) {
+        updaterState.currentVersion = String(nextState.currentVersion || app.getVersion());
+    }
+    if (Object.prototype.hasOwnProperty.call(nextState, 'releaseVersion')) {
+        updaterState.releaseVersion = String(nextState.releaseVersion || '').trim();
+    }
+    if (Object.prototype.hasOwnProperty.call(nextState, 'error')) {
+        updaterState.error = String(nextState.error || '').trim();
+    }
+
+    emitUpdaterState();
+    return getUpdaterState();
+}
+
+function getAutoUpdaterDisableReason() {
+    if (!autoUpdater) {
+        return 'Auto-updater dependency missing. Run npm install.';
+    }
+    if (process.platform !== 'win32') {
+        return 'Auto-updates are currently enabled for packaged Windows builds only.';
+    }
+    if (!app.isPackaged) {
+        return 'Auto-updates are disabled in development mode.';
+    }
+    return '';
+}
+
+async function promptRestartForDownloadedUpdate(versionText = '') {
+    if (!win || win.isDestroyed()) return;
+    const versionMessage = versionText ? `Version ${versionText} is ready to install.` : 'A new version is ready to install.';
+    try {
+        const result = await dialog.showMessageBox(win, {
+            type: 'info',
+            title: 'Update ready',
+            message: versionMessage,
+            detail: 'Restart now to apply the update.',
+            buttons: ['Restart now', 'Later'],
+            defaultId: 0,
+            cancelId: 1,
+            noLink: true
+        });
+        if (result && result.response === 0 && autoUpdater) {
+            setUpdaterState({
+                phase: 'installing',
+                message: 'Closing app to install update...'
+            });
+            autoUpdater.quitAndInstall(false, true);
+        }
+    } catch (error) {
+        const message = error && error.message ? error.message : String(error);
+        console.error('[Updater] Failed to prompt restart:', message);
+    }
+}
+
+function registerAutoUpdaterEvents() {
+    if (!autoUpdater || updaterListenersRegistered) return;
+    updaterListenersRegistered = true;
+
+    autoUpdater.autoDownload = true;
+    autoUpdater.autoInstallOnAppQuit = true;
+    autoUpdater.allowPrerelease = false;
+
+    autoUpdater.on('checking-for-update', () => {
+        setUpdaterState({
+            phase: 'checking',
+            message: 'Checking for updates...',
+            checking: true,
+            downloading: false,
+            error: ''
+        });
+    });
+
+    autoUpdater.on('update-available', (info = {}) => {
+        const nextVersion = String(info && info.version ? info.version : '').trim();
+        setUpdaterState({
+            phase: 'downloading',
+            message: nextVersion
+                ? `Update ${nextVersion} found. Downloading...`
+                : 'Update found. Downloading...',
+            checking: false,
+            available: true,
+            downloading: true,
+            downloaded: false,
+            percent: 0,
+            releaseVersion: nextVersion,
+            error: ''
+        });
+    });
+
+    autoUpdater.on('update-not-available', () => {
+        setUpdaterState({
+            phase: 'ready',
+            message: 'You are on the latest version.',
+            checking: false,
+            available: false,
+            downloading: false,
+            downloaded: false,
+            percent: 100,
+            releaseVersion: '',
+            error: ''
+        });
+    });
+
+    autoUpdater.on('download-progress', (progress = {}) => {
+        const percent = Number(progress && progress.percent);
+        setUpdaterState({
+            phase: 'downloading',
+            message: 'Downloading update...',
+            checking: false,
+            available: true,
+            downloading: true,
+            downloaded: false,
+            percent: Number.isFinite(percent) ? percent : updaterState.percent,
+            error: ''
+        });
+    });
+
+    autoUpdater.on('update-downloaded', (info = {}) => {
+        const nextVersion = String(info && info.version ? info.version : '').trim();
+        setUpdaterState({
+            phase: 'ready',
+            message: nextVersion
+                ? `Update ${nextVersion} downloaded. Restart to install.`
+                : 'Update downloaded. Restart to install.',
+            checking: false,
+            available: true,
+            downloading: false,
+            downloaded: true,
+            percent: 100,
+            releaseVersion: nextVersion,
+            error: ''
+        });
+        void promptRestartForDownloadedUpdate(nextVersion);
+    });
+
+    autoUpdater.on('before-quit-for-update', () => {
+        setUpdaterState({
+            phase: 'installing',
+            message: 'Applying update...'
+        });
+    });
+
+    autoUpdater.on('error', (error) => {
+        const message = error && error.message ? error.message : String(error);
+        console.error('[Updater] Error:', message);
+        setUpdaterState({
+            phase: 'error',
+            message: 'Update check failed.',
+            checking: false,
+            downloading: false,
+            error: message
+        });
+    });
+}
+
+async function checkForAppUpdates(trigger = 'manual') {
+    if (!autoUpdater || !updaterState.enabled) {
+        return {
+            ok: false,
+            reason: 'updater-disabled',
+            state: getUpdaterState()
+        };
+    }
+
+    if (updaterState.checking) {
+        return {
+            ok: true,
+            reason: 'already-checking',
+            state: getUpdaterState()
+        };
+    }
+
+    setUpdaterState({
+        phase: 'checking',
+        message: trigger === 'scheduled' ? 'Checking for updates (scheduled)...' : 'Checking for updates...',
+        checking: true,
+        error: ''
+    });
+
+    try {
+        await autoUpdater.checkForUpdates();
+        return {
+            ok: true,
+            state: getUpdaterState()
+        };
+    } catch (error) {
+        const message = error && error.message ? error.message : String(error);
+        setUpdaterState({
+            phase: 'error',
+            message: 'Update check failed.',
+            checking: false,
+            downloading: false,
+            error: message
+        });
+        return {
+            ok: false,
+            reason: 'check-failed',
+            error: message,
+            state: getUpdaterState()
+        };
+    }
+}
+
+function startAutoUpdater() {
+    const disableReason = getAutoUpdaterDisableReason();
+    if (disableReason) {
+        setUpdaterState({
+            enabled: false,
+            phase: 'idle',
+            message: disableReason,
+            checking: false,
+            available: false,
+            downloading: false,
+            downloaded: false,
+            percent: null,
+            releaseVersion: '',
+            error: ''
+        });
+        return;
+    }
+
+    setUpdaterState({
+        enabled: true,
+        phase: 'idle',
+        message: 'Updater ready.',
+        currentVersion: app.getVersion(),
+        error: ''
+    });
+
+    registerAutoUpdaterEvents();
+    void checkForAppUpdates('startup');
+
+    if (updaterCheckTimer) {
+        clearInterval(updaterCheckTimer);
+    }
+    updaterCheckTimer = setInterval(() => {
+        void checkForAppUpdates('scheduled');
+    }, UPDATE_CHECK_INTERVAL_MS);
+}
+
+function stopAutoUpdater() {
+    if (updaterCheckTimer) {
+        clearInterval(updaterCheckTimer);
+        updaterCheckTimer = null;
+    }
+}
+
 function startExtensionBridge() {
     let WebSocketServer;
     try {
@@ -961,6 +1273,7 @@ function createWindow() {
 
     win.webContents.on('did-finish-load', () => {
         emitBridgeStatus();
+        emitUpdaterState();
         revealWindow();
     });
     
@@ -977,6 +1290,7 @@ app.whenReady().then(() => {
     startExtensionBridge();
     void startDiscordRpc();
     createWindow();
+    startAutoUpdater();
 });
 
 ipcMain.handle('window:minimize', () => {
@@ -1029,6 +1343,54 @@ ipcMain.handle('extension:get-status', () => {
 ipcMain.handle('app:get-version', () => {
     // return the current application version from Electron
     return app.getVersion();
+});
+
+ipcMain.handle('updater:get-state', () => {
+    return getUpdaterState();
+});
+
+ipcMain.handle('updater:check', async () => {
+    return await checkForAppUpdates('manual');
+});
+
+ipcMain.handle('updater:quit-and-install', async () => {
+    if (!autoUpdater || !updaterState.enabled) {
+        return {
+            ok: false,
+            reason: 'updater-disabled',
+            state: getUpdaterState()
+        };
+    }
+    if (!updaterState.downloaded) {
+        return {
+            ok: false,
+            reason: 'update-not-downloaded',
+            state: getUpdaterState()
+        };
+    }
+
+    setUpdaterState({
+        phase: 'installing',
+        message: 'Closing app to install update...'
+    });
+
+    setImmediate(() => {
+        try {
+            autoUpdater.quitAndInstall(false, true);
+        } catch (error) {
+            const message = error && error.message ? error.message : String(error);
+            setUpdaterState({
+                phase: 'error',
+                message: 'Could not start update install.',
+                error: message
+            });
+        }
+    });
+
+    return {
+        ok: true,
+        state: getUpdaterState()
+    };
 });
 
 ipcMain.handle('app:open-external', async (_event, url) => {
@@ -2053,6 +2415,7 @@ app.on('activate', () => {
 });
 
 app.on('before-quit', () => {
+    stopAutoUpdater();
     stopAllCmdSessions('app-quit');
     stopExtensionBridge();
     void stopDiscordRpc();

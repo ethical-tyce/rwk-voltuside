@@ -3,17 +3,65 @@
   "version": "2.8.1",
   "main": "main.js",
   "scripts": {
-    "start": "electron ."
+    "start": "electron .",
+    "dist:win": "electron-builder --win nsis --x64",
+    "publish:win": "electron-builder --win nsis --x64 --publish always"
   },
   "dependencies": {
     "@xterm/addon-fit": "^0.11.0",
     "discord-rpc": "^4.0.1",
+    "electron-updater": "^6.6.2",
     "monaco-editor": "^0.55.1",
     "node-pty": "^1.1.0",
     "ws": "^8.18.0",
     "xterm": "^5.3.0"
   },
   "devDependencies": {
+    "electron-builder": "^24.13.3",
     "electron": "^28.0.0"
+  },
+  "build": {
+    "appId": "xyz.voltus.ide",
+    "productName": "Voltus IDE",
+    "artifactName": "${productName}-Setup-${version}.${ext}",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "index.html",
+      "main.js",
+      "preload.js",
+      "tools.js",
+      "ui-shell.js",
+      "workspace.js",
+      ".bridge/**/*",
+      "icon.png",
+      "voltus.ico",
+      "voltuside.png",
+      "voltus-icon-pure.png",
+      "package.json"
+    ],
+    "win": {
+      "icon": "voltus.ico",
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    },
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "ethical-tyce",
+        "repo": "rwk-voltuside"
+      }
+    ]
   }
 }

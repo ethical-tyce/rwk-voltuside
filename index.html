@@ -4531,12 +4531,12 @@
                                                     </svg>
                                                 </div>
                                                 <h3 class="link-title" id="dashboardVersionTitle">Version: Unknown</h3>
-                                                <button id="downloadLatestBtn" type="button" class="toolbar-button run" aria-label="Download latest Voltus IDE">
+                                                <button id="downloadLatestBtn" type="button" class="toolbar-button run" aria-label="Check for Voltus IDE updates">
                                                     <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                                         <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
                                                         <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
                                                     </svg>
-                                                    Download Latest
+                                                    <span class="toolbar-button-label">Check for Updates</span>
                                                 </button>
                                             </div>
                                         </div>
@@ -4862,6 +4862,58 @@ throw "Chrome executable not found."
                     return false;
                 }
             };
+            const downloadLatestBtnLabel = downloadLatestBtn ? downloadLatestBtn.querySelector('.toolbar-button-label') : null;
+
+            const setDownloadLatestButtonLabel = (nextLabel) => {
+                if (!downloadLatestBtn) return;
+                const resolvedLabel = String(nextLabel || 'Check for Updates').trim() || 'Check for Updates';
+                if (downloadLatestBtnLabel) {
+                    downloadLatestBtnLabel.textContent = resolvedLabel;
+                    return;
+                }
+                downloadLatestBtn.textContent = resolvedLabel;
+            };
+
+            const applyUpdateActionButtonState = (state = {}) => {
+                if (!downloadLatestBtn) return;
+
+                if (!window.autoUpdater || typeof window.autoUpdater.checkForUpdates !== 'function') {
+                    downloadLatestBtn.disabled = false;
+                    downloadLatestBtn.dataset.updatePhase = 'external';
+                    setDownloadLatestButtonLabel('Download Latest');
+                    return;
+                }
+                if (state && state.enabled === false) {
+                    downloadLatestBtn.disabled = false;
+                    downloadLatestBtn.dataset.updatePhase = 'external';
+                    setDownloadLatestButtonLabel('Download Latest');
+                    return;
+                }
+
+                const phase = typeof state.phase === 'string' ? state.phase.trim().toLowerCase() : '';
+                const percent = Number(state && state.percent);
+                let nextLabel = 'Check for Updates';
+                let nextDisabled = false;
+
+                if (phase === 'checking') {
+                    nextLabel = 'Checking...';
+                    nextDisabled = true;
+                } else if (phase === 'downloading') {
+                    nextLabel = Number.isFinite(percent) ? `Downloading ${Math.round(percent)}%` : 'Downloading...';
+                    nextDisabled = true;
+                } else if (phase === 'installing') {
+                    nextLabel = 'Installing...';
+                    nextDisabled = true;
+                } else if (phase === 'ready' && Boolean(state && state.downloaded)) {
+                    nextLabel = 'Restart to Update';
+                } else if (phase === 'error') {
+                    nextLabel = 'Retry Update Check';
+                }
+
+                downloadLatestBtn.dataset.updatePhase = phase || 'idle';
+                downloadLatestBtn.disabled = nextDisabled;
+                setDownloadLatestButtonLabel(nextLabel);
+            };
 
             if (openWebsiteBtn) {
                 openWebsiteBtn.addEventListener('click', async (event) => {
@@ -4878,7 +4930,36 @@ throw "Chrome executable not found."
                 downloadLatestBtn.addEventListener('click', async (event) => {
                     event.preventDefault();
                     event.stopPropagation();
-                    await openExternalLink('https://voltus-ide.xyz/download');
+
+                    if (!window.autoUpdater || typeof window.autoUpdater.checkForUpdates !== 'function') {
+                        await openExternalLink('https://voltus-ide.xyz/download');
+                        return;
+                    }
+
+                    try {
+                        const updaterState = typeof window.autoUpdater.getState === 'function'
+                            ? await window.autoUpdater.getState()
+                            : null;
+                        if (updaterState && updaterState.enabled === false) {
+                            await openExternalLink('https://voltus-ide.xyz/download');
+                            return;
+                        }
+                        if (updaterState && updaterState.downloaded && typeof window.autoUpdater.quitAndInstall === 'function') {
+                            applyUpdateActionButtonState({ phase: 'installing' });
+                            await window.autoUpdater.quitAndInstall();
+                            return;
+                        }
+
+                        applyUpdateActionButtonState({ phase: 'checking' });
+                        const checkResult = await window.autoUpdater.checkForUpdates();
+                        if (checkResult && checkResult.ok === false && checkResult.reason === 'updater-disabled') {
+                            await openExternalLink('https://voltus-ide.xyz/download');
+                        }
+                    } catch (error) {
+                        applyUpdateActionButtonState({ phase: 'error' });
+                        showToast('Failed to check for updates');
+                        pushConsole('error', 'Auto-update check failed:', error && error.message ? error.message : String(error));
+                    }
                 });
             }
 
@@ -4949,7 +5030,7 @@ throw "Chrome executable not found."
             const startupUpdatePercentEl = document.getElementById('startupUpdatePercent');
             const startupProgressBarEl = document.getElementById('startupProgressBar');
             const startupProgressFillEl = document.getElementById('startupProgressFill');
-            const DEFAULT_STARTUP_UPDATE_MESSAGE = 'Auto-update integration pending';
+            const DEFAULT_STARTUP_UPDATE_MESSAGE = 'Initializing updater...';
             const STARTUP_PHASE_LABELS = Object.freeze({
                 idle: 'Idle',
                 checking: 'Checking',
@@ -5105,6 +5186,63 @@ throw "Chrome executable not found."
                 return true;
             };
 
+            const mapUpdaterPhaseToStartupPhase = (phaseValue) => {
+                const normalized = String(phaseValue || '').trim().toLowerCase();
+                if (normalized === 'checking') return 'checking';
+                if (normalized === 'available') return 'available';
+                if (normalized === 'downloading') return 'downloading';
+                if (normalized === 'installing') return 'installing';
+                if (normalized === 'ready') return 'ready';
+                if (normalized === 'error') return 'error';
+                return 'idle';
+            };
+
+            const applyAutoUpdaterState = (state = {}) => {
+                if (!state || typeof state !== 'object') return;
+
+                const nextState = {
+                    phase: mapUpdaterPhaseToStartupPhase(state.phase)
+                };
+                if (typeof state.message === 'string' && state.message.trim()) {
+                    nextState.message = state.message.trim();
+                }
+
+                const numericPercent = Number(state.percent);
+                if (Number.isFinite(numericPercent)) {
+                    nextState.percent = numericPercent;
+                } else if (Boolean(state.downloaded)) {
+                    nextState.percent = 100;
+                }
+
+                setStartupUpdateState(nextState);
+                applyUpdateActionButtonState(state);
+            };
+
+            const initializeAutoUpdaterBridge = async () => {
+                if (!window.autoUpdater || typeof window.autoUpdater.getState !== 'function') {
+                    applyUpdateActionButtonState({ phase: 'external' });
+                    setStartupUpdateState({
+                        phase: 'idle',
+                        message: 'Auto-updates unavailable in this build.'
+                    });
+                    return;
+                }
+
+                if (typeof window.autoUpdater.onStateChange === 'function') {
+                    window.autoUpdater.onStateChange((state = {}) => {
+                        applyAutoUpdaterState(state);
+                    });
+                }
+
+                try {
+                    const initialState = await window.autoUpdater.getState();
+                    applyAutoUpdaterState(initialState);
+                } catch (error) {
+                    pushConsole('warn', 'Could not read updater state:', error && error.message ? error.message : String(error));
+                    applyUpdateActionButtonState({ phase: 'error' });
+                }
+            };
+
             window.startupSplash = Object.freeze({
                 setUpdateState: (state = {}) => setStartupUpdateState(state)
             });
@@ -5114,6 +5252,7 @@ throw "Chrome executable not found."
                 message: DEFAULT_STARTUP_UPDATE_MESSAGE
             });
             setStartupProgress(0, { immediate: true });
+            void initializeAutoUpdaterBridge();
 
             const INTRO_MS = 420;
             const HOLD_MS = 920;
