@@ -1,6 +1,6 @@
 {
   "name": "voltus-ide",
-  "version": "2.8.1",
+  "version": "2.9.0",
   "main": "main.js",
   "scripts": {
     "start": "electron .",

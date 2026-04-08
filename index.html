@@ -92,6 +92,15 @@
             user-select: text;
         }
 
+        /* Keep Monaco hovers/suggest widgets above app chrome/toolbars. */
+        .monaco-editor .overflowingContentWidgets,
+        .monaco-editor .overflowingOverlayWidgets,
+        .monaco-editor .suggest-widget,
+        .monaco-editor .monaco-hover,
+        .monaco-editor .parameter-hints-widget {
+            z-index: 25010 !important;
+        }
+
         #windowChrome {
             height: 40px;
             min-height: 35px;
