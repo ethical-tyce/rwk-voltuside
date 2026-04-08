@@ -1,0 +1,43 @@
+Voltus IDE Proprietary License
+Copyright (c) 2026 Voltus IDE. All rights reserved.
+
+IMPORTANT: THIS SOFTWARE IS LICENSED, NOT SOLD.
+
+1. Definitions
+"Software" means Voltus IDE and all associated files, binaries, source code, updates, and documentation made available by Licensor.
+"Licensor" means the copyright owner of the Software.
+"You" means the individual or legal entity using the Software.
+
+2. License Grant
+Subject to your compliance with this License and the EULA, Licensor grants you a limited, revocable, non-exclusive, non-transferable, non-sublicensable license to install and use the Software solely for your own internal, personal, or business use.
+
+3. Restrictions
+You may not, and may not permit any third party to:
+- copy, distribute, publish, host, lease, rent, lend, sell, sublicense, assign, transfer, or otherwise redistribute the Software, in whole or in part;
+- commercialize or resell access to the Software;
+- make the Software available to third parties as a hosted service, SaaS, managed service, or service bureau;
+- modify, adapt, translate, create derivative works of, or prepare any works based on the Software for distribution;
+- remove, alter, or obscure any proprietary notices;
+- reverse engineer, decompile, disassemble, or attempt to derive source code except to the limited extent such restriction is prohibited by applicable law.
+
+4. Ownership
+The Software is proprietary to Licensor and protected by copyright and other laws. Licensor and its licensors retain all right, title, and interest in and to the Software and all related intellectual property rights. No rights are granted except as expressly stated.
+
+5. Updates
+Licensor may provide updates at its discretion. Updates are governed by this License unless accompanied by separate terms.
+
+6. Term and Termination
+This License is effective until terminated. It terminates automatically if you breach any term. Upon termination, you must immediately stop using and delete all copies of the Software.
+
+7. Disclaimer of Warranties
+TO THE MAXIMUM EXTENT PERMITTED BY LAW, THE SOFTWARE IS PROVIDED "AS IS" AND "AS AVAILABLE," WITHOUT WARRANTIES OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE, AND NON-INFRINGEMENT.
+
+8. Limitation of Liability
+TO THE MAXIMUM EXTENT PERMITTED BY LAW, IN NO EVENT SHALL LICENSOR BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, EXEMPLARY, OR PUNITIVE DAMAGES, OR ANY LOSS OF DATA, PROFITS, REVENUE, GOODWILL, OR BUSINESS INTERRUPTION, ARISING OUT OF OR RELATED TO THE SOFTWARE OR THIS LICENSE. LICENSOR'S TOTAL LIABILITY SHALL NOT EXCEED THE AMOUNT PAID BY YOU FOR THE SOFTWARE IN THE 12 MONTHS BEFORE THE CLAIM, OR USD $50, WHICHEVER IS GREATER.
+
+9. Governing Law
+This License is governed by the laws of the jurisdiction selected by Licensor in the EULA, without regard to conflict-of-law principles.
+
+10. Entire Agreement
+This License, together with the EULA, constitutes the entire agreement between you and Licensor regarding the Software.
+
