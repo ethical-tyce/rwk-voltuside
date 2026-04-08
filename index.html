@@ -28,7 +28,7 @@
             --console-left-offset: 0px;
             --preview-console-height: 140px;
             --menu-glass-bg: rgba(0, 0, 0, 0.1);
-            --menu-glass-blur: 5px;
+            --menu-glass-blur: 2px;
             --menu-glass-saturate: 210%;
             --menu-glass-border: rgba(255, 255, 255, 0.05);
             --menu-glass-divider: rgba(255, 255, 255, 0.08);
@@ -298,7 +298,7 @@
 
         /* The new Deep Blur effect */
         .ui-blur {
-            filter: blur(12px) brightness(0.7) saturate(150%) !important;
+            filter: blur(14px) brightness(0.7) saturate(150%) !important;
             pointer-events: none; /* Prevents clicking through to the editor */
             transform: scale(0.98); /* Subtle "push back" effect */
         }
@@ -2892,7 +2892,7 @@
         .modal-backdrop {
             position: fixed;
             inset: 0;
-            background: rgba(0, 0, 0, 0.5);
+            background: rgba(0, 0, 0, 0.3);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -2904,9 +2904,11 @@
                 animation: modalFadeOut var(--menu-transition) var(--menu-ease);
             }
 
-        /* Match Settings menu feel: no dark veil behind these menus */
+        /* Keep these utility overlays glass-only (no dark veil), like Script Hub style. */
+        #scriptHubModal.modal-backdrop,
         #tabBrowserModal.modal-backdrop,
-        #scriptHubModal.modal-backdrop {
+        #taskRunnerModal.modal-backdrop,
+        #gitPanelModal.modal-backdrop {
             background: transparent;
         }
 
@@ -12834,9 +12836,18 @@ console.log('Dark mode applied!');`
                 overlay.classList.add('hide');
                 setTimeout(() => {
                     overlay.remove();
-                    document.getElementById('app').classList.remove('ui-blur');
+                    syncAppBlurForActiveOverlays();
                 }, MENU_TRANSITION_MS);
             }
+        }
+
+        function syncAppBlurForActiveOverlays() {
+            const app = document.getElementById('app');
+            if (!app) return;
+            const hasBackdrop = Boolean(document.querySelector('.modal-backdrop'));
+            const modalOverlay = document.getElementById('modalOverlay');
+            const hasCoreModal = Boolean(modalOverlay && modalOverlay.classList.contains('show'));
+            app.classList.toggle('ui-blur', hasBackdrop || hasCoreModal);
         }
 
         function closeTaskRunnerModal() {
@@ -12845,7 +12856,7 @@ console.log('Dark mode applied!');`
             overlay.classList.add('hide');
             setTimeout(() => {
                 overlay.remove();
-                document.getElementById('app').classList.remove('ui-blur');
+                syncAppBlurForActiveOverlays();
             }, MENU_TRANSITION_MS);
         }
 
@@ -12853,6 +12864,8 @@ console.log('Dark mode applied!');`
             loadTaskDefinitions();
             syncRunOnSaveTaskSelect();
 
+            const existingGitModal = document.getElementById('gitPanelModal');
+            if (existingGitModal) existingGitModal.remove();
             const existing = document.getElementById('taskRunnerModal');
             if (existing) existing.remove();
 
@@ -12993,7 +13006,7 @@ console.log('Dark mode applied!');`
             overlay.classList.add('hide');
             setTimeout(() => {
                 overlay.remove();
-                document.getElementById('app').classList.remove('ui-blur');
+                syncAppBlurForActiveOverlays();
             }, MENU_TRANSITION_MS);
         }
 
@@ -13018,6 +13031,8 @@ console.log('Dark mode applied!');`
                 return;
             }
 
+            const existingTaskRunnerModal = document.getElementById('taskRunnerModal');
+            if (existingTaskRunnerModal) existingTaskRunnerModal.remove();
             const existing = document.getElementById('gitPanelModal');
             if (existing) existing.remove();
 
