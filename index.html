@@ -109,7 +109,19 @@
             user-select: none;
             z-index: 20000;
             pointer-events: auto;
+            overflow: hidden;
             transition: opacity 0.2s ease;
+        }
+
+        #windowChrome::after {
+            content: "";
+            position: absolute;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            height: 1px;
+            background: rgba(255, 255, 255, 0.08);
+            pointer-events: none;
         }
 
         body.startup-active #windowChrome {
@@ -130,6 +142,7 @@
             display: flex;
             align-items: center;
             gap: 8px;
+            height: 100%;
         }
 
         #windowTitleIcon {
@@ -139,11 +152,18 @@
             flex-shrink: 0;
             /* remove left margin since we will center via parent */
             margin-left: -1px;
-            margin-top: 2px;
+            margin-top: 0;
             opacity: 0;
             transition: opacity 0.12s ease;
             display: block;
             background: transparent;
+        }
+
+        #versionLabel {
+            display: inline-flex;
+            align-items: center;
+            line-height: 1;
+            margin-left: 0 !important;
         }
 
         body.title-icon-ready #windowTitleIcon {
@@ -154,6 +174,7 @@
         #windowButtons {
             display: flex;
             align-items: center;
+            height: 100%;
             gap: 15px; /* Adjust spacing between buttons */
             -webkit-app-region: no-drag;
         }
@@ -173,9 +194,12 @@
             width: var(--bug-btn-size);
             height: var(--bug-btn-size);
             padding: 0 !important;
+            margin: 0;
             display: flex;
+            align-self: center;
             align-items: center;
             justify-content: center;
+            line-height: 1;
             color: #9b9b9b;
             background: none !important;
             box-shadow: none !important;
@@ -212,14 +236,17 @@
             width: 24px;         /* Uniform hitbox width */
             height: 24px;        /* Uniform hitbox height */
             flex: 0 0 24px;
+            margin: 0;
             position: relative;
             border: none;
             background: transparent;
             color: #9b9b9b;
             cursor: pointer;
             display: flex;       /* Centers the icon span */
+            align-self: center;
             align-items: center;
             justify-content: center;
+            line-height: 1;
             padding: 0;
             outline: none;
         }
@@ -322,7 +349,7 @@
             display: flex;
             align-items: center;
             gap: 8px;
-            padding: 0 12px 6px 12px;
+            padding: 3px 12px;
             height: 46px;
             overflow: hidden;
             border-bottom: 1px solid rgba(255, 255, 255, 0.08);
@@ -4331,7 +4358,7 @@
                  as the icon option; Windows will also use it for the taskbar
                  button and the Alt-Tab thumbnail (use icon.ico when packaging) -->
             <img id="windowTitleIcon" src="icon.png" alt="">
-            <span id="versionLabel" style="font-size:11px;color:#909090;margin-left:-5px;user-select:none;">v?</span>
+            <span id="versionLabel" style="font-size:11px;color:#909090;user-select:none;">v?</span>
         </div>
         <div id="windowButtons">
             <button id="bugButton" class="bug-btn" title="Report bug">
