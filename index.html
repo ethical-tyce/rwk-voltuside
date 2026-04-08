@@ -2176,8 +2176,9 @@
         #console {
             flex: 1;
             display: block;
-            padding: 2px 0;
+            padding: 10px 0 0 10px;
             overflow-y: auto;
+            background: #000000;
             font-family: -apple-system, BlinkMacSystemFont, sans-serif;
             font-size: 12px;
             line-height: 1.25;
@@ -2211,7 +2212,7 @@
             flex: 1;
             min-height: 0;
             overflow-y: auto;
-            padding: 0;
+            padding: 10px 0 0 10px;
             position: relative;
             font-family: Consolas, "Courier New", monospace;
             font-size: 12px;
@@ -2829,21 +2830,39 @@
         }
 
         .log {
-            color: #d4d4d4;
+            color: #ffffff;
         }
 
         .warn {
-            color: #d4d4d4;
+            color: #ffd84d;
         }
 
         .error {
-            color: #d4d4d4;
+            color: #ff5f57;
         }
 
         .entry {
+            position: relative;
             display: block;
             width: 100%;
             margin-bottom: 0;
+            padding-left: 16px;
+        }
+
+        .entry.error::before {
+            content: '⚠';
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 12px;
+            text-align: center;
+            font-size: 11px;
+            line-height: 1.25;
+            font-family: "Segoe UI Symbol", "Apple Symbols", "Noto Sans Symbols", sans-serif;
+        }
+
+        .entry.error::before {
+            color: #ff5f57;
         }
 
         ::-webkit-scrollbar {
