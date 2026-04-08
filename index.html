@@ -2033,7 +2033,9 @@
             min-width: 0;
             display: inline-flex;
             align-items: center;
-            gap: 6px;
+            justify-content: center;
+            position: relative;
+            gap: 0;
         }
 
         #consoleTopActions {
@@ -2061,13 +2063,13 @@
 
         #consoleTabBar {
             display: inline-flex;
-            align-items: center;
-            gap: 2px;
+            align-items: flex-end;
+            gap: 16px;
             position: relative;
-            padding: 1px;
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            background: rgba(255, 255, 255, 0.04);
-            border-radius: 7px;
+            padding: 0;
+            border: none;
+            background: transparent;
+            border-radius: 0;
         }
 
         #consoleTop .console-tab-btn {
@@ -2076,44 +2078,30 @@
             box-shadow: none !important;
             text-shadow: none !important;
             color: #8f8f8f !important;
-            border-radius: 999px !important;
-            padding: 3px 8px !important;
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", sans-serif;
+            border-radius: 0 !important;
+            padding: 0 0 4px !important;
             min-height: 0 !important;
-            min-width: 76px;
-            font-size: 9px !important;
-            font-weight: 500 !important;
+            min-width: 0 !important;
+            font-size: 10px !important;
+            font-weight: 600 !important;
             text-transform: uppercase;
-            letter-spacing: 0.06em;
+            letter-spacing: 0.08em;
             cursor: pointer;
-            justify-content: center;
-            gap: 5px;
-            transition: color 180ms ease, background 180ms ease !important;
+            justify-content: flex-start;
+            gap: 0;
+            transition: color 180ms ease !important;
             transform: none !important;
         }
 
         #consoleTop .console-tab-btn:hover {
-            color: #d0d0d0 !important;
-            background: rgba(255, 255, 255, 0.09) !important;
+            color: #d7d7d7 !important;
+            background: transparent !important;
         }
 
         #consoleTop .console-tab-btn.active {
-            color: #f0f0f0 !important;
-            background: rgba(255, 255, 255, 0.14) !important;
-        }
-
-        #consoleTop .console-tab-btn svg {
-            width: 12px;
-            height: 12px;
-            stroke: currentColor;
-            fill: none;
-            stroke-width: 1.8;
-            stroke-linecap: round;
-            stroke-linejoin: round;
-            opacity: 0.82;
-        }
-
-        #consoleTop .console-tab-btn.active svg {
-            opacity: 1;
+            color: #f1f1f1 !important;
+            background: transparent !important;
         }
 
         #consoleTabIndicator {
@@ -2121,9 +2109,9 @@
             bottom: 0;
             left: 0;
             width: 0;
-            height: 1px;
-            border-radius: 999px;
-            background: rgba(230, 230, 230, 0.88);
+            height: 2px;
+            border-radius: 0;
+            background: rgba(235, 235, 235, 0.92);
             transform: translateX(0);
             opacity: 0;
             transition:
@@ -2789,44 +2777,47 @@
         }
 
         #clearConsole {
-            width: 22px !important;
-            min-width: 22px !important;
-            height: 22px !important;
-            min-height: 22px !important;
+            width: 28px !important;
+            min-width: 28px !important;
+            height: 28px !important;
+            min-height: 28px !important;
             border: none !important;
-            border-radius: 999px !important;
+            border-radius: 0 !important;
             background: transparent !important;
             color: #9a9a9a;
-            display: inline-flex;
+            display: inline-flex !important;
             align-items: center;
             justify-content: center;
             padding: 0 !important;
             margin: 0;
             flex-shrink: 0;
             cursor: pointer;
-            transition: color 140ms ease, background 140ms ease;
+            transition: color 140ms ease, opacity 140ms ease;
+            position: absolute;
+            right: 0;
+            top: 50%;
+            transform: translateY(-50%);
         }
 
         #clearConsole:hover {
-            color: #f0f0f0;
-            background: rgba(255, 255, 255, 0.08) !important;
+            color: #efefef;
         }
 
         #clearConsole:active {
-            opacity: 0.9;
-        }
-
-        #consoleTopActions #consoleTerminalNewSession .console-session-add-plus {
-            color: currentColor;
+            opacity: 0.85;
         }
 
         #clearConsole svg {
-            width: 14px;
-            height: 14px;
+            width: 16px;
+            height: 16px;
             fill: currentColor;
             stroke: none;
             display: block;
             pointer-events: none;
+        }
+
+        #consoleTopActions #consoleTerminalNewSession .console-session-add-plus {
+            color: currentColor;
         }
 
         .log {
@@ -4599,13 +4590,24 @@
                                     <div class="changelog-list" style="padding-right: 8px;">
                                         <!-- Add or remove dot points by editing the <li> items below -->
                                         <ul id="latestUpdatesList">
-                                            <li>Python local and browser execution support.</li>
-                                            <li>Full project simulation, local execution stable, browser execcution unstable.</li>
-                                            <li>Image rendering.</li>
-                                            <li>Introduced a new dashboard with quick access to resources and project insights.</li>
-                                            <li>Added project run support for linked HTML/CSS/JS assets.</li>
-                                            <li>Improved dashboard cards and quick-link actions.</li>
-                                            <li>Refined tab handling and explorer interactions.</li>
+                                            <li>Dual runtime execution engine: run code in Browser mode or Local mode, including Python and shell-backed workflows with live Output and diagnostics.</li>
+                                            <li>Project simulation mode for linked HTML/CSS/JS assets with integrated preview, console, and execution controls.</li>
+                                            <li>Persistent multi-session terminal system with CMD and PowerShell sessions, fast session switching, and per-session command history.</li>
+                                            <li>Workspace-scale source control panel with change review, staging, commits, pull, and push flows.</li>
+                                            <li>Command Palette + power shortcuts layer (Quick Open, Find/Replace in Files, Diagnostics, Run commands, Explorer, Git, and tooling actions).</li>
+                                            <li>Workspace Explorer with folder attach, tree refresh, context actions, resizable pane, and active file sync.</li>
+                                            <li>Run Automation stack: run-on-save and saved task execution directly from the editor workflow.</li>
+                                            <li>Integrated Task Runner dashboard for repeatable command execution in terminal context.</li>
+                                            <li>Script Hub with reusable browser automation/scraping templates to accelerate common workflows.</li>
+                                            <li>Advanced tab workflow: create/open/close/reorder tabs, session restore, and dedicated tab browser management.</li>
+                                            <li>Built-in diagnostics pipeline with bracket/tag analysis, runtime problem surfacing, and status-bar problem counters.</li>
+                                            <li>Editor productivity controls: format document, minimap toggle, word wrap toggle, and configurable font size.</li>
+                                            <li>Image-aware editing workflow with in-editor image preview overlay and metadata display.</li>
+                                            <li>Security controls for runtime boundaries: allow shell execution, allow Python execution, and allow runtime outside workspace.</li>
+                                            <li>Terminal quality-of-life controls: auto-detect workspace directory and optional terminal problem matcher integration.</li>
+                                            <li>Browser-debug launch integration (Chrome debug port flow) directly from the IDE status bar.</li>
+                                            <li>Always-on-top window mode and refined native window controls for focused sessions.</li>
+                                            <li>Dashboard quick actions for website, updates, and community entry points.</li>
                                         </ul>
                                     </div>
                                 </div>
@@ -4723,22 +4725,8 @@
                         <div id="consoleTop">
                             <div id="consoleTopMain">
                                 <div id="consoleTabBar">
-                                    <button id="consoleOutputTabBtn" class="console-tab-btn active" type="button">
-                                        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                                            <path d="M4 6h16"></path>
-                                            <path d="M4 12h10"></path>
-                                            <path d="M4 18h13"></path>
-                                        </svg>
-                                        <span>Output</span>
-                                    </button>
-                                    <button id="consoleTerminalTabBtn" class="console-tab-btn" type="button">
-                                        <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
-                                            <path d="M4 5h16v14H4z"></path>
-                                            <path d="m8 10 2.5 2-2.5 2"></path>
-                                            <path d="M12 14h4"></path>
-                                        </svg>
-                                        <span>Terminal</span>
-                                    </button>
+                                    <button id="consoleOutputTabBtn" class="console-tab-btn active" type="button">Output</button>
+                                    <button id="consoleTerminalTabBtn" class="console-tab-btn" type="button">Terminal</button>
                                     <span id="consoleTabIndicator" aria-hidden="true"></span>
                                 </div>
                                 <button id="clearConsole" type="button" title="Clear Console" aria-label="Clear Console">
@@ -5410,6 +5398,8 @@ throw "Chrome executable not found."
         let problemMatcherEnabled = true;
         let stopConsoleResizeDrag = null;
         let consoleTabIndicatorFrame = null;
+        let consoleTabIndicatorBootstrapRetries = 0;
+        const CONSOLE_TAB_INDICATOR_MAX_BOOTSTRAP_RETRIES = 8;
         let consoleNewSessionMenuOpen = false;
         let consoleNewSessionMenuCloseTimer = null;
         let consoleSessionActionMenuSessionId = '';
@@ -6809,6 +6799,7 @@ console.log('Dark mode applied!');`
             if (consoleTabIndicator) {
                 consoleTabIndicator.classList.remove('ready');
             }
+            consoleTabIndicatorBootstrapRetries = 0;
             if (nextTab === 'terminal') {
                 void ensureTerminalCwdResolved();
                 void startCmdTerminalSession();
@@ -6848,12 +6839,20 @@ console.log('Dark mode applied!');`
 
             if (width <= 0) {
                 consoleTabIndicator.classList.remove('ready');
+                if (consoleTabIndicatorBootstrapRetries < CONSOLE_TAB_INDICATOR_MAX_BOOTSTRAP_RETRIES) {
+                    consoleTabIndicatorBootstrapRetries += 1;
+                    const retryDelay = 40 * consoleTabIndicatorBootstrapRetries;
+                    window.setTimeout(() => {
+                        scheduleConsoleTabIndicatorUpdate();
+                    }, retryDelay);
+                }
                 return;
             }
 
             consoleTabIndicator.style.transform = `translateX(${offsetLeft}px)`;
             consoleTabIndicator.style.width = `${width}px`;
             consoleTabIndicator.classList.add('ready');
+            consoleTabIndicatorBootstrapRetries = 0;
         }
 
         function syncTerminalInputHeight() {
