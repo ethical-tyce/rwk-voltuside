@@ -3493,6 +3493,19 @@
             align-self: flex-start;
         }
 
+        #settingsView .settings-segmented {
+            margin-top: auto;
+            width: 100%;
+            display: flex;
+            gap: 8px;
+        }
+
+        #settingsView .settings-segmented .mode-btn {
+            flex: 1;
+            min-height: 34px;
+            padding: 8px 10px !important;
+        }
+
         .settings-header {
             padding: 18px 24px;
             border-bottom: 1px solid var(--menu-glass-divider);
@@ -4734,6 +4747,15 @@
                                 <div class="dashboard-card-label">Runtime</div>
                                 <h3 class="settings-setting-name">Allow Runtime Outside Workspace</h3>
                                 <div class="settings-toggle" id="toggleAllowAnyCwd"></div>
+                            </div>
+                            <div class="dashboard-card settings-card">
+                                <div class="dashboard-card-label">Discord</div>
+                                <h3 class="settings-setting-name">Rich Presence Privacy</h3>
+                                <div class="settings-segmented" id="discordPresencePrivacy" role="group" aria-label="Discord Rich Presence privacy level">
+                                    <button type="button" class="mode-btn" data-level="none">None</button>
+                                    <button type="button" class="mode-btn active" data-level="basic">Basic</button>
+                                    <button type="button" class="mode-btn" data-level="full">Full</button>
+                                </div>
                             </div>
 
                             <div class="settings-section-divider"><span>Window</span></div>
@@ -8011,10 +8033,18 @@ console.log('Dark mode applied!');`
             trustedRoots: []
         };
         const DISCORD_PRESENCE_DEBOUNCE_MS = 650;
+        const DISCORD_PRESENCE_PRIVACY_STORAGE_KEY = 'voltus.discordPresence.privacyLevel';
+        const DISCORD_PRESENCE_NONE_SIGNATURE = '__discord_presence_none__';
+        const DISCORD_PRESENCE_PRIVACY_LEVELS = Object.freeze({
+            NONE: 'none',
+            BASIC: 'basic',
+            FULL: 'full'
+        });
         const discordPresenceSessionStartedAt = Date.now();
         let discordPresenceDebounceTimer = null;
         let discordPresenceLastSignature = '';
         let discordPresenceDisabled = false;
+        let discordPresencePrivacyLevel = DISCORD_PRESENCE_PRIVACY_LEVELS.BASIC;
 
         function truncateDiscordPresenceText(value, maxLength = 128) {
             const text = String(value || '').trim();
@@ -8023,7 +8053,30 @@ console.log('Dark mode applied!');`
             return text.slice(0, maxLength);
         }
 
+        function normalizeDiscordPresencePrivacyLevel(value) {
+            const normalized = String(value || '').trim().toLowerCase();
+            if (
+                normalized === DISCORD_PRESENCE_PRIVACY_LEVELS.NONE ||
+                normalized === DISCORD_PRESENCE_PRIVACY_LEVELS.BASIC ||
+                normalized === DISCORD_PRESENCE_PRIVACY_LEVELS.FULL
+            ) {
+                return normalized;
+            }
+            return DISCORD_PRESENCE_PRIVACY_LEVELS.BASIC;
+        }
+
         function buildDiscordPresencePayload() {
+            if (discordPresencePrivacyLevel === DISCORD_PRESENCE_PRIVACY_LEVELS.NONE) {
+                return null;
+            }
+            if (discordPresencePrivacyLevel === DISCORD_PRESENCE_PRIVACY_LEVELS.BASIC) {
+                return {
+                    details: 'Editing in Voltus IDE',
+                    state: '',
+                    startTimestamp: discordPresenceSessionStartedAt
+                };
+            }
+
             const activeTab = activeTabId && tabs[activeTabId] ? tabs[activeTabId] : null;
             const displayName = activeTab ? String(activeTab.name || 'Untitled') : 'Untitled';
             const languageId = activeTab ? resolveMonacoLanguageId(getTabLanguageId(activeTab)) : 'plaintext';
@@ -8052,10 +8105,13 @@ console.log('Dark mode applied!');`
 
         function queueDiscordPresenceUpdate(force = false) {
             if (discordPresenceDisabled) return;
-            if (!window.discordRpc || typeof window.discordRpc.updatePresence !== 'function') return;
+            if (!window.discordRpc) return;
+            const canUpdatePresence = typeof window.discordRpc.updatePresence === 'function';
+            const canClearPresence = typeof window.discordRpc.clearPresence === 'function';
+            if (!canUpdatePresence && !canClearPresence) return;
 
             const payload = buildDiscordPresencePayload();
-            const signature = JSON.stringify(payload);
+            const signature = payload ? JSON.stringify(payload) : DISCORD_PRESENCE_NONE_SIGNATURE;
             if (!force && signature === discordPresenceLastSignature) return;
 
             if (discordPresenceDebounceTimer) {
@@ -8065,7 +8121,13 @@ console.log('Dark mode applied!');`
             discordPresenceDebounceTimer = setTimeout(async () => {
                 discordPresenceDebounceTimer = null;
                 try {
-                    const status = await window.discordRpc.updatePresence(payload);
+                    let status = null;
+                    if (payload) {
+                        if (!canUpdatePresence) return;
+                        status = await window.discordRpc.updatePresence(payload);
+                    } else if (canClearPresence) {
+                        status = await window.discordRpc.clearPresence();
+                    }
                     if (status && status.enabled === false) {
                         discordPresenceDisabled = true;
                         return;
@@ -8076,7 +8138,7 @@ console.log('Dark mode applied!');`
                 } catch {
                     // Ignore transient Discord RPC transport failures.
                 }
-            }, DISCORD_PRESENCE_DEBOUNCE_MS);
+            }, force ? 0 : DISCORD_PRESENCE_DEBOUNCE_MS);
         }
 
         function openTabById(tabId) {
@@ -12440,6 +12502,9 @@ console.log('Dark mode applied!');`
         loadExplorerWidth();
         setExplorerPaneOpen(false);
         renderExplorerTree();
+        discordPresencePrivacyLevel = normalizeDiscordPresencePrivacyLevel(
+            safeStorageGet(DISCORD_PRESENCE_PRIVACY_STORAGE_KEY, DISCORD_PRESENCE_PRIVACY_LEVELS.BASIC)
+        );
         setPrimaryView('home');
         loadTaskDefinitions();
         runOnSaveEnabled = safeStorageGet(RUN_ON_SAVE_STORAGE_KEY, '0') === '1';
@@ -12566,6 +12631,10 @@ console.log('Dark mode applied!');`
 
         const runOnSaveToggle = document.getElementById('toggleRunOnSave');
         const runOnSaveTaskSelect = document.getElementById('runOnSaveTaskSelect');
+        const discordPresencePrivacyControl = document.getElementById('discordPresencePrivacy');
+        const discordPresencePrivacyButtons = discordPresencePrivacyControl
+            ? Array.from(discordPresencePrivacyControl.querySelectorAll('button[data-level]'))
+            : [];
         const problemMatcherToggle = document.getElementById('toggleProblemMatcher');
         const allowShellToggle = document.getElementById('toggleAllowShellExecution');
         const allowPythonToggle = document.getElementById('toggleAllowPythonExecution');
@@ -12589,6 +12658,25 @@ console.log('Dark mode applied!');`
             }
             if (!problemMatcherEnabled) {
                 clearRuntimeProblems();
+            }
+        };
+
+        const setDiscordPresencePrivacyUI = (level, options = {}) => {
+            const nextLevel = normalizeDiscordPresencePrivacyLevel(level);
+            discordPresencePrivacyLevel = nextLevel;
+            if (discordPresencePrivacyButtons.length) {
+                discordPresencePrivacyButtons.forEach((buttonEl) => {
+                    const buttonLevel = normalizeDiscordPresencePrivacyLevel(
+                        buttonEl && buttonEl.dataset ? buttonEl.dataset.level : ''
+                    );
+                    buttonEl.classList.toggle('active', buttonLevel === nextLevel);
+                });
+            }
+            if (!options || options.persist !== false) {
+                safeStorageSet(DISCORD_PRESENCE_PRIVACY_STORAGE_KEY, nextLevel);
+            }
+            if (!options || options.syncPresence !== false) {
+                queueDiscordPresenceUpdate(true);
             }
         };
 
@@ -12695,6 +12783,25 @@ console.log('Dark mode applied!');`
                 setRunOnSaveUI(nextState);
                 showToast(`Run on Save ${nextState ? 'enabled' : 'disabled'}`);
             };
+        }
+
+        if (discordPresencePrivacyButtons.length) {
+            setDiscordPresencePrivacyUI(discordPresencePrivacyLevel, { persist: false, syncPresence: false });
+            discordPresencePrivacyButtons.forEach((buttonEl) => {
+                buttonEl.onclick = () => {
+                    const nextLevel = normalizeDiscordPresencePrivacyLevel(
+                        buttonEl && buttonEl.dataset ? buttonEl.dataset.level : DISCORD_PRESENCE_PRIVACY_LEVELS.BASIC
+                    );
+                    if (nextLevel === discordPresencePrivacyLevel) return;
+                    setDiscordPresencePrivacyUI(nextLevel);
+                    const label = nextLevel === DISCORD_PRESENCE_PRIVACY_LEVELS.NONE
+                        ? 'None'
+                        : nextLevel === DISCORD_PRESENCE_PRIVACY_LEVELS.FULL
+                            ? 'Full'
+                            : 'Basic';
+                    showToast(`Discord Rich Presence: ${label}`);
+                };
+            });
         }
 
         if (problemMatcherToggle) {

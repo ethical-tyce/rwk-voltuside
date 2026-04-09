@@ -828,9 +828,6 @@ async function startDiscordRpc() {
         if (discordRpcClient !== client) return;
         discordRpcReady = true;
         discordRpcConnecting = false;
-        if (!discordRpcActivity) {
-            discordRpcActivity = buildDefaultDiscordRpcActivity();
-        }
         await applyDiscordRpcActivity();
         console.log('[Discord RPC] Connected');
     });
