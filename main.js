@@ -960,7 +960,7 @@ async function promptRestartForDownloadedUpdate(versionText = '') {
                 phase: 'installing',
                 message: 'Closing app to install update...'
             });
-            autoUpdater.quitAndInstall(false, true);
+            autoUpdater.quitAndInstall(true, true);
         }
     } catch (error) {
         const message = error && error.message ? error.message : String(error);
@@ -1373,7 +1373,7 @@ ipcMain.handle('updater:quit-and-install', async () => {
 
     setImmediate(() => {
         try {
-            autoUpdater.quitAndInstall(false, true);
+            autoUpdater.quitAndInstall(true, true);
         } catch (error) {
             const message = error && error.message ? error.message : String(error);
             setUpdaterState({
