@@ -34,6 +34,7 @@
       "tools.js",
       "ui-shell.js",
       "workspace.js",
+      "vendor/liquidgl/**/*",
       ".bridge/**/*",
       "icon.png",
       "voltus.ico",

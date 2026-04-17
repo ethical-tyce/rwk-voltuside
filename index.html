@@ -3981,6 +3981,59 @@
             filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.2));
         }
 
+        #topbar .icon-btn {
+            position: relative;
+            overflow: hidden;
+            isolation: isolate;
+            background: rgba(255, 255, 255, 0.015) !important;
+            backdrop-filter: none !important;
+            -webkit-backdrop-filter: none !important;
+            border: 1px solid rgba(255, 255, 255, 0.14) !important;
+            box-shadow:
+                0 7px 18px rgba(0, 0, 0, 0.34),
+                inset 0 1px 0 rgba(255, 255, 255, 0.28) !important;
+            transition: transform 110ms cubic-bezier(0.22, 1, 0.36, 1);
+        }
+
+        #topbar .icon-btn:hover {
+            transform: scale(0.97) !important;
+        }
+
+        #topbar .icon-btn:active {
+            transform: scale(0.93) !important;
+        }
+
+        .liquidgl-glass-host {
+            position: relative !important;
+            overflow: hidden;
+            isolation: isolate;
+        }
+
+        .liquidgl-glass-lens {
+            position: absolute;
+            inset: 0;
+            border-radius: inherit;
+            pointer-events: none;
+            z-index: 26000;
+            background: rgba(255, 255, 255, 0);
+        }
+
+        .liquidgl-glass-button-host > .liquidgl-glass-content {
+            position: relative;
+            z-index: 26001;
+            width: 100%;
+            height: 100%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: inherit;
+        }
+
+        .liquidgl-glass-menu-host > :not(.liquidgl-glass-lens) {
+            position: relative;
+            z-index: 26001;
+        }
+
         /* --- Startup Splash: polished, lightweight, web-tech --- */
         #startup-splash {
             --startup-bg: #060606;
@@ -4871,6 +4924,8 @@
     <script src="node_modules/xterm/lib/xterm.js"></script>
     <script src="node_modules/@xterm/addon-fit/lib/addon-fit.js"></script>
     <script src="node_modules/monaco-editor/min/vs/loader.js"></script>
+    <script src="vendor/liquidgl/html2canvas.min.js"></script>
+    <script src="vendor/liquidgl/liquidGL.js"></script>
     <script>
         window.addEventListener('DOMContentLoaded', () => {
             const splash = document.getElementById('startup-splash');
@@ -4897,6 +4952,168 @@
             const downloadLatestBtn = document.getElementById('downloadLatestBtn');
             const joinDiscordBtn = document.getElementById('joinDiscordBtn');
             const statusChromeDebugBtn = document.getElementById('statusChromeDebugBtn');
+
+            const LIQUID_GL_BUTTON_SELECTOR = '.icon-btn, .run-btn, .modal-btn, .toolbar-button.run, .console-tab-btn, .mode-btn, .settings-close';
+            const LIQUID_GL_MENU_SELECTOR = [
+                '#explorerContextMenu',
+                '#consoleNewSessionMenu',
+                '#consoleSessionActionMenu',
+                '.modal-content',
+                '.splash-content',
+                '#settingsView .settings-topbar',
+                '#settingsView .dashboard-card',
+                '#dashboard .link-section',
+                '#dashboard .link-card',
+                '#dashboard .dashboard-card'
+            ].join(', ');
+            let liquidGlLensCounter = 0;
+            let liquidGlScanRaf = null;
+            let liquidGlObserver = null;
+
+            const findDirectChildByClass = (parent, className) => {
+                if (!parent || !className) return null;
+                return Array.from(parent.children || []).find((child) => child.classList && child.classList.contains(className)) || null;
+            };
+
+            const isBorderedElement = (element) => {
+                if (!element) return false;
+                const style = window.getComputedStyle(element);
+                const borderStyles = [style.borderTopStyle, style.borderRightStyle, style.borderBottomStyle, style.borderLeftStyle];
+                const borderWidths = [style.borderTopWidth, style.borderRightWidth, style.borderBottomWidth, style.borderLeftWidth]
+                    .map((value) => Number.parseFloat(String(value || '0')));
+                return borderStyles.some((value) => value && value !== 'none' && value !== 'hidden')
+                    && borderWidths.some((value) => Number.isFinite(value) && value > 0.1);
+            };
+
+            const ensureLiquidGlLensIdentity = (lensEl) => {
+                if (!lensEl) return '';
+                if (!lensEl.dataset.liquidglClass) {
+                    liquidGlLensCounter += 1;
+                    lensEl.dataset.liquidglClass = `voltus-liquidgl-target-${liquidGlLensCounter}`;
+                }
+                if (lensEl.dataset.liquidglInit !== '1') {
+                    lensEl.dataset.liquidglInit = '0';
+                }
+                lensEl.classList.add('liquidgl-glass-lens-target', lensEl.dataset.liquidglClass);
+                return lensEl.dataset.liquidglClass;
+            };
+
+            const prepareLiquidGlButton = (buttonEl) => {
+                if (!buttonEl || !isBorderedElement(buttonEl)) return null;
+                buttonEl.classList.add('liquidgl-glass-host', 'liquidgl-glass-button-host');
+
+                let contentEl = findDirectChildByClass(buttonEl, 'liquidgl-glass-content');
+                if (!contentEl) {
+                    contentEl = document.createElement('span');
+                    contentEl.className = 'liquidgl-glass-content';
+                    const nodesToMove = Array.from(buttonEl.childNodes).filter((node) => !(node.nodeType === 1 && node.classList && node.classList.contains('liquidgl-glass-lens')));
+                    nodesToMove.forEach((node) => contentEl.appendChild(node));
+                    buttonEl.appendChild(contentEl);
+                } else {
+                    const strayNodes = Array.from(buttonEl.childNodes).filter((node) => node !== contentEl && !(node.nodeType === 1 && node.classList && node.classList.contains('liquidgl-glass-lens')));
+                    strayNodes.forEach((node) => contentEl.appendChild(node));
+                }
+
+                let lensEl = findDirectChildByClass(buttonEl, 'liquidgl-glass-lens');
+                if (!lensEl) {
+                    lensEl = document.createElement('span');
+                    lensEl.className = 'liquidgl-glass-lens';
+                    lensEl.setAttribute('aria-hidden', 'true');
+                    buttonEl.insertBefore(lensEl, contentEl);
+                }
+
+                ensureLiquidGlLensIdentity(lensEl);
+                return lensEl;
+            };
+
+            const prepareLiquidGlMenu = (menuEl) => {
+                if (!menuEl || !isBorderedElement(menuEl)) return null;
+                menuEl.classList.add('liquidgl-glass-host', 'liquidgl-glass-menu-host');
+
+                let lensEl = findDirectChildByClass(menuEl, 'liquidgl-glass-lens');
+                if (!lensEl) {
+                    lensEl = document.createElement('div');
+                    lensEl.className = 'liquidgl-glass-lens';
+                    lensEl.setAttribute('aria-hidden', 'true');
+                    menuEl.insertBefore(lensEl, menuEl.firstChild || null);
+                }
+
+                ensureLiquidGlLensIdentity(lensEl);
+                return lensEl;
+            };
+
+            const initLiquidGlForLens = (lensEl) => {
+                if (!lensEl || lensEl.dataset.liquidglInit === '1') return;
+                if (typeof window.liquidGL !== 'function') return;
+                const className = ensureLiquidGlLensIdentity(lensEl);
+                if (!className) return;
+                try {
+                    window.liquidGL({
+                        snapshot: 'body',
+                        target: `.${className}`,
+                        resolution: 1.5,
+                        refraction: 0.03,
+                        bevelDepth: 0.2,
+                        bevelWidth: 0.22,
+                        frost: 0,
+                        shadow: false,
+                        specular: true,
+                        reveal: 'none',
+                        tilt: false,
+                        magnify: 1.01
+                    });
+                    lensEl.dataset.liquidglInit = '1';
+                } catch (error) {
+                    lensEl.dataset.liquidglInit = '0';
+                    pushConsole('warn', 'liquidGL init failed:', error && error.message ? error.message : String(error));
+                }
+            };
+
+            const prepareAndInitLiquidGlTargets = () => {
+                const buttonTargets = Array.from(document.querySelectorAll(LIQUID_GL_BUTTON_SELECTOR));
+                const menuTargets = Array.from(document.querySelectorAll(LIQUID_GL_MENU_SELECTOR));
+                const lenses = [];
+
+                buttonTargets.forEach((buttonEl) => {
+                    const lensEl = prepareLiquidGlButton(buttonEl);
+                    if (lensEl) lenses.push(lensEl);
+                });
+                menuTargets.forEach((menuEl) => {
+                    const lensEl = prepareLiquidGlMenu(menuEl);
+                    if (lensEl) lenses.push(lensEl);
+                });
+
+                lenses.forEach((lensEl) => initLiquidGlForLens(lensEl));
+            };
+
+            const queueLiquidGlScan = () => {
+                if (liquidGlScanRaf !== null) return;
+                liquidGlScanRaf = window.requestAnimationFrame(() => {
+                    liquidGlScanRaf = null;
+                    prepareAndInitLiquidGlTargets();
+                });
+            };
+
+            const startLiquidGlSystem = () => {
+                if (window.__voltusLiquidGlSystemStarted) return;
+                window.__voltusLiquidGlSystemStarted = true;
+                prepareAndInitLiquidGlTargets();
+
+                if (typeof MutationObserver === 'function' && !liquidGlObserver) {
+                    liquidGlObserver = new MutationObserver(() => {
+                        queueLiquidGlScan();
+                    });
+                    liquidGlObserver.observe(document.body, {
+                        childList: true,
+                        subtree: true
+                    });
+                }
+            };
+
+            const scheduleLiquidGlInit = () => {
+                window.requestAnimationFrame(() => startLiquidGlSystem());
+            };
+            scheduleLiquidGlInit();
 
             const launchChromeDebugCommand = `
 $candidates = @(
