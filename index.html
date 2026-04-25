@@ -3981,7 +3981,8 @@
             filter: drop-shadow(0 0 2px rgba(255, 255, 255, 0.2));
         }
 
-        #topbar .icon-btn {
+        #topbar .icon-btn,
+        button.voltus-liquid-glass-btn {
             position: relative;
             overflow: hidden;
             isolation: isolate;
@@ -3995,11 +3996,24 @@
             transition: transform 110ms cubic-bezier(0.22, 1, 0.36, 1);
         }
 
-        #topbar .icon-btn:hover {
+        #topbar .icon-btn:hover,
+        button.voltus-liquid-glass-btn:hover {
+            background: rgba(255, 255, 255, 0.015) !important;
+            border-color: rgba(255, 255, 255, 0.14) !important;
+            box-shadow:
+                0 7px 18px rgba(0, 0, 0, 0.34),
+                inset 0 1px 0 rgba(255, 255, 255, 0.28) !important;
+            color: #ffffff !important;
             transform: scale(0.97) !important;
         }
 
-        #topbar .icon-btn:active {
+        #topbar .icon-btn:active,
+        button.voltus-liquid-glass-btn:active {
+            background: rgba(255, 255, 255, 0.015) !important;
+            border-color: rgba(255, 255, 255, 0.14) !important;
+            box-shadow:
+                0 7px 18px rgba(0, 0, 0, 0.34),
+                inset 0 1px 0 rgba(255, 255, 255, 0.28) !important;
             transform: scale(0.93) !important;
         }
 
@@ -4953,7 +4967,7 @@
             const joinDiscordBtn = document.getElementById('joinDiscordBtn');
             const statusChromeDebugBtn = document.getElementById('statusChromeDebugBtn');
 
-            const LIQUID_GL_BUTTON_SELECTOR = '.icon-btn, .run-btn, .modal-btn, .toolbar-button.run, .console-tab-btn, .mode-btn, .settings-close';
+            const LIQUID_GL_BUTTON_SELECTOR = 'button';
             const LIQUID_GL_MENU_SELECTOR = [
                 '#explorerContextMenu',
                 '#consoleNewSessionMenu',
@@ -4978,11 +4992,19 @@
             const isBorderedElement = (element) => {
                 if (!element) return false;
                 const style = window.getComputedStyle(element);
-                const borderStyles = [style.borderTopStyle, style.borderRightStyle, style.borderBottomStyle, style.borderLeftStyle];
-                const borderWidths = [style.borderTopWidth, style.borderRightWidth, style.borderBottomWidth, style.borderLeftWidth]
-                    .map((value) => Number.parseFloat(String(value || '0')));
-                return borderStyles.some((value) => value && value !== 'none' && value !== 'hidden')
-                    && borderWidths.some((value) => Number.isFinite(value) && value > 0.1);
+                const borders = [
+                    [style.borderTopStyle, style.borderTopWidth],
+                    [style.borderRightStyle, style.borderRightWidth],
+                    [style.borderBottomStyle, style.borderBottomWidth],
+                    [style.borderLeftStyle, style.borderLeftWidth]
+                ];
+                const borderedSides = borders.filter(([sideStyle, sideWidth]) => {
+                    const width = Number.parseFloat(String(sideWidth || '0'));
+                    if (!Number.isFinite(width) || width <= 0.1) return false;
+                    if (!sideStyle || sideStyle === 'none' || sideStyle === 'hidden') return false;
+                    return true;
+                });
+                return borderedSides.length >= 3;
             };
 
             const ensureLiquidGlLensIdentity = (lensEl) => {
@@ -5000,7 +5022,7 @@
 
             const prepareLiquidGlButton = (buttonEl) => {
                 if (!buttonEl || !isBorderedElement(buttonEl)) return null;
-                buttonEl.classList.add('liquidgl-glass-host', 'liquidgl-glass-button-host');
+                buttonEl.classList.add('voltus-liquid-glass-btn', 'liquidgl-glass-host', 'liquidgl-glass-button-host');
 
                 let contentEl = findDirectChildByClass(buttonEl, 'liquidgl-glass-content');
                 if (!contentEl) {
