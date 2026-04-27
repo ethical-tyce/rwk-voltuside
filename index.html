@@ -1565,7 +1565,8 @@
             background: #040404;
         }
 
-        #mainContent.console-open #htmlOutput.primary-view {
+        #mainContent.console-open #htmlOutput.primary-view,
+        #mainContent.console-open #editor.primary-view {
             bottom: calc(var(--preview-console-height) + 4px);
         }
 
@@ -12360,7 +12361,8 @@ console.log('Dark mode applied!');`
             const mainContentEl = document.getElementById('mainContent');
 
             htmlOutputLabelEl.classList.remove('active');
-            enforcePreviewConsoleLayer(false);
+            const shouldShowConsole = view === 'html' || view === 'editor';
+            enforcePreviewConsoleLayer(shouldShowConsole);
 
             const viewMap = {
                 home: dashboardEl,
@@ -12417,13 +12419,6 @@ console.log('Dark mode applied!');`
             } else if (view === 'html') {
                 hideImagePreview();
                 document.getElementById('htmlOutputTab').classList.add('active');
-                enforcePreviewConsoleLayer(true);
-                const consoleHeight = Math.max(
-                    96,
-                    Math.round(consoleWrapEl.offsetHeight || parseFloat(consoleWrapEl.style.height) || 140)
-                );
-                consoleHandleEl.style.bottom = consoleHeight + 'px';
-                document.documentElement.style.setProperty('--preview-console-height', `${consoleHeight}px`);
                 bindHtmlOutputProximityTracking();
 
                 if (htmlOutputLabelEl.textContent) {
@@ -12435,6 +12430,15 @@ console.log('Dark mode applied!');`
 
             if (htmlOutputEl) {
                 htmlOutputEl.style.pointerEvents = view === 'html' ? 'auto' : 'none';
+            }
+
+            if (shouldShowConsole && consoleWrapEl && consoleHandleEl) {
+                const consoleHeight = Math.max(
+                    96,
+                    Math.round(consoleWrapEl.offsetHeight || parseFloat(consoleWrapEl.style.height) || 140)
+                );
+                consoleHandleEl.style.bottom = consoleHeight + 'px';
+                document.documentElement.style.setProperty('--preview-console-height', `${consoleHeight}px`);
             }
 
             currentPrimaryView = view;
