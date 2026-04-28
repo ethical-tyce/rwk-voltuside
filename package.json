@@ -4,8 +4,10 @@
   "main": "main.js",
   "scripts": {
     "start": "electron .",
-    "dist:win": "electron-builder --win nsis --x64",
-    "publish:win": "electron-builder --win nsis --x64 --publish always"
+    "sanitize:dist": "node scripts/sanitize-dist.js",
+    "sanitize:workspace": "node scripts/sanitize-workspace.js",
+    "dist:win": "electron-builder --win nsis --x64 && node scripts/sanitize-dist.js && node scripts/sanitize-workspace.js",
+    "publish:win": "electron-builder --win nsis --x64 --publish always && node scripts/sanitize-dist.js && node scripts/sanitize-workspace.js"
   },
   "dependencies": {
     "@xterm/addon-fit": "^0.11.0",
@@ -24,6 +26,7 @@
     "appId": "xyz.voltus.ide",
     "productName": "Voltus IDE",
     "artifactName": "Voltus-IDE-Setup.${ext}",
+    "afterPack": "./scripts/sanitize-after-pack.js",
     "directories": {
       "output": "dist"
     },
