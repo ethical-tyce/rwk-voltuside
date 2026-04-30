@@ -88,6 +88,12 @@ const discordRpcSessionStartedAt = Date.now();
 let discordRpcWarnedMissingClientId = false;
 const UPDATE_CHANNEL_STATE = 'updater:state';
 const UPDATE_CHECK_INTERVAL_MS = 6 * 60 * 60 * 1000;
+const UPDATER_GITHUB_TOKEN_ENV_KEYS = Object.freeze([
+    'VOLTUS_UPDATER_GH_TOKEN',
+    'VOLTUS_UPDATER_TOKEN',
+    'GH_TOKEN',
+    'GITHUB_TOKEN'
+]);
 const updaterState = {
     enabled: false,
     phase: 'idle',
@@ -103,6 +109,7 @@ const updaterState = {
 };
 let updaterCheckTimer = null;
 let updaterListenersRegistered = false;
+let updaterTokenSource = '';
 
 function isPathInsideRoot(targetPath, rootPath) {
     const relative = path.relative(rootPath, targetPath);
@@ -941,6 +948,43 @@ function getAutoUpdaterDisableReason() {
     return '';
 }
 
+function resolveUpdaterGithubToken() {
+    for (const envKey of UPDATER_GITHUB_TOKEN_ENV_KEYS) {
+        const rawValue = process.env[envKey];
+        if (typeof rawValue !== 'string') continue;
+        const token = rawValue.trim();
+        if (!token) continue;
+        return { token, source: envKey };
+    }
+    return { token: '', source: '' };
+}
+
+function configureAutoUpdaterAuth() {
+    updaterTokenSource = '';
+    if (!autoUpdater) return false;
+
+    const { token, source } = resolveUpdaterGithubToken();
+    if (!token) return false;
+
+    const normalizedToken = /^token\s+|^bearer\s+/i.test(token) ? token : `token ${token}`;
+    try {
+        if (typeof autoUpdater.addAuthHeader === 'function') {
+            autoUpdater.addAuthHeader(normalizedToken);
+        } else {
+            autoUpdater.requestHeaders = {
+                ...(autoUpdater.requestHeaders || {}),
+                Authorization: normalizedToken
+            };
+        }
+        updaterTokenSource = source;
+        return true;
+    } catch (error) {
+        const message = error && error.message ? error.message : String(error);
+        console.error('[Updater] Failed to apply auth token:', message);
+        return false;
+    }
+}
+
 async function promptRestartForDownloadedUpdate(versionText = '') {
     if (!win || win.isDestroyed()) return;
     const versionMessage = versionText ? `Version ${versionText} is ready to install.` : 'A new version is ready to install.';
@@ -1059,9 +1103,16 @@ function registerAutoUpdaterEvents() {
     autoUpdater.on('error', (error) => {
         const message = error && error.message ? error.message : String(error);
         console.error('[Updater] Error:', message);
+        const missingPrivateTokenHint = (
+            !updaterTokenSource
+            && /api\.github\.com/i.test(message)
+            && /404/.test(message)
+        )
+            ? ' For private GitHub updates, set GH_TOKEN (or VOLTUS_UPDATER_GH_TOKEN).'
+            : '';
         setUpdaterState({
             phase: 'error',
-            message: 'Update check failed.',
+            message: `Update check failed.${missingPrivateTokenHint}`,
             checking: false,
             downloading: false,
             error: message
@@ -1142,6 +1193,12 @@ function startAutoUpdater() {
         currentVersion: app.getVersion(),
         error: ''
     });
+
+    if (configureAutoUpdaterAuth()) {
+        console.log(`[Updater] GitHub auth token configured from ${updaterTokenSource}.`);
+    } else {
+        console.log('[Updater] GitHub auth token not found in environment; private release feeds need GH_TOKEN.');
+    }
 
     registerAutoUpdaterEvents();
     void checkForAppUpdates('startup');
@@ -1265,7 +1322,6 @@ function createWindow() {
         if (!win || win.isDestroyed()) return;
         win.center();
         win.show();
-        win.webContents.send('startup:window-expanded');
     };
 
     win.webContents.on('did-finish-load', () => {
@@ -1286,8 +1342,8 @@ function createWindow() {
 app.whenReady().then(() => {
     startExtensionBridge();
     void startDiscordRpc();
-    createWindow();
     startAutoUpdater();
+    createWindow();
 });
 
 ipcMain.handle('window:minimize', () => {

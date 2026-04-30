@@ -30,15 +30,6 @@ contextBridge.exposeInMainWorld('extensionBridge', {
     }
 });
 
-contextBridge.exposeInMainWorld('startupEvents', {
-    onWindowExpanded: (callback) => {
-        if (typeof callback !== 'function') return () => { };
-        const handler = () => callback();
-        ipcRenderer.on('startup:window-expanded', handler);
-        return () => ipcRenderer.removeListener('startup:window-expanded', handler);
-    }
-});
-
 contextBridge.exposeInMainWorld('fileExplorer', {
     pickFolder: () => ipcRenderer.invoke('explorer:pick-folder'),
     closeFolder: (rootPath) => ipcRenderer.invoke('explorer:close-folder', rootPath),
