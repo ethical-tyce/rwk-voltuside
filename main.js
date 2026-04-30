@@ -1288,6 +1288,7 @@ function createWindow() {
     const WINDOW_HEIGHT = 550;
     const MIN_WIDTH = 600;
     const MIN_HEIGHT = 510;
+    const WINDOW_BG_COLOR = '#151515';
 
     // Use the .ico asset on Windows for proper taskbar/shell icon rendering.
     const iconPath = path.join(__dirname, process.platform === 'win32' ? 'voltus.ico' : 'icon.png');
@@ -1302,7 +1303,7 @@ function createWindow() {
         roundedCorners: false,
         alwaysOnTop: false,
         titleBarStyle: 'hidden',
-        backgroundColor: '#000',
+        backgroundColor: WINDOW_BG_COLOR,
         webPreferences: {
             nodeIntegration: false,
             contextIsolation: true,
@@ -1311,6 +1312,9 @@ function createWindow() {
         },
         icon: iconPath
     });
+    win.setBackgroundColor(WINDOW_BG_COLOR);
+    win.center();
+    win.show();
 
     // Load your HTML file
     win.loadFile('index.html');
@@ -1318,18 +1322,10 @@ function createWindow() {
     // Remove the default menu bar
     Menu.setApplicationMenu(null);
 
-    const revealWindow = () => {
-        if (!win || win.isDestroyed()) return;
-        win.center();
-        win.show();
-    };
-
     win.webContents.on('did-finish-load', () => {
         emitBridgeStatus();
         emitUpdaterState();
-        revealWindow();
     });
-    
 
     //win.webContents.openDevTools();
 
