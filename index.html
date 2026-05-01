@@ -1499,11 +1499,11 @@
             max-width: 220px;
             padding: 6px;
             border-radius: 11px;
-            border: 1px solid rgba(255, 255, 255, 0.14);
-            background: rgba(10, 10, 10, 0.93);
-            box-shadow: 0 14px 32px rgba(0, 0, 0, 0.55);
-            backdrop-filter: blur(12px) saturate(160%);
-            -webkit-backdrop-filter: blur(12px) saturate(160%);
+            border: 1px solid var(--menu-glass-border);
+            background: var(--menu-glass-bg);
+            box-shadow: var(--menu-glass-shadow);
+            backdrop-filter: blur(var(--menu-glass-blur)) saturate(var(--menu-glass-saturate));
+            -webkit-backdrop-filter: blur(var(--menu-glass-blur)) saturate(var(--menu-glass-saturate));
             opacity: 0;
             transform: translateY(4px) scale(0.985);
             transition: opacity 150ms ease, transform 150ms ease;
@@ -1526,8 +1526,8 @@
         .explorer-context-item {
             display: block;
             width: auto;
-            border: 1px solid transparent;
-            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.07);
+            background: rgba(255, 255, 255, 0.03);
             color: rgba(224, 224, 224, 0.9);
             text-align: left;
             white-space: nowrap;
@@ -1535,6 +1535,8 @@
             border-radius: 7px;
             padding: 7px 9px;
             cursor: pointer;
+            backdrop-filter: blur(var(--menu-glass-blur)) saturate(var(--menu-glass-saturate));
+            -webkit-backdrop-filter: blur(var(--menu-glass-blur)) saturate(var(--menu-glass-saturate));
         }
 
         .explorer-context-item:hover {
@@ -2549,8 +2551,8 @@
             width: 16px;
             min-width: 16px;
             height: 16px;
-            border: none;
-            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            background: rgba(255, 255, 255, 0.02);
             color: #a6a6a6;
             cursor: pointer;
             font-size: 14px;
@@ -2563,6 +2565,8 @@
             pointer-events: auto;
             transition: color 140ms ease, background 140ms ease, opacity 140ms ease;
             padding: 0;
+            backdrop-filter: blur(var(--menu-glass-blur)) saturate(var(--menu-glass-saturate));
+            -webkit-backdrop-filter: blur(var(--menu-glass-blur)) saturate(var(--menu-glass-saturate));
         }
 
         .console-session-menu-trigger svg {
@@ -2659,11 +2663,11 @@
             max-width: 116px;
             padding: 4px;
             border-radius: 9px;
-            border: 1px solid rgba(255, 255, 255, 0.14);
-            background: rgba(10, 10, 10, 0.93);
-            box-shadow: 0 14px 32px rgba(0, 0, 0, 0.55);
-            backdrop-filter: blur(12px) saturate(160%);
-            -webkit-backdrop-filter: blur(12px) saturate(160%);
+            border: 1px solid var(--menu-glass-border);
+            background: var(--menu-glass-bg);
+            box-shadow: var(--menu-glass-shadow);
+            backdrop-filter: blur(var(--menu-glass-blur)) saturate(var(--menu-glass-saturate));
+            -webkit-backdrop-filter: blur(var(--menu-glass-blur)) saturate(var(--menu-glass-saturate));
             opacity: 0;
             transform: translateY(4px) scale(0.985);
             transition: opacity 150ms ease, transform 150ms ease;
@@ -2688,8 +2692,8 @@
             align-items: center;
             gap: 5px;
             width: 100%;
-            border: 1px solid transparent;
-            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.07);
+            background: rgba(255, 255, 255, 0.03);
             color: rgba(224, 224, 224, 0.9);
             text-align: left;
             white-space: nowrap;
@@ -2698,6 +2702,8 @@
             padding: 5px 7px;
             cursor: pointer;
             font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+            backdrop-filter: blur(var(--menu-glass-blur)) saturate(var(--menu-glass-saturate));
+            -webkit-backdrop-filter: blur(var(--menu-glass-blur)) saturate(var(--menu-glass-saturate));
         }
 
         .console-session-menu-item:hover {
@@ -14135,7 +14141,6 @@ console.log('Dark mode applied!');`
     </script>
 </body>
 </html>
-
 
 
 
